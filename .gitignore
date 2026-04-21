@@ -6,6 +6,8 @@ __pycache__/
 .venv/
 .claude.local.md
 .claude/settings.local.json
-raw/repos/*/
+raw/repos/*
+!raw/repos/.gitkeep
+!raw/repos/fsi-dsp
 outputs/charts/*.png
 outputs/slides/*.pdf

@@ -17,11 +17,13 @@ Read these before proceeding:
 1. Read the input document(s) specified in the arguments.
 2. Read `wiki/_index.md` and identify all overlapping wiki articles.
 3. Read each overlapping wiki article (compiled knowledge baseline).
-4. Read fsi-dsp reference implementations for code baseline:
+4. Read fsi-dsp reference implementations for code baseline (if submodule is present):
    - `raw/repos/fsi-dsp/reference/java-producer/.../FsiProducer.java`
    - `raw/repos/fsi-dsp/reference/java-consumer/.../FsiConsumer.java`
    - `raw/repos/fsi-dsp/reference/python-producer/fsi_producer.py`
    - `raw/repos/fsi-dsp/reference/python-consumer/fsi_consumer.py`
+   If `raw/repos/fsi-dsp/` is empty or missing, skip code-delta checks in Steps 4B and 5.
+   Note this in the report: "fsi-dsp submodule not initialized — code-delta checks skipped."
 
 ### Step 2: Extract claims
 
@@ -52,7 +54,7 @@ For each claim, record the MCP response and classify the outcome.
 - Wiki content that the documents are missing (enrichment opportunities)
 - Gaps where neither wiki nor documents cover a topic
 
-**4B. Code deltas:** For each config recommendation, compare against fsi-dsp reference implementations. Flag:
+**4B. Code deltas (requires fsi-dsp submodule):** For each config recommendation, compare against fsi-dsp reference implementations. Flag:
 - Settings where document recommendation differs from reference code
 - Settings recommended in documents but missing from reference code
 - Settings in reference code but not mentioned in documents

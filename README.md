@@ -7,8 +7,8 @@ No custom application code. The "app" is Claude Code itself, configured via comm
 ## Quick Start
 
 ```bash
-# 1. Clone
-git clone <repo-url> cflt-ai && cd cflt-ai
+# 1. Clone (--recurse-submodules pulls fsi-dsp if you have access)
+git clone --recurse-submodules git@github.com:goodlabs-studio/cflt-ai.git && cd cflt-ai
 
 # 2. Activate the environment (installs Python, Node.js, etc.)
 flox activate
@@ -81,7 +81,8 @@ cflt-ai/
 │   ├── concepts/                    # Foundational knowledge
 │   ├── patterns/                    # Reusable architecture patterns
 │   └── synthesis/                   # Cross-cutting analysis (ADRs)
-├── raw/                             # Source material for ingestion
+├── raw/
+│   └── repos/fsi-dsp/              # Git submodule: Ansible, Terraform, ADRs, reference code
 ├── tools/                           # Python CLI tools
 ├── outputs/                         # Generated reports
 ├── bin/
@@ -112,6 +113,18 @@ cflt-ai/
 ```
 
 Skills combine these three sources: the wiki provides institutional knowledge, CLAUDE.md provides canonical defaults, and MCP servers provide live validation against current Confluent docs and APIs.
+
+## fsi-dsp Reference Repo (Optional)
+
+The [fsi-dsp](https://github.com/goodlabs-studio/fsi-dsp) repo is linked as a git submodule at `raw/repos/fsi-dsp/`. It contains Ansible vars, Terraform configs, ADRs, and reference Java/Python implementations that 10+ wiki articles cite as sources.
+
+`bin/setup` offers to initialize it. You can also do it manually:
+
+```bash
+git submodule update --init raw/repos/fsi-dsp
+```
+
+Requires SSH access to `goodlabs-studio/fsi-dsp`. Without it, wiki skills still work — `/wiki:evaluate` skips code-delta checks and notes the gap in its report.
 
 ## Confluent Cloud Integration (Optional)
 

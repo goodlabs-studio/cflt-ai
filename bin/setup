@@ -107,10 +107,39 @@ if [ "$auth_ok" = false ]; then
   esac
 fi
 
-# ── Step 3: Confluent Cloud (optional) ──────────────────────────────
+# ── Step 3: fsi-dsp reference repo (optional) ───────────────────────
 
 echo ""
-info "3. Confluent Cloud credentials ${DIM}(optional)${RESET}"
+info "3. fsi-dsp reference repo ${DIM}(optional)${RESET}"
+
+fsi_dsp_path="$(git rev-parse --show-toplevel)/raw/repos/fsi-dsp"
+
+if [ -d "$fsi_dsp_path/.git" ] || [ -f "$fsi_dsp_path/.git" ]; then
+  ok "fsi-dsp submodule present"
+else
+  echo "   The fsi-dsp repo contains Ansible vars, Terraform configs, ADRs,"
+  echo "   and reference implementations used by wiki articles and /wiki:evaluate."
+  echo "   Requires access to github.com/goodlabs-studio/fsi-dsp."
+  echo ""
+  read -rp "   Initialize fsi-dsp submodule? [Y/n]: " fsi_choice
+
+  if [[ ! "$fsi_choice" =~ ^[nN] ]]; then
+    if git submodule update --init raw/repos/fsi-dsp 2>/dev/null; then
+      ok "fsi-dsp submodule initialized"
+    else
+      warn "Could not clone fsi-dsp. Check your SSH key access to goodlabs-studio."
+      echo "   You can retry later: git submodule update --init raw/repos/fsi-dsp"
+    fi
+  else
+    echo "   ${DIM}Skipped. Wiki skills still work but /wiki:evaluate code-delta checks${RESET}"
+    echo "   ${DIM}and some source references will be unavailable.${RESET}"
+  fi
+fi
+
+# ── Step 4: Confluent Cloud (optional) ──────────────────────────────
+
+echo ""
+info "4. Confluent Cloud credentials ${DIM}(optional)${RESET}"
 
 cc_env_file="${HOME}/.config/confluent/mcp.env"
 
@@ -146,7 +175,7 @@ fi
 # ── Step 4: MCP auto-approve ────────────────────────────────────────
 
 echo ""
-info "4. MCP server auto-approve"
+info "5. MCP server auto-approve"
 
 claude_settings="$HOME/.claude/settings.json"
 needs_mcp_setting=true
