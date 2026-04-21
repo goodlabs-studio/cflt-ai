@@ -1,0 +1,208 @@
+#!/usr/bin/env bash
+# cflt-ai first-run setup
+# Checks Claude auth, optional CC credentials, MCP auto-approve
+
+set -euo pipefail
+
+BOLD='\033[1m'
+DIM='\033[2m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+RESET='\033[0m'
+
+info()  { echo -e "${BOLD}$1${RESET}"; }
+ok()    { echo -e "${GREEN}✓${RESET} $1"; }
+warn()  { echo -e "${YELLOW}⚠${RESET} $1"; }
+fail()  { echo -e "${RED}✗${RESET} $1"; }
+
+echo ""
+info "cflt-ai setup"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# ── Step 1: Claude Code ─────────────────────────────────────────────
+
+info "1. Claude Code"
+
+if ! command -v claude &>/dev/null; then
+  fail "Claude Code not found."
+  echo ""
+  echo "   Install it first:"
+  echo "     npm install -g @anthropic-ai/claude-code"
+  echo "     # or: brew install claude-code"
+  echo ""
+  echo "   Then re-run: bin/setup"
+  exit 1
+fi
+
+ok "Claude Code found: $(command -v claude)"
+
+# ── Step 2: Authentication ──────────────────────────────────────────
+
+echo ""
+info "2. Authentication"
+
+auth_ok=false
+
+if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+  ok "ANTHROPIC_API_KEY is set"
+  auth_ok=true
+elif [ -f "$HOME/.claude/.credentials.json" ]; then
+  ok "Claude subscription detected (logged in)"
+  auth_ok=true
+fi
+
+if [ "$auth_ok" = false ]; then
+  warn "No authentication detected."
+  echo ""
+  echo "   Choose one:"
+  echo ""
+  echo "   ${BOLD}a)${RESET} Claude Max/Pro subscription"
+  echo "      Run: claude login"
+  echo ""
+  echo "   ${BOLD}b)${RESET} Anthropic API key"
+  echo "      Export ANTHROPIC_API_KEY in your shell profile"
+  echo ""
+
+  read -rp "   Set up auth now? [a/b/skip]: " auth_choice
+
+  case "$auth_choice" in
+    a|A)
+      echo ""
+      echo "   Running 'claude login' — follow the prompts:"
+      echo ""
+      claude login
+      if [ -f "$HOME/.claude/.credentials.json" ]; then
+        ok "Login successful"
+        auth_ok=true
+      else
+        warn "Login may not have completed. You can retry with: claude login"
+      fi
+      ;;
+    b|B)
+      echo ""
+      read -rsp "   Paste your API key: " api_key
+      echo ""
+      if [ -n "$api_key" ]; then
+        # Detect shell profile
+        shell_profile="$HOME/.zshrc"
+        if [ -n "${BASH_VERSION:-}" ] && [ -f "$HOME/.bashrc" ]; then
+          shell_profile="$HOME/.bashrc"
+        fi
+
+        echo "" >> "$shell_profile"
+        echo "# Anthropic API key (added by cflt-ai setup)" >> "$shell_profile"
+        echo "export ANTHROPIC_API_KEY='${api_key}'" >> "$shell_profile"
+
+        export ANTHROPIC_API_KEY="$api_key"
+        ok "API key written to $shell_profile"
+        ok "Exported for this session"
+        auth_ok=true
+      fi
+      ;;
+    *)
+      warn "Skipped. You'll need auth before running Claude Code."
+      ;;
+  esac
+fi
+
+# ── Step 3: Confluent Cloud (optional) ──────────────────────────────
+
+echo ""
+info "3. Confluent Cloud credentials ${DIM}(optional)${RESET}"
+
+cc_env_file="${HOME}/.config/confluent/mcp.env"
+
+if [ -f "$cc_env_file" ]; then
+  ok "Found $cc_env_file"
+  export CONFLUENT_MCP_ENV_FILE="$cc_env_file"
+else
+  echo "   The mcp-confluent server lets Claude query live Confluent Cloud clusters."
+  echo "   You need a Confluent Cloud API key/secret."
+  echo ""
+  read -rp "   Set up CC credentials? [y/N]: " cc_choice
+
+  if [[ "$cc_choice" =~ ^[yY] ]]; then
+    read -rp "   Confluent Cloud API key: " cc_key
+    read -rsp "   Confluent Cloud API secret: " cc_secret
+    echo ""
+
+    if [ -n "$cc_key" ] && [ -n "$cc_secret" ]; then
+      mkdir -p "$(dirname "$cc_env_file")"
+      cat > "$cc_env_file" << EOF
+CONFLUENT_CLOUD_API_KEY=${cc_key}
+CONFLUENT_CLOUD_API_SECRET=${cc_secret}
+EOF
+      chmod 600 "$cc_env_file"
+      export CONFLUENT_MCP_ENV_FILE="$cc_env_file"
+      ok "Credentials written to $cc_env_file"
+    fi
+  else
+    echo "   ${DIM}Skipped. Wiki and skills still work without CC credentials.${RESET}"
+  fi
+fi
+
+# ── Step 4: MCP auto-approve ────────────────────────────────────────
+
+echo ""
+info "4. MCP server auto-approve"
+
+claude_settings="$HOME/.claude/settings.json"
+needs_mcp_setting=true
+
+if [ -f "$claude_settings" ]; then
+  if grep -q '"enableAllProjectMcpServers"' "$claude_settings" 2>/dev/null; then
+    ok "MCP auto-approve already configured"
+    needs_mcp_setting=false
+  fi
+fi
+
+if [ "$needs_mcp_setting" = true ]; then
+  echo "   cflt-ai uses 3 MCP servers (context7, confluent-docs, mcp-confluent)."
+  echo "   Auto-approve skips the per-session approval prompt."
+  echo ""
+  read -rp "   Enable MCP auto-approve? [Y/n]: " mcp_choice
+
+  if [[ ! "$mcp_choice" =~ ^[nN] ]]; then
+    mkdir -p "$(dirname "$claude_settings")"
+    if [ -f "$claude_settings" ]; then
+      # Merge into existing settings using a temp file
+      tmp=$(mktemp)
+      python3 -c "
+import json, sys
+with open('$claude_settings') as f:
+    data = json.load(f)
+data['enableAllProjectMcpServers'] = True
+with open('$tmp', 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+" 2>/dev/null && mv "$tmp" "$claude_settings" || {
+        # Fallback: write fresh
+        echo '{ "enableAllProjectMcpServers": true }' > "$claude_settings"
+      }
+    else
+      echo '{ "enableAllProjectMcpServers": true }' > "$claude_settings"
+    fi
+    ok "MCP auto-approve enabled in $claude_settings"
+  else
+    echo "   ${DIM}Skipped. You'll be prompted to approve MCP servers each session.${RESET}"
+  fi
+fi
+
+# ── Done ────────────────────────────────────────────────────────────
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+if [ "$auth_ok" = true ]; then
+  ok "${BOLD}You're ready. Run 'claude' to start.${RESET}"
+  echo ""
+  echo "   Try these skills:"
+  echo "     /ask        — paste a config or question, get a validated answer"
+  echo "     /review     — evaluate a document against wiki + MCP sources"
+  echo "     /wiki:lint  — health check the wiki"
+  echo ""
+else
+  warn "Set up authentication first, then run: claude"
+fi

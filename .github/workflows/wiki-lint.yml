@@ -1,0 +1,23 @@
+name: Wiki Lint
+
+on:
+  pull_request:
+    paths:
+      - 'wiki/**'
+      - 'tools/wiki-lint.py'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Run wiki-lint
+        run: python tools/wiki-lint.py --full

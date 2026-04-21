@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "confluent-docs": {
+      "command": "npx",
+      "args": [
+        "-y", "@langchain/mcpdoc-server",
+        "--url", "https://docs.confluent.io/llms.txt"
+      ]
+    },
+    "mcp-confluent": {
+      "command": "npx",
+      "args": [
+        "-y", "@confluentinc/mcp-confluent",
+        "--env-file", "${CONFLUENT_MCP_ENV_FILE}"
+      ],
+      "env": {
+        "CONFLUENT_MCP_ENV_FILE": "${CONFLUENT_MCP_ENV_FILE}"
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(python tools/wiki-lint.py:*)",
+      "Bash(npx:*)",
+      "Bash(wc:*)",
+      "Bash(xargs:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.confluent.io)",
+      "WebFetch(domain:developer.confluent.io)",
+      "WebFetch(domain:www.confluent.io)",
+      "WebFetch(domain:support.confluent.io)",
+      "WebFetch(domain:cwiki.apache.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:registry.terraform.io)",
+      "WebFetch(domain:docs.redhat.com)",
+      "WebFetch(domain:flox.dev)"
+    ]
+  }
+}

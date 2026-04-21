@@ -1,0 +1,124 @@
+---
+title: Concept Graph / Backlink Registry
+last_updated: 2026-04-17
+---
+
+# Backlink Registry
+
+Tracks which articles reference which. The LLM maintains this file.
+
+## Format
+
+```
+[source article] → [target article] : relationship description
+```
+
+## Backlinks
+
+concepts/fsi-data-streaming-platform → concepts/sla-tiers : tier system drives all governance defaults
+concepts/fsi-data-streaming-platform → concepts/schema-evolution-strategies : schema governance for the platform
+concepts/fsi-data-streaming-platform → concepts/fsi-compliance : compliance audit trail for CI/CD
+concepts/fsi-data-streaming-platform → patterns/fsi-governance-automation : governance-as-code pattern
+concepts/fsi-data-streaming-platform → patterns/dr-cluster-linking : CL DR for CC deployments
+concepts/fsi-data-streaming-platform → patterns/dr-mirrormaker2 : MM2 DR for CFK/CP deployments
+concepts/fsi-data-streaming-platform → patterns/dr-multi-region-cluster : MRC RPO=0 for CP
+concepts/fsi-data-streaming-platform → patterns/topic-naming : naming convention
+concepts/fsi-data-streaming-platform → synthesis/adr-index : architecture decisions
+
+concepts/sla-tiers → concepts/fsi-data-streaming-platform : platform overview
+concepts/sla-tiers → concepts/schema-evolution-strategies : compatibility modes derived from tier
+concepts/sla-tiers → patterns/fsi-governance-automation : tiers propagate through IaC
+concepts/sla-tiers → patterns/dr-cluster-linking : DR thresholds per tier
+concepts/sla-tiers → patterns/dr-mirrormaker2 : MM2 lag monitoring per tier
+concepts/sla-tiers → patterns/dr-multi-region-cluster : compliance tier drives RPO=0
+concepts/sla-tiers → synthesis/adr-index : ADR-002, ADR-008
+
+concepts/schema-evolution-strategies → concepts/sla-tiers : compatibility modes per tier
+concepts/schema-evolution-strategies → patterns/topic-naming : version segment for breaking changes
+concepts/schema-evolution-strategies → patterns/fsi-governance-automation : Terraform module enforcement
+concepts/schema-evolution-strategies → concepts/fsi-compliance : audit trail for schema changes
+concepts/schema-evolution-strategies → synthesis/adr-index : ADR-001, ADR-002
+
+concepts/fsi-compliance → concepts/fsi-data-streaming-platform : platform context
+concepts/fsi-compliance → patterns/fsi-governance-automation : CI/CD pattern producing audit trail
+concepts/fsi-compliance → concepts/sla-tiers : tier definitions
+concepts/fsi-compliance → concepts/schema-evolution-strategies : schema governance enforced by CI
+
+patterns/fsi-governance-automation → concepts/fsi-data-streaming-platform : platform overview
+patterns/fsi-governance-automation → concepts/sla-tiers : tier defaults
+patterns/fsi-governance-automation → patterns/topic-naming : naming enforcement
+patterns/fsi-governance-automation → concepts/schema-evolution-strategies : compatibility modes
+patterns/fsi-governance-automation → concepts/fsi-compliance : audit trail
+
+patterns/topic-naming → concepts/schema-evolution-strategies : versioned topic migration
+patterns/topic-naming → patterns/fsi-governance-automation : module validates names
+patterns/topic-naming → concepts/sla-tiers : tier selection per topic
+patterns/topic-naming → synthesis/adr-index : ADR-007
+
+patterns/dr-cluster-linking → patterns/dr-mirrormaker2 : alternative backend
+patterns/dr-cluster-linking → patterns/dr-multi-region-cluster : RPO=0 alternative
+patterns/dr-cluster-linking → concepts/sla-tiers : RPO/RTO targets per tier
+patterns/dr-cluster-linking → concepts/cluster-linking-topology : CL architecture
+patterns/dr-cluster-linking → synthesis/adr-index : ADR-003, ADR-005
+
+patterns/dr-mirrormaker2 → patterns/dr-cluster-linking : alternative for CC
+patterns/dr-mirrormaker2 → patterns/dr-multi-region-cluster : RPO=0 on CP
+patterns/dr-mirrormaker2 → concepts/sla-tiers : tier-based RPO/RTO
+
+patterns/dr-multi-region-cluster → patterns/dr-cluster-linking : async DR for CC
+patterns/dr-multi-region-cluster → patterns/dr-mirrormaker2 : async DR for CFK/CP
+patterns/dr-multi-region-cluster → concepts/sla-tiers : compliance tier requirement
+patterns/dr-multi-region-cluster → synthesis/adr-index : ADR-005, ADR-008
+
+synthesis/adr-index → concepts/fsi-data-streaming-platform : platform these decisions govern
+synthesis/adr-index → concepts/sla-tiers : tier system (ADR-002, ADR-008)
+synthesis/adr-index → concepts/schema-evolution-strategies : Avro and compatibility (ADR-001, ADR-002)
+synthesis/adr-index → patterns/fsi-governance-automation : implements decisions
+synthesis/adr-index → patterns/topic-naming : naming convention (ADR-007)
+synthesis/adr-index → patterns/dr-cluster-linking : CL decision (ADR-005)
+synthesis/adr-index → patterns/dr-mirrormaker2 : MM2 procedures
+synthesis/adr-index → patterns/dr-multi-region-cluster : MRC RPO=0 (ADR-005, ADR-008)
+
+concepts/cluster-linking-topology → patterns/dr-cluster-linking : CL DR pattern using CL
+concepts/cluster-linking-topology → concepts/fsi-data-streaming-platform : platform monitoring context
+concepts/cluster-linking-topology → concepts/sla-tiers : RPO/RTO targets per tier
+
+concepts/consumer-group-rebalancing → concepts/consumer-lag-monitoring : lag spikes during rebalances
+concepts/consumer-group-rebalancing → concepts/exactly-once-semantics : rebalance impact on EOS
+concepts/consumer-group-rebalancing → concepts/producer-batching-config : producer-side tuning
+concepts/consumer-group-rebalancing → patterns/aks-kafka-tuning : static membership in Kubernetes, CooperativeStickyAssignor
+
+concepts/consumer-lag-monitoring → concepts/consumer-group-rebalancing : rebalances cause lag spikes
+concepts/consumer-lag-monitoring → concepts/sla-tiers : tier-based lag alert thresholds
+concepts/consumer-lag-monitoring → concepts/fsi-data-streaming-platform : platform monitoring context
+
+concepts/exactly-once-semantics → concepts/consumer-group-rebalancing : rebalance behavior during transactions
+concepts/exactly-once-semantics → concepts/consumer-lag-monitoring : LSO-based lag under read_committed
+concepts/exactly-once-semantics → patterns/fsi-exactly-once : regulatory reporting and audit for EOS
+concepts/exactly-once-semantics → concepts/flink-checkpointing : checkpoint mechanics for Flink 2PC
+concepts/exactly-once-semantics → concepts/producer-batching-config : batching interaction with idempotence
+
+concepts/flink-checkpointing → concepts/exactly-once-semantics : end-to-end delivery guarantees
+concepts/flink-checkpointing → concepts/consumer-lag-monitoring : offset commits feed consumer lag metrics
+
+concepts/producer-batching-config → concepts/exactly-once-semantics : idempotence constraints on batching
+concepts/producer-batching-config → concepts/consumer-lag-monitoring : downstream impact on e2e latency
+concepts/producer-batching-config → patterns/aks-kafka-tuning : platform-specific producer tuning
+
+patterns/aks-kafka-tuning → concepts/producer-batching-config : client-side tuning pairing
+patterns/aks-kafka-tuning → concepts/fsi-data-streaming-platform : FSI architecture context
+patterns/aks-kafka-tuning → concepts/sla-tiers : latency tiers drive VM/storage selection
+patterns/aks-kafka-tuning → patterns/dr-cluster-linking : cross-region replication
+patterns/aks-kafka-tuning → concepts/consumer-lag-monitoring : monitoring patterns
+
+patterns/dead-letter-queue-design → concepts/exactly-once-semantics : DLQ interaction with transactions
+patterns/dead-letter-queue-design → concepts/consumer-group-rebalancing : rebalance during retry backoff
+patterns/dead-letter-queue-design → patterns/fsi-exactly-once : FSI failure handling requirements
+patterns/dead-letter-queue-design → patterns/topic-naming : naming conventions for DLQ topics
+patterns/dead-letter-queue-design → concepts/consumer-lag-monitoring : DLQ consumer lag monitoring
+
+patterns/fsi-exactly-once → concepts/exactly-once-semantics : foundational EOS mechanisms
+patterns/fsi-exactly-once → concepts/sla-tiers : tier definitions for EOS requirements
+patterns/fsi-exactly-once → concepts/fsi-data-streaming-platform : overall FSI architecture
+patterns/fsi-exactly-once → patterns/dead-letter-queue-design : error handling complementing EOS
+patterns/fsi-exactly-once → patterns/dr-cluster-linking : DR with EOS implications
