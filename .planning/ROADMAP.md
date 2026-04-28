@@ -12,7 +12,7 @@ Six phases deliver a Confluent operational and knowledge agent for FSI engagemen
 
 - [x] **Phase 0: Foundation** - Fix bugs, establish MANIFEST.yaml contract, scaffold canon overlay stack, and get both repos to clean-clone health (completed 2026-04-28)
 - [ ] **Phase 1: Knowledge Skill** - Unify /ask + /wiki:recommend, add triage classifier, golden harness, and wiki decay rules
-- [ ] **Phase 2: Review Skill** - Reproducible claim extraction, premise-challenge step, .docx output, multi-document support, customer overlay validation
+- [x] **Phase 2: Review Skill** - Reproducible claim extraction, premise-challenge step, .docx output, multi-document support, customer overlay validation (completed 2026-04-28)
 - [ ] **Phase 3a: Act Rail — Plan** - Four-gate validation chain, /dsp:plan read-only rail, structural-correctness harness, CI parity in both repos
 - [ ] **Phase 3b: Act Rail — Apply** - /dsp:apply with human-in-the-loop confirmation, three policy profiles, activity log, incident entries
 - [ ] **Phase 3c: Act Rail — Profile Gating** - Per-tool classification of all 50+ mcp-confluent tools, negative-space test suites, break-glass two-step, customer fork demo
@@ -65,12 +65,12 @@ Plans:
   3. /review --output docx produces a .docx file containing a provenance footer with canon stack hash, manifest version, model floors, and MCP versions
   4. /review accepts a mixed input set (e.g., deck + tfvars + runbook) and treats them as a single review scope
   5. At least one customer overlay is configured and a review run under that overlay produces a differential result relative to base canon
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 02-01-PLAN.md — Rewrite /review skill with structured claim extraction, premise-challenge step, multi-doc input, and --output/--overlay flags (REVW-01, REVW-02, REVW-04)
 - [x] 02-02-PLAN.md — Build review-to-docx.py converter with provenance footer and create acme-bank customer overlay (REVW-03, REVW-06)
-- [ ] 02-03-PLAN.md — Build golden test harness with 16 cases, 8 fixtures, and structural pytest runner (REVW-05, exercises REVW-01 through REVW-06)
+- [x] 02-03-PLAN.md — Build golden test harness with 16 cases, 8 fixtures, and structural pytest runner (REVW-05, exercises REVW-01 through REVW-06)
 
 ### Phase 3a: Act Rail — Plan
 **Goal**: A read-only /dsp:plan rail that selects and validates fsi-dsp artifacts through a four-gate chain, with structural correctness >= 95% and CI parity enforcing canon/fsi-dsp alignment in both repos
@@ -116,7 +116,7 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 |-------|----------------|--------|-----------|
 | 0. Foundation | 6/6 | Complete   | 2026-04-28 |
 | 1. Knowledge Skill | 0/3 | Planning complete | - |
-| 2. Review Skill | 1/3 | In Progress|  |
+| 2. Review Skill | 3/3 | Complete   | 2026-04-28 |
 | 3a. Act Rail — Plan | 0/TBD | Not started | - |
 | 3b. Act Rail — Apply | 0/TBD | Not started | - |
 | 3c. Act Rail — Profile Gating | 0/TBD | Not started | - |
