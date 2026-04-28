@@ -52,7 +52,7 @@ Plans:
 
 Plans:
 - [ ] 01-01-PLAN.md — Add last_validated decay lifecycle to wiki articles and tooling (WIKI-03, WIKI-04)
-- [ ] 01-02-PLAN.md — Consolidate /ask with mode routing, triage classifier, and auto-stub (KNOW-01, KNOW-02, WIKI-05)
+- [x] 01-02-PLAN.md — Consolidate /ask with mode routing, triage classifier, and auto-stub (KNOW-01, KNOW-02, WIKI-05)
 - [ ] 01-03-PLAN.md — Build golden test harness with 32 cases and structural pytest runner (KNOW-03, KNOW-04, KNOW-05)
 
 ### Phase 2: Review Skill

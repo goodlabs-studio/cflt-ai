@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 00-foundation 00-06-PLAN.md
-last_updated: "2026-04-28T18:52:16.533Z"
+stopped_at: Completed 01-knowledge-skill 01-02-PLAN.md
+last_updated: "2026-04-28T19:59:30.781Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 9
+  completed_plans: 7
   percent: 0
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase 00 — foundation
+**Current focus:** Phase 01 — knowledge-skill
 
 ## Current Position
 
-Phase: 1
-Plan: Not started
+Phase: 01 (knowledge-skill) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
 Last activity: 2026-04-28
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 00-foundation P03 | 172 | 2 tasks | 13 files |
 | Phase 00-foundation P05 | 2 | 2 tasks | 14 files |
 | Phase 00-foundation P06 | 10 | 3 tasks | 5 files |
+| Phase 01-knowledge-skill P02 | 109 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,10 @@ Recent decisions affecting current work:
 - [Phase 00-foundation]: Citation test pattern: pytest classes with fixture-based wiki traversal for ongoing enforcement of citation hygiene
 - [Phase 00-foundation]: fsi-dsp scripts committed inside submodule then parent pointer updated
 - [Phase 00-foundation]: check-manifest-stability.py allows ID removal only on major version bump
+- [Phase 01-knowledge-skill]: Triage classifier uses four routes (wiki-only/wiki+MCP/deep/refuse); --force-route bypasses classifier
+- [Phase 01-knowledge-skill]: Mode flag governs write behavior only; MCP routing is route-driven via triage classifier
+- [Phase 01-knowledge-skill]: Auto-stub fires on all modes including ephemeral — coverage gaps are never lost
+- [Phase 01-knowledge-skill]: /wiki:recommend reduced to thin alias dispatching to /ask --mode reconsolidate
 
 ### Pending Todos
 
@@ -92,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-28T18:49:34.391Z
-Stopped at: Completed 00-foundation 00-06-PLAN.md
+Last session: 2026-04-28T19:59:30.779Z
+Stopped at: Completed 01-knowledge-skill 01-02-PLAN.md
 Resume file: None
