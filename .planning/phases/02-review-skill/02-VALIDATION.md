@@ -38,12 +38,12 @@ created: 2026-04-28
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 02-01-01 | 01 | 1 | REVW-01 | unit | `python3 -m pytest tests/golden/review/ -k reproducibility` | ❌ W0 | ⬜ pending |
-| 02-01-02 | 01 | 1 | REVW-02 | unit | `python3 -m pytest tests/golden/review/ -k premise_challenge` | ❌ W0 | ⬜ pending |
-| 02-02-01 | 02 | 1 | REVW-03 | unit | `python3 -m pytest tests/golden/review/ -k docx` | ❌ W0 | ⬜ pending |
-| 02-02-02 | 02 | 1 | REVW-04 | unit | `python3 -m pytest tests/golden/review/ -k multi_doc` | ❌ W0 | ⬜ pending |
-| 02-03-01 | 03 | 2 | REVW-05 | integration | `python3 -m pytest tests/golden/review/ -v` | ❌ W0 | ⬜ pending |
-| 02-03-02 | 03 | 2 | REVW-06 | integration | `python3 -m pytest tests/golden/review/ -k overlay` | ❌ W0 | ⬜ pending |
+| 02-01-T1 | 01 | 1 | REVW-01, REVW-02, REVW-04 | structural | `grep -c "Step 2.5" .claude/commands/review.md` | N/A (skill file) | ⬜ pending |
+| 02-02-T1 | 02 | 2 | REVW-03 | unit | `python3 -m pytest tests/test_review_to_docx.py -v` | ❌ W0 | ⬜ pending |
+| 02-02-T2 | 02 | 2 | REVW-03 | unit | `python3 -m pytest tests/test_review_to_docx.py -v` | ❌ W0 | ⬜ pending |
+| 02-02-T3 | 02 | 2 | REVW-06 | integration | `python3 -c "from canon.stack import resolve_stack; resolve_stack(customer='acme-bank')"` | ❌ W0 | ⬜ pending |
+| 02-03-T1 | 03 | 3 | REVW-05 | structural | `python3 -m pytest tests/golden/review/test_golden_review.py -v` | ❌ W0 | ⬜ pending |
+| 02-03-T2 | 03 | 3 | REVW-01-06 | integration | `python3 -m pytest tests/golden/review/test_golden_review.py -v` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
