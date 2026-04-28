@@ -1,0 +1,12 @@
+# Acme Bank customer overrides — each override references an ADR
+# These compose on top of canon/base + canon/industry/fsi via deep merge
+# Override rule: no override without an ADR reference
+
+producer:
+  compression_type: "zstd"              # Storage-constrained cluster; overrides base lz4
+  override_source: "customer/acme-bank/adr-001"
+
+latency_tiers:
+  market_data: "sub-100-microsecond"    # Stricter than FSI base sub-millisecond
+  risk: "<5ms"                          # Stricter than FSI base <10ms
+  override_source: "customer/acme-bank/adr-002"
