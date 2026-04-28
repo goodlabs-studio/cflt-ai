@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 00-foundation 00-03-PLAN.md
-last_updated: "2026-04-28T18:41:24.979Z"
+stopped_at: Completed 00-foundation 00-05-PLAN.md
+last_updated: "2026-04-28T18:46:23.219Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: 00 (foundation) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-04-28
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 00-foundation P02 | 8 | 2 tasks | 2 files |
 | Phase 00-foundation P04 | 8 | 2 tasks | 3 files |
 | Phase 00-foundation P03 | 172 | 2 tasks | 13 files |
+| Phase 00-foundation P05 | 2 | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Recent decisions affecting current work:
 - [Phase 00-foundation]: ADR-009 status set to Accepted (not Proposed) — decision is already canonical in CLAUDE.md FSI overlay
 - [Phase 00-foundation]: canon/stack.py uses Optional[List[str]] typing for Python 3.9 compatibility (not X|Y union syntax)
 - [Phase 00-foundation]: Stack hash truncated to 16 hex chars from SHA-256 for compact provenance footers
+- [Phase 00-foundation]: fsi-dsp:// URI scheme adopted as stable citation form — IDs survive fsi-dsp refactors per MANIFEST.yaml contract
+- [Phase 00-foundation]: Citation test pattern: pytest classes with fixture-based wiki traversal for ongoing enforcement of citation hygiene
 
 ### Pending Todos
 
@@ -86,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-28T18:41:24.977Z
-Stopped at: Completed 00-foundation 00-03-PLAN.md
+Last session: 2026-04-28T18:46:23.217Z
+Stopped at: Completed 00-foundation 00-05-PLAN.md
 Resume file: None
