@@ -65,7 +65,12 @@ Plans:
   3. /review --output docx produces a .docx file containing a provenance footer with canon stack hash, manifest version, model floors, and MCP versions
   4. /review accepts a mixed input set (e.g., deck + tfvars + runbook) and treats them as a single review scope
   5. At least one customer overlay is configured and a review run under that overlay produces a differential result relative to base canon
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Rewrite /review skill with structured claim extraction, premise-challenge step, multi-doc input, and --output/--overlay flags (REVW-01, REVW-02, REVW-04)
+- [ ] 02-02-PLAN.md — Build review-to-docx.py converter with provenance footer and create acme-bank customer overlay (REVW-03, REVW-06)
+- [ ] 02-03-PLAN.md — Build golden test harness with 16 cases, 8 fixtures, and structural pytest runner (REVW-05, exercises REVW-01 through REVW-06)
 
 ### Phase 3a: Act Rail — Plan
 **Goal**: A read-only /dsp:plan rail that selects and validates fsi-dsp artifacts through a four-gate chain, with structural correctness >= 95% and CI parity enforcing canon/fsi-dsp alignment in both repos
@@ -111,7 +116,7 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 |-------|----------------|--------|-----------|
 | 0. Foundation | 6/6 | Complete   | 2026-04-28 |
 | 1. Knowledge Skill | 0/3 | Planning complete | - |
-| 2. Review Skill | 0/TBD | Not started | - |
+| 2. Review Skill | 0/3 | Planning complete | - |
 | 3a. Act Rail — Plan | 0/TBD | Not started | - |
 | 3b. Act Rail — Apply | 0/TBD | Not started | - |
 | 3c. Act Rail — Profile Gating | 0/TBD | Not started | - |
