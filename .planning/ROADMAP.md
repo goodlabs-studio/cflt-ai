@@ -48,7 +48,12 @@ Plans:
   2. The golden harness at tests/golden/ask/ contains >= 30 cases (>= 5 negative-space), passes at >= 90% on Haiku floor and >= 95% on Sonnet floor
   3. Wiki articles older than 90 days without revalidation drop from confidence:high to confidence:medium automatically
   4. Every /ask query that misses wiki coverage appends a stub to wiki/_queue.md for follow-up
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Add last_validated decay lifecycle to wiki articles and tooling (WIKI-03, WIKI-04)
+- [ ] 01-02-PLAN.md — Consolidate /ask with mode routing, triage classifier, and auto-stub (KNOW-01, KNOW-02, WIKI-05)
+- [ ] 01-03-PLAN.md — Build golden test harness with 32 cases and structural pytest runner (KNOW-03, KNOW-04, KNOW-05)
 
 ### Phase 2: Review Skill
 **Goal**: The /review skill produces reproducible, customer-ready output — deterministic claim extraction, premise-challenge step, .docx with full provenance, multi-document input, and at least one validated customer overlay
@@ -105,7 +110,7 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 0. Foundation | 6/6 | Complete   | 2026-04-28 |
-| 1. Knowledge Skill | 0/TBD | Not started | - |
+| 1. Knowledge Skill | 0/3 | Planning complete | - |
 | 2. Review Skill | 0/TBD | Not started | - |
 | 3a. Act Rail — Plan | 0/TBD | Not started | - |
 | 3b. Act Rail — Apply | 0/TBD | Not started | - |
