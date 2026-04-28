@@ -42,16 +42,16 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 
 - [x] **KNOW-01**: /ask and /wiki:recommend collapsed into single skill with --mode flag (ephemeral | report | reconsolidate)
 - [x] **KNOW-02**: Triage classifier routes queries: wiki-only / wiki+MCP / deep reasoning
-- [ ] **KNOW-03**: Golden test harness at tests/golden/ask/ with >= 30 cases including >= 5 negative-space cases
-- [ ] **KNOW-04**: Floor-model pass rate >= 90% on Haiku-floor cases
-- [ ] **KNOW-05**: Floor-model pass rate >= 95% on Sonnet-floor cases
+- [x] **KNOW-03**: Golden test harness at tests/golden/ask/ with >= 30 cases including >= 5 negative-space cases
+- [x] **KNOW-04**: Floor-model pass rate >= 90% on Haiku-floor cases
+- [x] **KNOW-05**: Floor-model pass rate >= 95% on Sonnet-floor cases
 
 ### Review Skill
 
-- [ ] **REVW-01**: Claim extraction reproducibility >= 95% across runs (same doc → same claims)
-- [ ] **REVW-02**: Explicit premise-challenge step shipped and tested in harness
+- [x] **REVW-01**: Claim extraction reproducibility >= 95% across runs (same doc → same claims)
+- [x] **REVW-02**: Explicit premise-challenge step shipped and tested in harness
 - [ ] **REVW-03**: .docx output with full provenance footer (canon stack hash, manifest version, model floors, MCP versions)
-- [ ] **REVW-04**: Multi-document review supported (deck + tfvars + runbook as single input)
+- [x] **REVW-04**: Multi-document review supported (deck + tfvars + runbook as single input)
 - [ ] **REVW-05**: Golden test harness at tests/golden/review/ with >= 15 cases from sanitized customer docs
 - [ ] **REVW-06**: >= 1 customer overlay validated end-to-end with differential canon override
 
@@ -133,13 +133,13 @@ Deferred to future release. Tracked but not in current roadmap.
 | WIKI-05 | Phase 1 | Complete |
 | KNOW-01 | Phase 1 | Complete |
 | KNOW-02 | Phase 1 | Complete |
-| KNOW-03 | Phase 1 | Pending |
-| KNOW-04 | Phase 1 | Pending |
-| KNOW-05 | Phase 1 | Pending |
-| REVW-01 | Phase 2 | Pending |
-| REVW-02 | Phase 2 | Pending |
+| KNOW-03 | Phase 1 | Complete |
+| KNOW-04 | Phase 1 | Complete |
+| KNOW-05 | Phase 1 | Complete |
+| REVW-01 | Phase 2 | Complete |
+| REVW-02 | Phase 2 | Complete |
 | REVW-03 | Phase 2 | Pending |
-| REVW-04 | Phase 2 | Pending |
+| REVW-04 | Phase 2 | Complete |
 | REVW-05 | Phase 2 | Pending |
 | REVW-06 | Phase 2 | Pending |
 | ACT-01 | Phase 3a | Pending |

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 01-knowledge-skill 01-03-PLAN.md
-last_updated: "2026-04-28T20:06:08.529Z"
+status: executing
+stopped_at: Completed 02-review-skill 02-01-PLAN.md
+last_updated: "2026-04-28T21:20:58.655Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 12
+  completed_plans: 10
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase 01 — knowledge-skill
+**Current focus:** Phase 02 — review-skill
 
 ## Current Position
 
-Phase: 01 (knowledge-skill) — EXECUTING
-Plan: 3 of 3
-Status: Phase complete — ready for verification
+Phase: 02 (review-skill) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-04-28
 
 Progress: [░░░░░░░░░░] 0%
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-knowledge-skill P02 | 109 | 2 tasks | 3 files |
 | Phase 01-knowledge-skill P01 | 3 | 2 tasks | 23 files |
 | Phase 01-knowledge-skill P03 | 5 | 2 tasks | 36 files |
+| Phase 02-review-skill P01 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,10 @@ Recent decisions affecting current work:
 - [Phase 01-knowledge-skill]: last_validated field uses 2026-04-28 for all articles (Phase 0 review date); DECAY_DAYS=90 constant; check_decay falls back to last_updated if field absent
 - [Phase 01-knowledge-skill]: apply_decay_fix scoped to front matter block via regex to prevent body text rewrites; --fix implies --full in wiki-lint.py
 - [Phase 01-knowledge-skill]: 32 golden cases authored (exceeds 30 minimum) with TDD RED-GREEN discipline — test runner committed before cases
+- [Phase 02-review-skill]: YAML claim block is mandatory before table rendering — reproducibility anchor for REVW-01 claim extraction determinism >= 95%
+- [Phase 02-review-skill]: Multi-doc claim IDs use source-slug prefix (deck-1, runbook-2) to prevent ID collision on merge
+- [Phase 02-review-skill]: Premise-challenge (Step 2.5) runs before wiki cross-reference so overlay conflicts inform validation pass
+- [Phase 02-review-skill]: /review is always report mode — no ephemeral variant; every invocation writes a file and emits activity log
 
 ### Pending Todos
 
@@ -102,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-28T20:06:08.527Z
-Stopped at: Completed 01-knowledge-skill 01-03-PLAN.md
+Last session: 2026-04-28T21:20:58.652Z
+Stopped at: Completed 02-review-skill 02-01-PLAN.md
 Resume file: None
