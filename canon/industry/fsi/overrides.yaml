@@ -1,0 +1,34 @@
+# FSI industry overrides — each override references an ADR
+# These compose on top of canon/base/defaults.yaml via dict merge
+# Override rule: no override without an ADR reference
+
+schema_registry:
+  format: "avro"
+  override_source: "fsi-dsp://adr/001"      # ADR-001: Avro over Protobuf
+  compatibility_mode: "tier-derived"
+  compatibility_source: "fsi-dsp://adr/002"  # ADR-002: Compatibility by tier
+
+cluster_linking:
+  preferred_over: "mirrormaker2"
+  override_source: "fsi-dsp://adr/005"       # ADR-005: Cluster Linking over MRC
+  dr_tier_classification: "fsi-dsp://adr/008"  # ADR-008: DR tier classification
+
+security:
+  auth_mechanism: "mTLS + RBAC"              # Reinforced: never username/password in FSI
+  override_source: "fsi-dsp://adr/006"       # ADR-006: OAuth vs API keys
+
+topic_design:
+  naming_convention: "<domain>.<application>.<entity>.<event>"
+  naming_source: "fsi-dsp://adr/007"         # ADR-007: Topic naming
+
+# FSI-specific additions (not overrides of base)
+latency_tiers:
+  market_data: "sub-millisecond"
+  risk: "<10ms"
+  compliance: "<100ms"
+  reconciliation: "async"
+
+mainframe_integration:
+  bridge_pattern: "IBM MQ Source Connector -> Kafka"
+  compute: "IBM LinuxONE preferred for z/OS offload"
+  linuxone_source: "fsi-dsp://adr/009"       # ADR-009: LinuxONE for z/OS Kafka offload

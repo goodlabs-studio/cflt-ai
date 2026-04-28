@@ -1,0 +1,43 @@
+# Canon base defaults — extracted from CLAUDE.md
+# Source: CLAUDE.md > Confluent Canon > Canonical Architectural Defaults
+# These values are the universal starting point. Override in industry/customer/engagement layers.
+
+topic_design:
+  partition_formula: "6 * peak_mb_per_sec"  # Starting point; reason about consumer parallelism
+  replication_factor: 3                      # Production minimum
+  min_insync_replicas: 2                     # Durability guarantee
+  retention: "event-time-driven"             # Prefer log compaction for entity streams
+  naming_convention: "<domain>.<entity>.<event>"  # e.g., payments.transaction.completed
+
+schema_registry:
+  format: "avro"                             # Avro or Protobuf in production; JSON Schema only for prototype
+  subject_naming_strategy: "TopicNameStrategy"  # RecordNameStrategy for event union patterns
+  compatibility_mode: "BACKWARD"             # Escalate to FULL for shared consumer contracts
+
+producer:
+  acks: "all"                                # Never acks=0 or acks=1 for durable workloads
+  enable_idempotence: true                   # Always
+  compression_type: "lz4"                    # lz4 for throughput; zstd for storage-constrained
+  # transactional_id must be set for exactly-once
+
+consumer:
+  group_design: "one_group_per_logical_application"  # Not per instance
+  auto_offset_reset: "earliest"              # Document deliberately if using latest
+  enable_auto_commit: false                  # Never in any processing workload; commit after processing
+
+flink_sql:
+  api_preference: "table"                    # Table API over DataStream for new work
+  watermark_strategy: "BOUNDED_OUT_OF_ORDERNESS"  # Never unbounded
+  output_connector: "UPSERT-KAFKA"           # For changelog/CDC-style output
+  window_preference: "tumbling"              # tumbling > sliding > session for resource efficiency
+  scan_startup_mode: "earliest-offset"       # Deterministic replay
+
+cluster_linking:
+  preferred_over: "mirrormaker2"             # For Confluent-to-Confluent topologies
+  auto_create_mirror_topics: false           # Explicit control in production
+  use_topic_filters: true                    # Mirror only needed topics
+
+security:
+  auth_mechanism: "mTLS + RBAC"              # For regulated environments; never username/password in FSI
+  service_account_scope: "per_application"   # Not per team
+  audit_log: true                            # All production clusters
