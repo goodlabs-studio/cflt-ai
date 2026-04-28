@@ -34,14 +34,14 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 
 - [x] **WIKI-01**: LinuxONE wiki articles ingested from fsi-dsp adr/009 and LinuxONE guides
 - [x] **WIKI-02**: Activity log directory live and emitting per overlay-scoped path
-- [ ] **WIKI-03**: last_validated field added to wiki articles with quarterly decay rule
-- [ ] **WIKI-04**: confidence:high articles drop to medium after 90 days without revalidation
-- [ ] **WIKI-05**: Auto-stub on coverage gap — every /ask miss appends to wiki/_queue.md
+- [x] **WIKI-03**: last_validated field added to wiki articles with quarterly decay rule
+- [x] **WIKI-04**: confidence:high articles drop to medium after 90 days without revalidation
+- [x] **WIKI-05**: Auto-stub on coverage gap — every /ask miss appends to wiki/_queue.md
 
 ### Knowledge Skill
 
-- [ ] **KNOW-01**: /ask and /wiki:recommend collapsed into single skill with --mode flag (ephemeral | report | reconsolidate)
-- [ ] **KNOW-02**: Triage classifier routes queries: wiki-only / wiki+MCP / deep reasoning
+- [x] **KNOW-01**: /ask and /wiki:recommend collapsed into single skill with --mode flag (ephemeral | report | reconsolidate)
+- [x] **KNOW-02**: Triage classifier routes queries: wiki-only / wiki+MCP / deep reasoning
 - [ ] **KNOW-03**: Golden test harness at tests/golden/ask/ with >= 30 cases including >= 5 negative-space cases
 - [ ] **KNOW-04**: Floor-model pass rate >= 90% on Haiku-floor cases
 - [ ] **KNOW-05**: Floor-model pass rate >= 95% on Sonnet-floor cases
@@ -128,11 +128,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | CANST-04 | Phase 0 | Complete |
 | WIKI-01 | Phase 0 | Complete |
 | WIKI-02 | Phase 0 | Complete |
-| WIKI-03 | Phase 1 | Pending |
-| WIKI-04 | Phase 1 | Pending |
-| WIKI-05 | Phase 1 | Pending |
-| KNOW-01 | Phase 1 | Pending |
-| KNOW-02 | Phase 1 | Pending |
+| WIKI-03 | Phase 1 | Complete |
+| WIKI-04 | Phase 1 | Complete |
+| WIKI-05 | Phase 1 | Complete |
+| KNOW-01 | Phase 1 | Complete |
+| KNOW-02 | Phase 1 | Complete |
 | KNOW-03 | Phase 1 | Pending |
 | KNOW-04 | Phase 1 | Pending |
 | KNOW-05 | Phase 1 | Pending |
