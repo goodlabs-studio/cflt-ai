@@ -1,7 +1,7 @@
 ---
 title: DR — MirrorMaker 2
 tags: [kafka mirrormaker2 dr cfk confluent-platform fsi]
-sources: [raw/repos/fsi-dsp/docs/dr-runbook.md]
+sources: [fsi-dsp://adr/005, fsi-dsp://script/mirror-failback]
 related: [patterns/dr-cluster-linking, patterns/dr-multi-region-cluster, concepts/sla-tiers, concepts/fsi-data-streaming-platform]
 confidence: high
 last_updated: 2026-04-11

@@ -1,7 +1,7 @@
 ---
 title: FSI Governance Automation
 tags: [kafka fsi terraform ansible ci-cd governance]
-sources: [raw/repos/fsi-dsp/README.md]
+sources: [fsi-dsp://role/cp_topic, fsi-dsp://role/cp_schema, fsi-dsp://role/cp_rbac]
 related: [concepts/fsi-data-streaming-platform, concepts/sla-tiers, concepts/fsi-compliance, concepts/schema-evolution-strategies, patterns/topic-naming]
 confidence: high
 last_updated: 2026-04-11

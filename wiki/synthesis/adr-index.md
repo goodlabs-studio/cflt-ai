@@ -1,7 +1,16 @@
 ---
 title: Architecture Decision Records — Index
 tags: [adr fsi architecture]
-sources: [raw/repos/fsi-dsp/docs/adr]
+sources:
+  - fsi-dsp://adr/001
+  - fsi-dsp://adr/002
+  - fsi-dsp://adr/003
+  - fsi-dsp://adr/004
+  - fsi-dsp://adr/005
+  - fsi-dsp://adr/006
+  - fsi-dsp://adr/007
+  - fsi-dsp://adr/008
+  - fsi-dsp://adr/009
 related: [concepts/fsi-data-streaming-platform, concepts/sla-tiers, concepts/schema-evolution-strategies, patterns/fsi-governance-automation, patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster, patterns/topic-naming]
 confidence: high
 last_updated: 2026-04-11

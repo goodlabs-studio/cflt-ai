@@ -1,7 +1,7 @@
 ---
 title: DR — Cluster Linking
 tags: [kafka confluent-cloud dr cluster-linking fsi]
-sources: [raw/repos/fsi-dsp/docs/dr-runbook.md]
+sources: [fsi-dsp://adr/005, fsi-dsp://script/mirror-failover]
 related: [patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster, concepts/sla-tiers, concepts/cluster-linking-topology, concepts/fsi-data-streaming-platform]
 confidence: high
 last_updated: 2026-04-11

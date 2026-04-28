@@ -1,7 +1,7 @@
 ---
 title: FSI Compliance
 tags: [fsi compliance audit ci-cd governance]
-sources: [raw/repos/fsi-dsp/docs/compliance-guide.md]
+sources: [fsi-dsp://script/validate-fips, fsi-dsp://adr/006]
 related: [concepts/fsi-data-streaming-platform, concepts/sla-tiers, patterns/fsi-governance-automation, concepts/schema-evolution-strategies]
 confidence: high
 last_updated: 2026-04-11

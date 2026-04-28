@@ -1,7 +1,7 @@
 ---
 title: Schema Evolution Strategies
 tags: [schema-registry avro fsi governance]
-sources: [raw/repos/fsi-dsp/docs/schema-guide.md]
+sources: [fsi-dsp://adr/001, fsi-dsp://adr/002]
 related: [concepts/sla-tiers, concepts/fsi-data-streaming-platform, patterns/fsi-governance-automation, patterns/topic-naming]
 confidence: high
 last_updated: 2026-04-11

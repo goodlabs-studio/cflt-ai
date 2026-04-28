@@ -1,7 +1,7 @@
 ---
 title: DR — Multi-Region Cluster
 tags: [kafka confluent-platform dr mrc fsi]
-sources: [raw/repos/fsi-dsp/docs/dr-runbook.md]
+sources: [fsi-dsp://adr/008, fsi-dsp://script/fsi-dr]
 related: [patterns/dr-cluster-linking, patterns/dr-mirrormaker2, concepts/sla-tiers, concepts/fsi-data-streaming-platform]
 confidence: high
 last_updated: 2026-04-11

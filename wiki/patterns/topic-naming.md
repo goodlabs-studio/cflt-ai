@@ -1,7 +1,7 @@
 ---
 title: Topic Naming Convention
 tags: [kafka governance naming fsi]
-sources: [raw/repos/fsi-dsp/ansible/vars/naming_rules.yml, raw/repos/fsi-dsp/docs/schema-guide.md]
+sources: [fsi-dsp://adr/007, fsi-dsp://role/cp_topic]
 related: [concepts/sla-tiers, concepts/schema-evolution-strategies, patterns/fsi-governance-automation, concepts/fsi-data-streaming-platform]
 confidence: high
 last_updated: 2026-04-11

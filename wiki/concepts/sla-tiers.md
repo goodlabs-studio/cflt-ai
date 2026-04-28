@@ -1,7 +1,7 @@
 ---
 title: SLA Tiers
 tags: [kafka fsi governance sla]
-sources: [raw/repos/fsi-dsp/ansible/vars/sla_tiers.yml]
+sources: [fsi-dsp://role/cp_topic]
 related: [concepts/fsi-data-streaming-platform, concepts/schema-evolution-strategies, concepts/fsi-compliance, patterns/fsi-governance-automation, patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster]
 confidence: high
 last_updated: 2026-04-11

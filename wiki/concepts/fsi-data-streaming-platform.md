@@ -1,7 +1,7 @@
 ---
 title: FSI Data Streaming Platform
 tags: [kafka fsi confluent-cloud confluent-platform cfk]
-sources: [raw/repos/fsi-dsp/README.md]
+sources: [fsi-dsp://scenario/cc-aws, fsi-dsp://module/topic]
 related: [concepts/sla-tiers, concepts/schema-evolution-strategies, concepts/fsi-compliance, patterns/fsi-governance-automation, patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster, patterns/topic-naming]
 confidence: high
 last_updated: 2026-04-11
