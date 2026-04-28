@@ -1,7 +1,7 @@
 # /review — Document Evaluation Against Wiki + MCP Sources
 
-You are evaluating a document for technical accuracy against the cflt-ai knowledge system.
-The user will point at a file or paste content for review.
+You are evaluating a document (or multiple documents) for technical accuracy against the cflt-ai
+knowledge system. The user will point at one or more files or paste content for review.
 
 ## Input
 
@@ -9,102 +9,239 @@ $ARGUMENTS
 
 ## Process
 
-### Step 1: Acquire the document
-- If the input is a file path, read it
-- If it's pasted content, use it directly
-- Identify the document's scope: what technologies, patterns, and claims does it cover?
+### Step 1: Parse arguments
+
+Parse `$ARGUMENTS`:
+- Extract `--output` value if present: `md` (default) | `docx` | `both`
+- Extract `--overlay` value if present: customer overlay name (e.g., `acme-bank`)
+- Remaining non-flag tokens are treated as file paths OR pasted content
+- Validation rules:
+  - If any specified file path does not exist, stop with: `Error: file not found: <path>`
+  - If no file paths and no pasted content, stop with: `Error: no input specified`
+  - If `--output` value is unrecognized, stop with: `Error: unknown --output value. Valid: md | docx | both`
+  - If `--overlay` specifies a customer name that has no `canon/customer/<name>/overrides.yaml`, stop with: `Error: overlay not found: canon/customer/<name>/overrides.yaml`
+- If `--output` is not provided, default to `md`.
+- If `--overlay` is not provided, no customer overlay is active (base + industry layers only).
+
+### Step 1.5: Load documents
+
+- For each file path from Step 1, read the file
+- If pasted content (no file paths), use it directly as a single document labeled `pasted-content`
+- Label each document by its basename for claim attribution (e.g., `deck.md`, `runbook.md`)
+- Identify file type from extension (`.md`, `.tfvars`, `.yaml`, `.yml`, `.txt`, `.tf`, `.json`) — treat all as text input
+- Build a labeled corpus: `{ "deck.md": <content>, "vars.tfvars": <content> }`
+- If `--overlay` was specified, load the customer overlay by calling `resolve_stack(customer=<overlay_name>)` from `canon/stack.py` to get the active canon config. Note the overlay-specific overrides for use in Steps 2.5 and 5.
+- Identify the collective scope: what technologies, patterns, and claim domains are covered across all documents?
 
 ### Step 2: Extract verifiable claims
-Scan the document and extract every verifiable technical claim. A claim is verifiable if it:
-- States a specific configuration value or default
-- Asserts behavior of a Confluent/Kafka/Flink component
-- Describes an architecture pattern or recommended approach
-- References specific metrics, limits, or SLAs
-- Makes a comparison between approaches
 
-Organize claims by section/topic.
+Scan each document in corpus order (if multiple docs, process each separately, section by section).
+
+Extract claims using these five numbered categories, in document order:
+
+1. **Config values** — specific property = value assertions (e.g., "acks=1 is recommended")
+2. **Behavior assertions** — X does Y under condition Z (e.g., "consumers will rebalance when...")
+3. **Architecture choices** — use X over Y for this use case (e.g., "prefer MirrorMaker2 for...")
+4. **Metrics / limits / SLAs** — numbers, thresholds, latencies (e.g., "99.99% availability")
+5. **Comparisons** — X is better/faster/safer than Y (e.g., "Avro is more efficient than JSON")
+
+Stop when all sections are exhausted. Do not invent claims not in the document.
+
+**Output claims as a YAML block BEFORE proceeding to Step 3.** This YAML intermediate is the
+reproducibility anchor for deterministic claim extraction (REVW-01). Do not skip it and go
+straight to table rendering.
+
+```yaml
+claims:
+  - id: "<source-slug>-1"
+    source_file: "<basename>"
+    source_section: "<section heading or 'Introduction'>"
+    category: config_value | behavior_assertion | architecture_choice | metric_sla | comparison
+    text: "<exact claim text or close paraphrase>"
+  - id: "<source-slug>-2"
+    source_file: "<basename>"
+    source_section: "<section heading or 'Introduction'>"
+    category: config_value | behavior_assertion | architecture_choice | metric_sla | comparison
+    text: "<exact claim text or close paraphrase>"
+```
+
+**Multi-document labeling:** Prefix claim IDs with a slug of the source filename.
+- For `deck.md`: claim IDs are `deck-1`, `deck-2`, `deck-3`, ...
+- For `runbook.md`: claim IDs are `runbook-1`, `runbook-2`, ...
+- This prevents ID collision when claims from multiple documents are merged.
+- A single undifferentiated claim pool for multi-doc input is forbidden.
+
+### Step 2.5: Challenge premises
+
+Before validating individual claims, interrogate the document's unstated assumptions.
+
+Identify 3-5 premises the document implicitly assumes (NOT explicit claims — these are the deeper
+structural assumptions the document's recommendations rest on).
+
+For each premise, evaluate:
+1. Does it hold for this customer's context?
+2. If `--overlay` was specified: does the premise conflict with the customer overlay's overrides?
+   (e.g., "under your FSI overlay, this premise about latency tolerance conflicts with
+   `market_data: sub-millisecond`")
+3. Check for logical gaps: does the premise require conditions the document never establishes?
+
+Rate severity:
+- **Critical** — blocks a key recommendation; the document's conclusion fails if this premise doesn't hold
+- **Moderate** — weakens a claim; the recommendation still applies but with caveats
+- **Minor** — pedantic; the document is still directionally correct
+
+Output as a dedicated "## Premise Challenge" section in the report:
+
+```markdown
+## Premise Challenge
+
+| # | Premise | Assumption | Challenge | Severity |
+|---|---------|------------|-----------|----------|
+| 1 | [what the document assumes] | [what must be true for this to hold] | [why it may not hold in this context] | Critical/Moderate/Minor |
+```
+
+If no `--overlay` is set, still challenge premises against base canon and FSI overlay (if content
+is FSI-relevant). Always check FSI SLA tiers: sub-millisecond (market data), <10ms (risk),
+<100ms (compliance), async (reconciliation).
 
 ### Step 3: Cross-reference against wiki
-For each claim:
+
+For each claim from the YAML block:
 - Search `wiki/concepts/` and `wiki/patterns/` for relevant articles
 - Compare the claim against wiki content
 - Note: agreement, disagreement, or no wiki coverage
 
+**Auto-stub on miss (WIKI-05):** If NO wiki articles match a claim topic:
+1. Extract a topic slug from the claim text (lowercase, first 5 meaningful words, joined with hyphens)
+2. Read `wiki/_queue.md`
+3. Check if ANY existing line under `## Auto-Stubs` contains the primary keyword from the claim
+4. If not already present, append to `wiki/_queue.md` under the `## Auto-Stubs` section:
+   ```
+   - [ ] <!-- auto-stub: <slug> --> wiki/concepts/<slug>.md — Auto-queued from /review
+         Claim: "<claim text>" | Date: <YYYY-MM-DD> | Source: <source_file>
+   ```
+5. Continue evaluating the claim from canon + MCP even though wiki had no hit.
+
 ### Step 4: Validate against MCP sources
+
 For claims where wiki coverage is absent or where the claim is particularly important:
-- Use `confluent-docs` for config values, syntax, and version-specific behavior
-- Use `context7` for architecture patterns and best practices
-- Record the validation result
+- Use `confluent-docs` MCP for config values, syntax, and version-specific behavior
+- Use `context7` MCP for architecture patterns and best practices
+- Record the validation result (Confirmed / Corrected / Unverifiable) for each claim checked
 
 ### Step 5: Check canon compliance
-Compare the document's recommendations against CLAUDE.md Confluent Canon:
-- Producer/consumer config defaults
-- Schema Registry governance
-- Flink SQL patterns
-- Cluster Linking / DR approach
-- Security posture
-- FSI overlay (if applicable)
+
+Compare the document's recommendations against the active canon config:
+
+- If `--overlay` was specified: compare against the overlay-resolved canon config (from `resolve_stack(customer=<overlay_name>)` output in Step 1.5), not just base canon
+- If no overlay: compare against base + FSI canon defaults from `canon/base/defaults.yaml` and `canon/industry/fsi/overrides.yaml`
+- Check: producer/consumer config defaults, Schema Registry governance, Flink SQL patterns, Cluster Linking / DR approach, security posture, FSI overlay (if applicable)
+- Note deviations from overlay-specific overrides in the Canon Compliance table
+- When overlay is active, add an "Overlay Override" column to the Canon Compliance table
+
+Compliance table when overlay is active:
+```markdown
+| Area | Status | Overlay Override | Notes |
+|------|--------|-----------------|-------|
+```
+
+Compliance table without overlay:
+```markdown
+| Area | Status | Notes |
+|------|--------|-------|
+```
 
 ### Step 6: Generate the report
 
-Create the output directory if it doesn't exist, then write the report.
+Write the report with these sections in order:
 
-## Output
-
-Write a report to `outputs/reports/<slug>-review-<YYYY-MM-DD>.md` where `<slug>` is derived from the document filename or first heading.
-
-### Report Format
-
+#### Header
 ```markdown
 # Review: <Document Title>
 
 **Date:** YYYY-MM-DD
-**Source:** <filename or "pasted content">
-**Scope:** <technologies covered>
-**Claims extracted:** <count>
+**Source files:** <space-separated list of input file paths, or "pasted content">
+**Scope:** <technologies and claim domains covered>
+**Claims extracted:** <total count across all documents>
+```
 
-## Summary
+#### ## Summary
+2-3 sentence executive summary: overall accuracy, major findings, recommendation.
 
-[2-3 sentence executive summary: overall accuracy, major findings, recommendation]
+#### ## Claim Validation
+- For single-doc input: organize by section/topic
+- For multi-doc input: organize first by source file, then by section within each file
+- Each claim row: `#`, `Claim`, `Wiki source`, `MCP source`, `Verdict`
+  (Verdict = `Confirmed` / `Corrected` / `Unverifiable`)
+- After each section's table, list specific Corrections with explanation and source
 
-## Claim Validation
-
+```markdown
 ### <Section/Topic 1>
 
 | # | Claim | Wiki | MCP | Verdict |
 |---|-------|------|-----|---------|
-| 1 | [claim text] | [article or "—"] | [source or "—"] | Confirmed / Corrected / Unverifiable |
-| 2 | ... | ... | ... | ... |
+| deck-1 | [claim text] | [article or "—"] | [source or "—"] | Confirmed / Corrected / Unverifiable |
 
 **Corrections:**
-- Claim #N: [what's wrong and what the correct answer is, with source]
+- Claim #deck-N: [what's wrong and what the correct answer is, with source]
+```
 
-### <Section/Topic 2>
-[repeat]
+#### ## Premise Challenge
+Insert the table produced in Step 2.5.
 
-## Canon Compliance
+#### ## Canon Compliance
+Insert the table produced in Step 5.
 
-| Area | Status | Notes |
-|------|--------|-------|
-| Producer config | Aligned / Deviates | [details] |
-| Consumer config | Aligned / Deviates | [details] |
-| Schema Registry | Aligned / Deviates | [details] |
-| ... | ... | ... |
+#### ## Gaps
+Claims that could not be verified by wiki or MCP. These are candidates for further research or
+auto-stub queuing.
 
-## Gaps
+#### ## Recommendations
+Specific, actionable recommendations based on findings.
 
-[Claims that could not be verified by wiki or MCP. These are candidates for further research.]
+#### Provenance footer
+```
+Canon stack: <layers> | Hash: <hash> | MANIFEST: <version> | Floor: <model> | Generated: <ISO-8601>
+```
+- Call `provenance_footer()` from `canon/stack.py` for the canon hash part (layers + hash)
+- Read MANIFEST.yaml version from `raw/repos/fsi-dsp/MANIFEST.yaml` (field: `version`)
+- Default floor model to the model currently answering (e.g., `claude-sonnet-4-6`)
+- Timestamp in ISO-8601 format
 
-## Recommendations
+#### Write report file
+- Write report to `outputs/reports/<slug>-review-<YYYY-MM-DD>.md`
+  (create directory if it does not exist)
+  where `<slug>` is derived from the first document's filename or first heading
+- If `--output docx` or `--output both`: after writing the `.md` file, invoke:
+  `python3 tools/review-to-docx.py outputs/reports/<slug>-review-<YYYY-MM-DD>.md`
+  to generate the `.docx` alongside the `.md`
+- If `--output both`: produce both `.md` and `.docx`
+- Print the file path(s) and the Summary section to the user
 
-1. [Specific, actionable recommendation]
-2. [...]
+#### Activity log emission
+After writing the report file(s), append an activity log entry to `wiki/activity/YYYY-MM.md`
+(create the file if the current month's file does not exist). Every invocation must emit an
+activity log entry — no silent runs.
+
+Follow the format defined in `wiki/activity/README.md`:
+
+```markdown
+## YYYY-MM-DDTHH:MM:SSZ
+**Skill:** /review
+**Overlay:** {overlay name from --overlay flag, or "base" if no overlay, or "base + fsi" if FSI-relevant content with no explicit overlay}
+**Input:** {space-separated list of input file paths, or "pasted content" if no file paths}
+**Output:** {report file path(s) written, e.g., "outputs/reports/deck-review-2026-04-28.md"}
+**Canon stack:** {output of active_layers(), e.g., "base + industry/fsi"}
 ```
 
 ## Rules
 
-- Be thorough. Extract ALL verifiable claims, not just the obvious ones.
-- Do NOT modify the source document or write back to the wiki. This is a read-only evaluation.
+- Be thorough. Extract ALL verifiable claims using the five numbered categories — do not skip any.
+- Do NOT modify source documents or write back to the wiki. This is a read-only evaluation.
+- Mode is always "report" — `/review` always writes a file. There is no ephemeral mode.
+- The YAML claim block in Step 2 is mandatory — do not skip it and go straight to table rendering.
+- For multi-doc input: label every claim by source file using the slug prefix. A single undifferentiated claim pool for multi-doc input is forbidden.
+- If `--overlay` specifies a customer name that has no `canon/customer/<name>/overrides.yaml`, stop immediately with: `Error: overlay not found: canon/customer/<name>/overrides.yaml`
+- Every invocation must emit an activity log entry — no silent runs.
 - If MCP servers are unavailable, validate against wiki + canon only and note the limitation.
-- Use the exact report format above — consumers depend on the structure.
-- After writing the report, tell the user the file path and print the Summary section.
+- Auto-stub fires on ALL wiki misses — coverage gaps are tracked to `wiki/_queue.md` automatically.
