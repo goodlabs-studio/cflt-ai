@@ -10,7 +10,7 @@ Six phases deliver a Confluent operational and knowledge agent for FSI engagemen
 - Integer phases (0, 1, 2, 3): Planned milestone work
 - Sub-phases (3a, 3b, 3c): Independent delivery boundaries within Phase 3 act rail
 
-- [ ] **Phase 0: Foundation** - Fix bugs, establish MANIFEST.yaml contract, scaffold canon overlay stack, and get both repos to clean-clone health
+- [x] **Phase 0: Foundation** - Fix bugs, establish MANIFEST.yaml contract, scaffold canon overlay stack, and get both repos to clean-clone health (completed 2026-04-28)
 - [ ] **Phase 1: Knowledge Skill** - Unify /ask + /wiki:recommend, add triage classifier, golden harness, and wiki decay rules
 - [ ] **Phase 2: Review Skill** - Reproducible claim extraction, premise-challenge step, .docx output, multi-document support, customer overlay validation
 - [ ] **Phase 3a: Act Rail — Plan** - Four-gate validation chain, /dsp:plan read-only rail, structural-correctness harness, CI parity in both repos
@@ -29,7 +29,7 @@ Six phases deliver a Confluent operational and knowledge agent for FSI engagemen
   3. MANIFEST.yaml v1 exists in fsi-dsp with capabilities blocks for every existing asset, and both repos' CI blocks PRs that break ID stability or citation resolution
   4. Overlay stack directory structure exists (base → industry → customer → engagement), each layer can override the layer above, and every override is an ADR
   5. LinuxONE wiki articles are ingested and activity log directories are live and emitting per overlay-scoped path
-**Plans:** 3/6 plans executed
+**Plans:** 6/6 plans complete
 
 Plans:
 - [x] 00-01-PLAN.md — Fix wiki tool bugs (HYG-01, HYG-02, HYG-03) and verify Flox environment (HYG-04)
@@ -37,7 +37,7 @@ Plans:
 - [x] 00-03-PLAN.md — Scaffold four-layer canon overlay stack with defaults, overrides, and stack resolution (CANST-01 through CANST-04)
 - [x] 00-04-PLAN.md — Create wiki activity log and author ADR-009 LinuxONE (WIKI-02, WIKI-01 partial)
 - [x] 00-05-PLAN.md — Migrate wiki citations to fsi-dsp:// IDs and compile LinuxONE article (CNTR-02, WIKI-01)
-- [ ] 00-06-PLAN.md — Create CI parity workflows for citation resolution and ID stability (CNTR-03, CNTR-04, CNTR-05)
+- [x] 00-06-PLAN.md — Create CI parity workflows for citation resolution and ID stability (CNTR-03, CNTR-04, CNTR-05)
 
 ### Phase 1: Knowledge Skill
 **Goal**: A single unified /ask skill with triage routing, a tested golden harness, and wiki decay rules that keep coverage honest
@@ -104,7 +104,7 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Foundation | 3/6 | In Progress|  |
+| 0. Foundation | 6/6 | Complete   | 2026-04-28 |
 | 1. Knowledge Skill | 0/TBD | Not started | - |
 | 2. Review Skill | 0/TBD | Not started | - |
 | 3a. Act Rail — Plan | 0/TBD | Not started | - |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 00-foundation 00-05-PLAN.md
-last_updated: "2026-04-28T18:46:23.219Z"
+stopped_at: Completed 00-foundation 00-06-PLAN.md
+last_updated: "2026-04-28T18:49:38.412Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: 00 (foundation) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-04-28
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 00-foundation P04 | 8 | 2 tasks | 3 files |
 | Phase 00-foundation P03 | 172 | 2 tasks | 13 files |
 | Phase 00-foundation P05 | 2 | 2 tasks | 14 files |
+| Phase 00-foundation P06 | 10 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,8 @@ Recent decisions affecting current work:
 - [Phase 00-foundation]: Stack hash truncated to 16 hex chars from SHA-256 for compact provenance footers
 - [Phase 00-foundation]: fsi-dsp:// URI scheme adopted as stable citation form — IDs survive fsi-dsp refactors per MANIFEST.yaml contract
 - [Phase 00-foundation]: Citation test pattern: pytest classes with fixture-based wiki traversal for ongoing enforcement of citation hygiene
+- [Phase 00-foundation]: fsi-dsp scripts committed inside submodule then parent pointer updated
+- [Phase 00-foundation]: check-manifest-stability.py allows ID removal only on major version bump
 
 ### Pending Todos
 
@@ -89,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-28T18:46:23.217Z
-Stopped at: Completed 00-foundation 00-05-PLAN.md
+Last session: 2026-04-28T18:49:34.391Z
+Stopped at: Completed 00-foundation 00-06-PLAN.md
 Resume file: None

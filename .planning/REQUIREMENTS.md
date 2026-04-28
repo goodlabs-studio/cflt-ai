@@ -19,9 +19,9 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 
 - [x] **CNTR-01**: MANIFEST.yaml v1 published with capabilities blocks for every existing fsi-dsp asset
 - [x] **CNTR-02**: Wiki citations migrated from prose references to MANIFEST.yaml ID form
-- [ ] **CNTR-03**: CI parity checks green in both repos (cflt-ai and fsi-kafka-platform)
-- [ ] **CNTR-04**: fsi-dsp blocks PRs that drop a stable ID without a major bump
-- [ ] **CNTR-05**: cflt-ai blocks PRs where any wiki citation fails to resolve against MANIFEST.yaml
+- [x] **CNTR-03**: CI parity checks green in both repos (cflt-ai and fsi-kafka-platform)
+- [x] **CNTR-04**: fsi-dsp blocks PRs that drop a stable ID without a major bump
+- [x] **CNTR-05**: cflt-ai blocks PRs where any wiki citation fails to resolve against MANIFEST.yaml
 
 ### Canon Stack
 
@@ -119,9 +119,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | HYG-05 | Phase 0 | Complete |
 | CNTR-01 | Phase 0 | Complete |
 | CNTR-02 | Phase 0 | Complete |
-| CNTR-03 | Phase 0 | Pending |
-| CNTR-04 | Phase 0 | Pending |
-| CNTR-05 | Phase 0 | Pending |
+| CNTR-03 | Phase 0 | Complete |
+| CNTR-04 | Phase 0 | Complete |
+| CNTR-05 | Phase 0 | Complete |
 | CANST-01 | Phase 0 | Complete |
 | CANST-02 | Phase 0 | Complete |
 | CANST-03 | Phase 0 | Complete |
