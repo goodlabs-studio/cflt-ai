@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 00-01-PLAN.md — wiki tooling bugs fixed, test scaffold green
-last_updated: "2026-04-28T18:02:39.645Z"
+stopped_at: Completed 00-foundation 00-02-PLAN.md
+last_updated: "2026-04-28T18:03:39.728Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 6
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: 00 (foundation) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-04-28
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 00-foundation P01 | 8 | 2 tasks | 6 files |
+| Phase 00-foundation P02 | 8 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - fsi-dsp linked as submodule; MANIFEST.yaml is the stable contract between repos
 - Phase exits are threshold-gated (golden harness), not date-driven
 - [Phase 00-foundation]: pytest chosen as test runner for wiki tooling regression tests
+- [Phase 00-foundation]: MANIFEST.yaml IDs embed type prefix to prevent cross-type collisions
+- [Phase 00-foundation]: ADR-009 pre-registered as proposed in MANIFEST.yaml to unblock citation CI before authoring
 
 ### Pending Todos
 
@@ -77,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-28T18:02:39.644Z
-Stopped at: Completed 00-01-PLAN.md — wiki tooling bugs fixed, test scaffold green
+Last session: 2026-04-28T18:03:39.726Z
+Stopped at: Completed 00-foundation 00-02-PLAN.md
 Resume file: None

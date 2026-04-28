@@ -13,11 +13,11 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 - [x] **HYG-02**: wiki-lint.py broken-link regex correctly matches all wiki-internal link formats including anchors
 - [x] **HYG-03**: evaluate.md literal-ellipsis paths resolved to real file references
 - [x] **HYG-04**: Flox manifest committed in cflt-ai and works on clean clone
-- [ ] **HYG-05**: Flox manifest committed in fsi-kafka-platform and works on clean clone
+- [x] **HYG-05**: Flox manifest committed in fsi-kafka-platform and works on clean clone
 
 ### Contract
 
-- [ ] **CNTR-01**: MANIFEST.yaml v1 published with capabilities blocks for every existing fsi-dsp asset
+- [x] **CNTR-01**: MANIFEST.yaml v1 published with capabilities blocks for every existing fsi-dsp asset
 - [ ] **CNTR-02**: Wiki citations migrated from prose references to MANIFEST.yaml ID form
 - [ ] **CNTR-03**: CI parity checks green in both repos (cflt-ai and fsi-kafka-platform)
 - [ ] **CNTR-04**: fsi-dsp blocks PRs that drop a stable ID without a major bump
@@ -116,8 +116,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | HYG-02 | Phase 0 | Complete |
 | HYG-03 | Phase 0 | Complete |
 | HYG-04 | Phase 0 | Complete |
-| HYG-05 | Phase 0 | Pending |
-| CNTR-01 | Phase 0 | Pending |
+| HYG-05 | Phase 0 | Complete |
+| CNTR-01 | Phase 0 | Complete |
 | CNTR-02 | Phase 0 | Pending |
 | CNTR-03 | Phase 0 | Pending |
 | CNTR-04 | Phase 0 | Pending |
