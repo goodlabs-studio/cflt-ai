@@ -1,0 +1,26 @@
+name: Manifest Citations
+
+on:
+  pull_request:
+    paths:
+      - 'wiki/**'
+      - 'raw/repos/fsi-dsp/MANIFEST.yaml'
+      - 'tools/check-citations.py'
+
+jobs:
+  check-citations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true  # fsi-dsp is a submodule
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Resolve wiki citations against MANIFEST.yaml
+        run: python tools/check-citations.py
