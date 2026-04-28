@@ -122,3 +122,8 @@ patterns/fsi-exactly-once → concepts/sla-tiers : tier definitions for EOS requ
 patterns/fsi-exactly-once → concepts/fsi-data-streaming-platform : overall FSI architecture
 patterns/fsi-exactly-once → patterns/dead-letter-queue-design : error handling complementing EOS
 patterns/fsi-exactly-once → patterns/dr-cluster-linking : DR with EOS implications
+
+concepts/linuxone-kafka-integration → concepts/fsi-data-streaming-platform : platform overview including LinuxONE context
+concepts/linuxone-kafka-integration → concepts/sla-tiers : latency tiers (market_data, risk) drive LinuxONE adoption
+concepts/linuxone-kafka-integration → concepts/fsi-compliance : FIPS 140-2 and audit trail requirements
+concepts/linuxone-kafka-integration → patterns/dr-cluster-linking : DR pattern for LinuxONE-produced topics

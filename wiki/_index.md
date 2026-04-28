@@ -26,6 +26,7 @@ The LLM maintains this file. Do not edit manually.
 [Exactly-Once Semantics](concepts/exactly-once-semantics.md) — Idempotent producers, transactional two-phase commit, consumer isolation levels, Kafka Streams EOS v1/v2, Flink two-phase commit, Connect EOS (KIP-618); Kafka-internal scope and limitations — #kafka #fsi #exactly-once #transactions
 [Flink Checkpointing](concepts/flink-checkpointing.md) — Chandy-Lamport barrier mechanism, aligned vs unaligned checkpoints, state backends (HashMap/RocksDB), incremental checkpoints, Kafka source/sink interaction, CC Flink managed checkpointing — #flink #confluent-cloud #performance
 [Producer Batching Configuration](concepts/producer-batching-config.md) — RecordAccumulator internals, batch.size/linger.ms interaction, compression trade-offs, tuning profiles (latency/throughput/balanced), acks interaction, JMX monitoring metrics — #kafka #performance #producers
+[LinuxONE Kafka Integration](concepts/linuxone-kafka-integration.md) — IBM LinuxONE as preferred compute for z/OS Kafka offload via MQ Source Connector bridge pattern — #linuxone #ibm #mainframe #z/os #mq #kafka-connect #fips #dr
 
 ## Patterns
 
