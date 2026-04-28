@@ -25,10 +25,10 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 
 ### Canon Stack
 
-- [ ] **CANST-01**: Canon overlay stack scaffolding present (base → industry → customer → engagement layers)
-- [ ] **CANST-02**: Each overlay layer can override defaults from the layer above
-- [ ] **CANST-03**: Every override is an ADR in the layer that introduces it
-- [ ] **CANST-04**: Active stack recorded in artifact provenance footers
+- [x] **CANST-01**: Canon overlay stack scaffolding present (base → industry → customer → engagement layers)
+- [x] **CANST-02**: Each overlay layer can override defaults from the layer above
+- [x] **CANST-03**: Every override is an ADR in the layer that introduces it
+- [x] **CANST-04**: Active stack recorded in artifact provenance footers
 
 ### Wiki
 
@@ -122,10 +122,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | CNTR-03 | Phase 0 | Pending |
 | CNTR-04 | Phase 0 | Pending |
 | CNTR-05 | Phase 0 | Pending |
-| CANST-01 | Phase 0 | Pending |
-| CANST-02 | Phase 0 | Pending |
-| CANST-03 | Phase 0 | Pending |
-| CANST-04 | Phase 0 | Pending |
+| CANST-01 | Phase 0 | Complete |
+| CANST-02 | Phase 0 | Complete |
+| CANST-03 | Phase 0 | Complete |
+| CANST-04 | Phase 0 | Complete |
 | WIKI-01 | Phase 0 | Complete |
 | WIKI-02 | Phase 0 | Complete |
 | WIKI-03 | Phase 1 | Pending |
