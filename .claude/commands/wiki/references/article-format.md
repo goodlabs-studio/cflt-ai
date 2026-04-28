@@ -14,11 +14,14 @@ sources: [<path1>, <path2>]        # Paths to raw source files used
 related: [<wiki-path1>, ...]       # Wiki-relative paths (no .md extension OK)
 confidence: high | medium | low    # See Confidence Levels below
 last_updated: YYYY-MM-DD           # Date of last substantive edit
+last_validated: YYYY-MM-DD         # Date of last MCP revalidation. confidence:high
+                                   # articles drop to medium after 90 days without
+                                   # revalidation. Set this when running /wiki:validate.
 ---
 ```
 
 ### Required Fields
-- `title`, `tags`, `confidence`, `last_updated`
+- `title`, `tags`, `confidence`, `last_updated`, `last_validated`
 
 ### Optional Fields
 - `sources` (omit if no raw source), `related` (omit only for orphan stubs)
@@ -45,6 +48,7 @@ sources: [...]
 related: [...]
 confidence: high
 last_updated: YYYY-MM-DD
+last_validated: YYYY-MM-DD
 ---
 
 # <Title>
@@ -80,6 +84,7 @@ sources: [...]
 related: [...]
 confidence: high
 last_updated: YYYY-MM-DD
+last_validated: YYYY-MM-DD
 ---
 
 # <Title>
@@ -125,6 +130,7 @@ sources: []
 related: []
 confidence: low
 last_updated: YYYY-MM-DD
+last_validated: YYYY-MM-DD
 ---
 
 # <Title>

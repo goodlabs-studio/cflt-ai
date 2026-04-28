@@ -5,6 +5,7 @@ sources: []
 related: [concepts/consumer-group-rebalancing, concepts/sla-tiers, concepts/fsi-data-streaming-platform]
 confidence: medium
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # Consumer Lag Monitoring

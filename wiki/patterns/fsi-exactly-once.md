@@ -5,6 +5,7 @@ sources: []
 related: [concepts/exactly-once-semantics, concepts/sla-tiers, concepts/fsi-data-streaming-platform, patterns/dead-letter-queue-design]
 confidence: medium
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # FSI Exactly-Once Pattern

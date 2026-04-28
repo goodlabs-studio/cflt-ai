@@ -5,6 +5,7 @@ sources: [fsi-dsp://scenario/cc-aws, fsi-dsp://module/topic]
 related: [concepts/sla-tiers, concepts/schema-evolution-strategies, concepts/fsi-compliance, patterns/fsi-governance-automation, patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster, patterns/topic-naming]
 confidence: high
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # FSI Data Streaming Platform

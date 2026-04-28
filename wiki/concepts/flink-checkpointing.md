@@ -15,6 +15,7 @@ sources:
 related: [concepts/exactly-once-semantics, concepts/consumer-lag-monitoring]
 confidence: medium
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # Flink Checkpointing

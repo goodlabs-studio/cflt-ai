@@ -5,6 +5,7 @@ sources: []
 related: [patterns/dr-cluster-linking, concepts/fsi-data-streaming-platform, concepts/sla-tiers]
 confidence: medium
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # Cluster Linking Topology

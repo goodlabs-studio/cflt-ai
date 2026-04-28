@@ -5,6 +5,7 @@ sources: [fsi-dsp://adr/009]
 related: [concepts/fsi-data-streaming-platform, concepts/sla-tiers, concepts/fsi-compliance, patterns/dr-cluster-linking]
 confidence: high
 last_updated: 2026-04-28
+last_validated: 2026-04-28
 ---
 
 # LinuxONE Kafka Integration for z/OS Offload

@@ -5,6 +5,7 @@ sources: []
 related: [concepts/consumer-lag-monitoring, concepts/exactly-once-semantics, concepts/producer-batching-config]
 confidence: medium
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # Consumer Group Rebalancing

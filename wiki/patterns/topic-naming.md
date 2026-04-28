@@ -5,6 +5,7 @@ sources: [fsi-dsp://adr/007, fsi-dsp://role/cp_topic]
 related: [concepts/sla-tiers, concepts/schema-evolution-strategies, patterns/fsi-governance-automation, concepts/fsi-data-streaming-platform]
 confidence: high
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # Topic Naming Convention

@@ -5,6 +5,7 @@ sources: [fsi-dsp://adr/008, fsi-dsp://script/fsi-dr]
 related: [patterns/dr-cluster-linking, patterns/dr-mirrormaker2, concepts/sla-tiers, concepts/fsi-data-streaming-platform]
 confidence: high
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # DR — Multi-Region Cluster

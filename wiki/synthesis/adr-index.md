@@ -14,6 +14,7 @@ sources:
 related: [concepts/fsi-data-streaming-platform, concepts/sla-tiers, concepts/schema-evolution-strategies, patterns/fsi-governance-automation, patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster, patterns/topic-naming]
 confidence: high
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # Architecture Decision Records — Index

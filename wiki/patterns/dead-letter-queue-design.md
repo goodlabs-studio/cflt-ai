@@ -5,6 +5,7 @@ sources: []
 related: [concepts/exactly-once-semantics, concepts/consumer-group-rebalancing, patterns/fsi-exactly-once, patterns/topic-naming, concepts/consumer-lag-monitoring]
 confidence: medium
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # Dead Letter Queue Design

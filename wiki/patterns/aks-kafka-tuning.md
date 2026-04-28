@@ -9,6 +9,7 @@ sources:
 related: [concepts/producer-batching-config, concepts/fsi-data-streaming-platform, concepts/sla-tiers, patterns/dr-cluster-linking, concepts/consumer-lag-monitoring]
 confidence: medium
 last_updated: 2026-04-17
+last_validated: 2026-04-28
 ---
 
 # AKS Kafka Tuning

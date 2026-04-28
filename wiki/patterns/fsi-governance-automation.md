@@ -5,6 +5,7 @@ sources: [fsi-dsp://role/cp_topic, fsi-dsp://role/cp_schema, fsi-dsp://role/cp_r
 related: [concepts/fsi-data-streaming-platform, concepts/sla-tiers, concepts/fsi-compliance, concepts/schema-evolution-strategies, patterns/topic-naming]
 confidence: high
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # FSI Governance Automation

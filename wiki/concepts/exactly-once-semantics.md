@@ -11,6 +11,7 @@ sources:
 related: [concepts/consumer-group-rebalancing, concepts/consumer-lag-monitoring, patterns/fsi-exactly-once, concepts/flink-checkpointing]
 confidence: medium
 last_updated: 2026-04-11
+last_validated: 2026-04-28
 ---
 
 # Exactly-Once Semantics

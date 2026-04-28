@@ -11,6 +11,7 @@ sources:
 related: [concepts/exactly-once-semantics, concepts/consumer-lag-monitoring, patterns/aks-kafka-tuning]
 confidence: medium
 last_updated: 2026-04-17
+last_validated: 2026-04-28
 ---
 
 # Producer Batching Configuration
