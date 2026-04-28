@@ -78,7 +78,7 @@ def lint_wiki(root: Path, full: bool = False) -> dict:
                 pass
 
         # Broken wiki-internal links
-        links = re.findall(r"\[.*?\]\((wiki/[^)]+)\)", content)
+        links = re.findall(r"\[.*?\]\((wiki/[^)#]+(?:#[^)]*)?)\)", content)
         for link in links:
             if link not in all_md:
                 findings["broken_links"].append(f"{rel} → {link}")

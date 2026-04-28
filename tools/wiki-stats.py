@@ -54,9 +54,9 @@ def main():
                 except Exception:
                     pass
 
-    print(f"\n{─*50}")
+    print(f"\n{'-' * 50}")
     print(f"  cflt-ai wiki stats")
-    print(f"{─*50}")
+    print(f"{'-' * 50}")
     print(f"  Articles:       {len(articles)}")
     print(f"  Total words:    {total_words:,}")
     print(f"  Raw sources:    {len(raw_files)}")
@@ -72,7 +72,7 @@ def main():
     print(f"  Top tags:")
     for tag, count in tag_counter.most_common(10):
         print(f"    {tag:<20} {count}")
-    print(f"{─*50}\n")
+    print(f"{'-' * 50}\n")
 
 
 if __name__ == "__main__":

@@ -18,8 +18,8 @@ Read these before proceeding:
 2. Read `wiki/_index.md` and identify all overlapping wiki articles.
 3. Read each overlapping wiki article (compiled knowledge baseline).
 4. Read fsi-dsp reference implementations for code baseline (if submodule is present):
-   - `raw/repos/fsi-dsp/reference/java-producer/.../FsiProducer.java`
-   - `raw/repos/fsi-dsp/reference/java-consumer/.../FsiConsumer.java`
+   - `raw/repos/fsi-dsp/reference/java-producer/src/main/java/org/fsi/kafka/producer/FsiProducer.java`
+   - `raw/repos/fsi-dsp/reference/java-consumer/src/main/java/org/fsi/kafka/consumer/FsiConsumer.java`
    - `raw/repos/fsi-dsp/reference/python-producer/fsi_producer.py`
    - `raw/repos/fsi-dsp/reference/python-consumer/fsi_consumer.py`
    If `raw/repos/fsi-dsp/` is empty or missing, skip code-delta checks in Steps 4B and 5.
