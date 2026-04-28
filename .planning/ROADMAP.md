@@ -29,13 +29,13 @@ Six phases deliver a Confluent operational and knowledge agent for FSI engagemen
   3. MANIFEST.yaml v1 exists in fsi-dsp with capabilities blocks for every existing asset, and both repos' CI blocks PRs that break ID stability or citation resolution
   4. Overlay stack directory structure exists (base → industry → customer → engagement), each layer can override the layer above, and every override is an ADR
   5. LinuxONE wiki articles are ingested and activity log directories are live and emitting per overlay-scoped path
-**Plans:** 2/6 plans executed
+**Plans:** 3/6 plans executed
 
 Plans:
 - [x] 00-01-PLAN.md — Fix wiki tool bugs (HYG-01, HYG-02, HYG-03) and verify Flox environment (HYG-04)
 - [x] 00-02-PLAN.md — Author MANIFEST.yaml v1 and create fsi-dsp Flox manifest (CNTR-01, HYG-05)
 - [ ] 00-03-PLAN.md — Scaffold four-layer canon overlay stack with defaults, overrides, and stack resolution (CANST-01 through CANST-04)
-- [ ] 00-04-PLAN.md — Create wiki activity log and author ADR-009 LinuxONE (WIKI-02, WIKI-01 partial)
+- [x] 00-04-PLAN.md — Create wiki activity log and author ADR-009 LinuxONE (WIKI-02, WIKI-01 partial)
 - [ ] 00-05-PLAN.md — Migrate wiki citations to fsi-dsp:// IDs and compile LinuxONE article (CNTR-02, WIKI-01)
 - [ ] 00-06-PLAN.md — Create CI parity workflows for citation resolution and ID stability (CNTR-03, CNTR-04, CNTR-05)
 
@@ -104,7 +104,7 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Foundation | 2/6 | In Progress|  |
+| 0. Foundation | 3/6 | In Progress|  |
 | 1. Knowledge Skill | 0/TBD | Not started | - |
 | 2. Review Skill | 0/TBD | Not started | - |
 | 3a. Act Rail — Plan | 0/TBD | Not started | - |

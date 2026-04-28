@@ -32,8 +32,8 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 
 ### Wiki
 
-- [ ] **WIKI-01**: LinuxONE wiki articles ingested from fsi-dsp adr/009 and LinuxONE guides
-- [ ] **WIKI-02**: Activity log directory live and emitting per overlay-scoped path
+- [x] **WIKI-01**: LinuxONE wiki articles ingested from fsi-dsp adr/009 and LinuxONE guides
+- [x] **WIKI-02**: Activity log directory live and emitting per overlay-scoped path
 - [ ] **WIKI-03**: last_validated field added to wiki articles with quarterly decay rule
 - [ ] **WIKI-04**: confidence:high articles drop to medium after 90 days without revalidation
 - [ ] **WIKI-05**: Auto-stub on coverage gap — every /ask miss appends to wiki/_queue.md
@@ -126,8 +126,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | CANST-02 | Phase 0 | Pending |
 | CANST-03 | Phase 0 | Pending |
 | CANST-04 | Phase 0 | Pending |
-| WIKI-01 | Phase 0 | Pending |
-| WIKI-02 | Phase 0 | Pending |
+| WIKI-01 | Phase 0 | Complete |
+| WIKI-02 | Phase 0 | Complete |
 | WIKI-03 | Phase 1 | Pending |
 | WIKI-04 | Phase 1 | Pending |
 | WIKI-05 | Phase 1 | Pending |
