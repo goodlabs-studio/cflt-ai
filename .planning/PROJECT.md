@@ -38,11 +38,11 @@ The canon overlay stack works — customers can fork and override safely. Base (
 - [ ] Phase 1: Golden test harness (tests/golden/ask/) with 30+ cases
 - [ ] Phase 1: Triage classifier (wiki-only / wiki+MCP / deep reasoning)
 - [ ] Phase 1: last_validated decay rule + auto-stub on coverage gaps
-- [ ] Phase 2: Claim extraction reproducibility >= 95%
-- [ ] Phase 2: Premise-challenge step in /review
-- [ ] Phase 2: .docx output with full provenance footer
-- [ ] Phase 2: Multi-document review support
-- [ ] Phase 2: Customer overlay validated end-to-end
+- ✓ Phase 2: Claim extraction reproducibility >= 95% — Validated in Phase 02: review-skill
+- ✓ Phase 2: Premise-challenge step in /review — Validated in Phase 02: review-skill
+- ✓ Phase 2: .docx output with full provenance footer — Validated in Phase 02: review-skill
+- ✓ Phase 2: Multi-document review support — Validated in Phase 02: review-skill
+- ✓ Phase 2: Customer overlay validated end-to-end — Validated in Phase 02: review-skill
 - [ ] Phase 3a: Four-gate validation chain (individually testable, dev-bypassable)
 - [ ] Phase 3a: /dsp:plan read-only act rail
 - [ ] Phase 3a: Structural correctness >= 95% (right artifact, right args)
@@ -108,4 +108,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-28 after initialization*
+*Last updated: 2026-04-28 after Phase 02 (review-skill) completion*
