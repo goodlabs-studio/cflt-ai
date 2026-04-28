@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: executing
+stopped_at: Completed 00-01-PLAN.md — wiki tooling bugs fixed, test scaffold green
+last_updated: "2026-04-28T18:02:39.645Z"
+last_activity: 2026-04-28
+progress:
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 6
+  completed_plans: 1
+  percent: 0
+---
+
 # Project State
 
 ## Project Reference
@@ -5,20 +21,21 @@
 See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase 0 — Foundation
+**Current focus:** Phase 00 — foundation
 
 ## Current Position
 
-Phase: 0 of 6 (Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-04-28 — Roadmap created, all 44 v1 requirements mapped to 6 phases
+Phase: 00 (foundation) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-04-28
 
 Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0
 - Average duration: -
 - Total execution time: 0 hours
@@ -30,10 +47,12 @@ Progress: [░░░░░░░░░░] 0%
 | - | - | - | - |
 
 **Recent Trend:**
+
 - Last 5 plans: -
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 00-foundation P01 | 8 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -46,6 +65,7 @@ Recent decisions affecting current work:
 - Claude Code is the runtime host through Phase 3 (no custom server)
 - fsi-dsp linked as submodule; MANIFEST.yaml is the stable contract between repos
 - Phase exits are threshold-gated (golden harness), not date-driven
+- [Phase 00-foundation]: pytest chosen as test runner for wiki tooling regression tests
 
 ### Pending Todos
 
@@ -57,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-28
-Stopped at: Roadmap created — Phase 0 ready to plan
+Last session: 2026-04-28T18:02:39.644Z
+Stopped at: Completed 00-01-PLAN.md — wiki tooling bugs fixed, test scaffold green
 Resume file: None

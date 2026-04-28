@@ -9,10 +9,10 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 
 ### Hygiene
 
-- [ ] **HYG-01**: wiki-stats.py syntax errors fixed and tool runs without crashes
-- [ ] **HYG-02**: wiki-lint.py broken-link regex correctly matches all wiki-internal link formats including anchors
-- [ ] **HYG-03**: evaluate.md literal-ellipsis paths resolved to real file references
-- [ ] **HYG-04**: Flox manifest committed in cflt-ai and works on clean clone
+- [x] **HYG-01**: wiki-stats.py syntax errors fixed and tool runs without crashes
+- [x] **HYG-02**: wiki-lint.py broken-link regex correctly matches all wiki-internal link formats including anchors
+- [x] **HYG-03**: evaluate.md literal-ellipsis paths resolved to real file references
+- [x] **HYG-04**: Flox manifest committed in cflt-ai and works on clean clone
 - [ ] **HYG-05**: Flox manifest committed in fsi-kafka-platform and works on clean clone
 
 ### Contract
@@ -112,10 +112,10 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HYG-01 | Phase 0 | Pending |
-| HYG-02 | Phase 0 | Pending |
-| HYG-03 | Phase 0 | Pending |
-| HYG-04 | Phase 0 | Pending |
+| HYG-01 | Phase 0 | Complete |
+| HYG-02 | Phase 0 | Complete |
+| HYG-03 | Phase 0 | Complete |
+| HYG-04 | Phase 0 | Complete |
 | HYG-05 | Phase 0 | Pending |
 | CNTR-01 | Phase 0 | Pending |
 | CNTR-02 | Phase 0 | Pending |
