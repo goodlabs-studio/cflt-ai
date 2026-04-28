@@ -69,7 +69,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Rewrite /review skill with structured claim extraction, premise-challenge step, multi-doc input, and --output/--overlay flags (REVW-01, REVW-02, REVW-04)
-- [ ] 02-02-PLAN.md — Build review-to-docx.py converter with provenance footer and create acme-bank customer overlay (REVW-03, REVW-06)
+- [x] 02-02-PLAN.md — Build review-to-docx.py converter with provenance footer and create acme-bank customer overlay (REVW-03, REVW-06)
 - [ ] 02-03-PLAN.md — Build golden test harness with 16 cases, 8 fixtures, and structural pytest runner (REVW-05, exercises REVW-01 through REVW-06)
 
 ### Phase 3a: Act Rail — Plan

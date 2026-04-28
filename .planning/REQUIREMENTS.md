@@ -50,10 +50,10 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 
 - [x] **REVW-01**: Claim extraction reproducibility >= 95% across runs (same doc → same claims)
 - [x] **REVW-02**: Explicit premise-challenge step shipped and tested in harness
-- [ ] **REVW-03**: .docx output with full provenance footer (canon stack hash, manifest version, model floors, MCP versions)
+- [x] **REVW-03**: .docx output with full provenance footer (canon stack hash, manifest version, model floors, MCP versions)
 - [x] **REVW-04**: Multi-document review supported (deck + tfvars + runbook as single input)
 - [ ] **REVW-05**: Golden test harness at tests/golden/review/ with >= 15 cases from sanitized customer docs
-- [ ] **REVW-06**: >= 1 customer overlay validated end-to-end with differential canon override
+- [x] **REVW-06**: >= 1 customer overlay validated end-to-end with differential canon override
 
 ### Act Rail (Plan)
 
@@ -138,10 +138,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | KNOW-05 | Phase 1 | Complete |
 | REVW-01 | Phase 2 | Complete |
 | REVW-02 | Phase 2 | Complete |
-| REVW-03 | Phase 2 | Pending |
+| REVW-03 | Phase 2 | Complete |
 | REVW-04 | Phase 2 | Complete |
 | REVW-05 | Phase 2 | Pending |
-| REVW-06 | Phase 2 | Pending |
+| REVW-06 | Phase 2 | Complete |
 | ACT-01 | Phase 3a | Pending |
 | ACT-02 | Phase 3a | Pending |
 | ACT-03 | Phase 3a | Pending |
