@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03A-act-rail-plan 03A-03-PLAN.md
-last_updated: "2026-04-29T01:23:27.767Z"
+status: executing
+stopped_at: Completed 03B-act-rail-apply 03B-02-PLAN.md
+last_updated: "2026-04-29T13:13:29.213Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 18
+  completed_plans: 16
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase 03A — act-rail-plan
+**Current focus:** Phase 03B — act-rail-apply
 
 ## Current Position
 
-Phase: 3b
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 03B (act-rail-apply) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-04-29
 
 Progress: [░░░░░░░░░░] 0%
@@ -67,6 +67,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03A-act-rail-plan P01 | 3 | 2 tasks | 3 files |
 | Phase 03A-act-rail-plan P02 | 3 | 2 tasks | 5 files |
 | Phase 03A-act-rail-plan P03 | 3 | 2 tasks | 24 files |
+| Phase 03B-act-rail-apply P02 | 2 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 03A-act-rail-plan]: Golden act harness mirrors ask/review harness pattern exactly: load_case, ALL_CASES glob, parametrize, REQUIRED_FIELDS for consistency across all skill harnesses
 - [Phase 03A-act-rail-plan]: REQUIRED_FIELDS for act cases: 8 fields (id, request, expected_artifact, floor_model, tags, required_claims, forbidden_claims, negative_space) capturing the act rail's unique concerns
 - [Phase 03A-act-rail-plan]: Negative-space cases enforce ACT-06 at structural level: forbidden_claims must contain 'resource "confluent_' — catches core hand-rolled Terraform violation in every negative-space case
+- [Phase 03B-act-rail-apply]: gate-bypass excluded from apply skill; unconditional gate re-run at apply time catches state drift
+- [Phase 03B-act-rail-apply]: Step 7 stub emits deferred-to-mcp-runtime; real MCP execution wired in Phase 3c per-tool classification
+- [Phase 03B-act-rail-apply]: Bypass refusal pattern covers 'apply immediately' / 'skip confirmation' / 'just do it' vectors with activity log entry per ACTA-02
 
 ### Pending Todos
 
@@ -126,6 +130,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T01:19:17.306Z
-Stopped at: Completed 03A-act-rail-plan 03A-03-PLAN.md
+Last session: 2026-04-29T13:13:29.211Z
+Stopped at: Completed 03B-act-rail-apply 03B-02-PLAN.md
 Resume file: None
