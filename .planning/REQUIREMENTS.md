@@ -77,10 +77,10 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 
 ### Act Rail (Profile Gating)
 
-- [ ] **ACTG-01**: Every mcp-confluent tool (50+) classified into a profile by name, not regex
+- [x] **ACTG-01**: Every mcp-confluent tool (50+) classified into a profile by name, not regex
 - [ ] **ACTG-02**: Per-profile negative-space test suite ensures forbidden tools fail closed
 - [ ] **ACTG-03**: Break-glass profile requires two-step confirmation with explicit override reason logged
-- [ ] **ACTG-04**: >= 1 customer fork demonstrates differential profile gating relative to base
+- [x] **ACTG-04**: >= 1 customer fork demonstrates differential profile gating relative to base
 
 ## v2 Requirements
 
@@ -156,10 +156,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | ACTA-04 | Phase 3b | Complete |
 | ACTA-05 | Phase 3b | Complete |
 | ACTA-06 | Phase 3b | Complete |
-| ACTG-01 | Phase 3c | Pending |
+| ACTG-01 | Phase 3c | Complete |
 | ACTG-02 | Phase 3c | Pending |
 | ACTG-03 | Phase 3c | Pending |
-| ACTG-04 | Phase 3c | Pending |
+| ACTG-04 | Phase 3c | Complete |
 
 **Coverage:**
 - v1 requirements: 44 total

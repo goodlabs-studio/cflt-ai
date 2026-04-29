@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03B-act-rail-apply 03B-03-PLAN.md
-last_updated: "2026-04-29T13:46:47.671Z"
+status: executing
+stopped_at: Completed 03C-act-rail-profile-gating 03C-01-PLAN.md
+last_updated: "2026-04-29T15:53:47.731Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 18
-  completed_plans: 18
+  total_plans: 21
+  completed_plans: 19
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase 03B — act-rail-apply
+**Current focus:** Phase 03C — act-rail-profile-gating
 
 ## Current Position
 
-Phase: 3c
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 03C (act-rail-profile-gating) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-04-29
 
 Progress: [░░░░░░░░░░] 0%
@@ -70,6 +70,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03B-act-rail-apply P02 | 2 | 1 tasks | 1 files |
 | Phase 03B-act-rail-apply P01 | 2 | 1 tasks | 5 files |
 | Phase 03B-act-rail-apply P03 | 8 | 2 tasks | 11 files |
+| Phase 03C-act-rail-profile-gating P01 | 8 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -128,6 +129,8 @@ Recent decisions affecting current work:
 - [Phase 03B-act-rail-apply]: Apply negative-space cases include 'no matching artifact' in required_claims for consistency with plan harness pattern
 - [Phase 03B-act-rail-apply]: APPLY_CASES filtered from ALL_CASES by skill field — no separate glob, single source of truth
 - [Phase 03B-act-rail-apply]: test_apply_case_has_valid_profile skips validation for negative-space cases to allow unknown profile rejection tests
+- [Phase 03C-act-rail-profile-gating]: 81 mcp-confluent tools explicitly classified into three tiers by exact name; unclassified_policy=deny for fail-closed enforcement
+- [Phase 03C-act-rail-profile-gating]: break-glass wildcard replaced with explicit artifact operation list; acme-bank engineer overlay is complete profile doc (not partial diff)
 
 ### Pending Todos
 
@@ -139,6 +142,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T13:26:00.326Z
-Stopped at: Completed 03B-act-rail-apply 03B-03-PLAN.md
+Last session: 2026-04-29T15:53:47.729Z
+Stopped at: Completed 03C-act-rail-profile-gating 03C-01-PLAN.md
 Resume file: None

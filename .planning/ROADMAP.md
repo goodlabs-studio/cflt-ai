@@ -118,7 +118,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 03C-01-PLAN.md — Classification table (50+ tools), profile JSON updates, acme-bank customer overlay (ACTG-01, ACTG-04)
+- [x] 03C-01-PLAN.md — Classification table (50+ tools), profile JSON updates, acme-bank customer overlay (ACTG-01, ACTG-04)
 - [ ] 03C-02-PLAN.md — Extend apply_engine.py with tool classification check, customer overlay loading, two-step break-glass in dsp-apply.md (ACTG-01, ACTG-03, ACTG-04)
 - [ ] 03C-03-PLAN.md — Per-profile negative-space test suite with full tool x profile parametrized matrix (ACTG-01, ACTG-02, ACTG-03, ACTG-04)
 
