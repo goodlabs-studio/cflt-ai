@@ -1,0 +1,10 @@
+{
+  "name": "engineer",
+  "description": "Acme Bank engineer profile: Flink self-service prohibited, audit role management required.",
+  "allowed_operations": ["module/topic", "role/cp_schema", "role/cp_rbac", "role/cp_connect", "role/cp_audit"],
+  "customer_overrides": {
+    "removed": ["module/flink"],
+    "added": ["role/cp_audit"],
+    "adr_ref": "canon/customer/acme-bank/adrs/adr-003.md"
+  }
+}

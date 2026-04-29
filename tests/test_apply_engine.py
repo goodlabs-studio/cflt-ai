@@ -43,10 +43,13 @@ class TestProfileLoading:
         assert "role/cp_rbac" in ops
         assert "role/cp_connect" in ops
 
-    def test_load_break_glass_contains_wildcard(self):
-        """break-glass profile has wildcard allowed_operations."""
+    def test_load_break_glass_has_explicit_operations(self):
+        """break-glass profile has explicit allowed_operations (wildcard replaced per ACTG-01)."""
         profile = load_profile("break-glass")
-        assert profile["allowed_operations"] == ["*"]
+        ops = profile["allowed_operations"]
+        assert "*" not in ops, "Wildcard must be replaced with explicit operations per ACTG-01"
+        assert len(ops) > 0, "break-glass must have at least one explicit operation"
+        assert "module/topic" in ops
 
     def test_unknown_profile_raises(self):
         """Unknown profile name raises ValueError mentioning 'Unknown profile'."""
@@ -92,12 +95,14 @@ class TestProfileFiles:
         assert not check_profile_permits(profile, "script/fsi-dr")
         assert not check_profile_permits(profile, "scenario/cc-aws")
 
-    def test_break_glass_permits_all(self):
-        """break-glass wildcard permits any operation string."""
+    def test_break_glass_permits_explicit_operations(self):
+        """break-glass permits explicit operations in its allowed_operations list (ACTG-01: wildcard replaced)."""
         profile = load_profile("break-glass")
         assert check_profile_permits(profile, "module/topic")
         assert check_profile_permits(profile, "script/fsi-dr")
-        assert check_profile_permits(profile, "anything/at/all")
+        assert check_profile_permits(profile, "scenario/cc-aws")
+        # Unknown operation not in explicit list is denied (wildcard removed)
+        assert not check_profile_permits(profile, "anything/at/all")
 
     def test_engineer_denies_script(self):
         """engineer profile does not permit script/fsi-dr."""
