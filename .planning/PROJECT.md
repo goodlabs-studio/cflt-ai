@@ -43,10 +43,10 @@ The canon overlay stack works — customers can fork and override safely. Base (
 - ✓ Phase 2: .docx output with full provenance footer — Validated in Phase 02: review-skill
 - ✓ Phase 2: Multi-document review support — Validated in Phase 02: review-skill
 - ✓ Phase 2: Customer overlay validated end-to-end — Validated in Phase 02: review-skill
-- [ ] Phase 3a: Four-gate validation chain (individually testable, dev-bypassable)
-- [ ] Phase 3a: /dsp:plan read-only act rail
-- [ ] Phase 3a: Structural correctness >= 95% (right artifact, right args)
-- [ ] Phase 3a: Canon <-> fsi-dsp parity CI in both repos
+- ✓ Phase 3a: Four-gate validation chain (individually testable, dev-bypassable) — Validated in Phase 3a: act-rail-plan
+- ✓ Phase 3a: /dsp:plan read-only act rail — Validated in Phase 3a: act-rail-plan
+- ✓ Phase 3a: Structural correctness >= 95% (right artifact, right args) — Validated in Phase 3a: act-rail-plan
+- ✓ Phase 3a: Canon <-> fsi-dsp parity CI in both repos — Validated in Phase 3a: act-rail-plan
 - [ ] Phase 3b: /dsp:apply with human-in-the-loop confirmation
 - [ ] Phase 3b: Three policy profiles (read-only, engineer, break-glass)
 - [ ] Phase 3b: Activity log captures every plan/apply with provenance
@@ -108,4 +108,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-28 after Phase 02 (review-skill) completion*
+*Last updated: 2026-04-29 after Phase 3a (act-rail-plan) completion*
