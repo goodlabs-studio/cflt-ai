@@ -50,10 +50,10 @@ The canon overlay stack works — customers can fork and override safely. Base (
 - ✓ Phase 3b: /dsp:apply with human-in-the-loop confirmation — Validated in Phase 3b: act-rail-apply
 - ✓ Phase 3b: Three policy profiles (read-only, engineer, break-glass) — Validated in Phase 3b: act-rail-apply
 - ✓ Phase 3b: Activity log captures every plan/apply with provenance — Validated in Phase 3b: act-rail-apply
-- [ ] Phase 3c: Every mcp-confluent tool classified by profile (by name, not regex)
-- [ ] Phase 3c: Per-profile negative-space test suites
-- [ ] Phase 3c: Break-glass two-step confirmation with override logging
-- [ ] Phase 3c: Customer fork with differential profile gating
+- ✓ Phase 3c: Every mcp-confluent tool classified by profile (by name, not regex) — Validated in Phase 3c: act-rail-profile-gating
+- ✓ Phase 3c: Per-profile negative-space test suites — Validated in Phase 3c: act-rail-profile-gating
+- ✓ Phase 3c: Break-glass two-step confirmation with override logging — Validated in Phase 3c: act-rail-profile-gating
+- ✓ Phase 3c: Customer fork with differential profile gating — Validated in Phase 3c: act-rail-profile-gating
 
 ### Out of Scope
 
@@ -108,4 +108,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-29 after Phase 3b (act-rail-apply) completion*
+*Last updated: 2026-04-29 after Phase 3c (act-rail-profile-gating) completion*
