@@ -31,6 +31,11 @@ VALID_ARTIFACT_TYPES = {
     "scenario/cfk-openshift",
     "scenario/cp-rhel",
     "scenario/private-cloud",
+    # Apply cases reference script artifacts (DR failover/failback, FSI ops scripts)
+    "script/mirror-failover",
+    "script/mirror-failback",
+    "script/fsi-dr",
+    "script/validate-fips",
     None,  # negative-space cases have no artifact
 }
 
@@ -190,3 +195,111 @@ class TestFloorModelDistribution:
     def test_sonnet_cases_exist(self):
         sonnet = [p for p in ALL_CASES if load_case(p).get("floor_model") == "sonnet"]
         assert len(sonnet) >= 5, f"Need >= 5 sonnet-floor cases, found {len(sonnet)}"
+
+
+# ---------------------------------------------------------------------------
+# Apply-specific constants (ACTA-06 -- structural correctness for apply rail)
+# ---------------------------------------------------------------------------
+
+APPLY_REQUIRED_FIELDS = {"skill", "profile", "confirmation", "expected_incident"}
+VALID_PROFILES = {"read-only", "engineer", "break-glass"}
+VALID_CONFIRMATIONS = {"confirmed", "blocked", "bypass_attempt"}
+APPLY_CASES = [
+    p for p in ALL_CASES
+    if load_case(p).get("skill") == "/dsp:apply"
+] if ALL_CASES else []
+
+
+class TestGoldenApplyHarnessStructure:
+    """ACTA-06: Verify apply case structure, profile enforcement, and bypass coverage."""
+
+    def test_minimum_apply_case_count(self):
+        assert len(APPLY_CASES) >= 10, (
+            f"Need >= 10 apply cases, found {len(APPLY_CASES)}"
+        )
+
+    def test_minimum_apply_negative_space_cases(self):
+        negative = [
+            p for p in APPLY_CASES
+            if load_case(p).get("negative_space") is True
+        ]
+        assert len(negative) >= 3, (
+            f"Need >= 3 negative-space apply cases, found {len(negative)}"
+        )
+
+    @pytest.mark.parametrize("case_path", APPLY_CASES, ids=lambda p: p.stem)
+    def test_apply_case_has_required_fields(self, case_path):
+        fm = load_case(case_path)
+        missing = APPLY_REQUIRED_FIELDS - set(fm.keys())
+        assert not missing, f"{case_path.name} missing apply fields: {missing}"
+
+    @pytest.mark.parametrize("case_path", APPLY_CASES, ids=lambda p: p.stem)
+    def test_apply_case_has_valid_profile(self, case_path):
+        fm = load_case(case_path)
+        # Negative-space cases may test unknown profile names (e.g., "admin") --
+        # skip the valid-profile check for those cases since testing rejection
+        # of unknown profiles is the point of the case.
+        if fm.get("negative_space") is True:
+            return
+        assert fm.get("profile") in VALID_PROFILES, (
+            f"{case_path.name}: invalid profile '{fm.get('profile')}', "
+            f"must be one of {VALID_PROFILES}"
+        )
+
+    @pytest.mark.parametrize("case_path", APPLY_CASES, ids=lambda p: p.stem)
+    def test_apply_case_has_valid_confirmation(self, case_path):
+        fm = load_case(case_path)
+        assert fm.get("confirmation") in VALID_CONFIRMATIONS, (
+            f"{case_path.name}: invalid confirmation '{fm.get('confirmation')}', "
+            f"must be one of {VALID_CONFIRMATIONS}"
+        )
+
+    @pytest.mark.parametrize("case_path", APPLY_CASES, ids=lambda p: p.stem)
+    def test_apply_case_skill_is_dsp_apply(self, case_path):
+        fm = load_case(case_path)
+        assert fm.get("skill") == "/dsp:apply", (
+            f"{case_path.name}: skill must be '/dsp:apply', got '{fm.get('skill')}'"
+        )
+
+    @pytest.mark.parametrize("case_path", APPLY_CASES, ids=lambda p: p.stem)
+    def test_negative_apply_case_no_incident(self, case_path):
+        fm = load_case(case_path)
+        if fm.get("negative_space") is True:
+            assert fm.get("expected_incident") is False, (
+                f"{case_path.name}: negative-space apply case must have "
+                f"expected_incident: false, got '{fm.get('expected_incident')}'"
+            )
+
+    @pytest.mark.parametrize("case_path", APPLY_CASES, ids=lambda p: p.stem)
+    def test_positive_apply_case_has_incident(self, case_path):
+        fm = load_case(case_path)
+        if fm.get("negative_space") is False and fm.get("confirmation") == "confirmed":
+            assert fm.get("expected_incident") is True, (
+                f"{case_path.name}: positive apply case with confirmation=confirmed must have "
+                f"expected_incident: true, got '{fm.get('expected_incident')}'"
+            )
+
+    def test_apply_negative_cases_forbid_inline_terraform(self):
+        negative_apply = [
+            p for p in APPLY_CASES
+            if load_case(p).get("negative_space") is True
+        ]
+        assert len(negative_apply) >= 3, (
+            f"Need >= 3 negative-space apply cases, found {len(negative_apply)}"
+        )
+        for case_path in negative_apply:
+            fm = load_case(case_path)
+            forbidden = fm.get("forbidden_claims", [])
+            has_terraform_forbid = any(
+                'resource "confluent_' in str(claim)
+                for claim in forbidden
+            )
+            assert has_terraform_forbid, (
+                f"{case_path.name}: negative-space apply case must forbid "
+                f"'resource \"confluent_' in forbidden_claims. Got: {forbidden}"
+            )
+
+    def test_total_case_count(self):
+        assert len(ALL_CASES) >= 32, (
+            f"Need >= 32 total golden cases (22 plan + 10 apply), found {len(ALL_CASES)}"
+        )
