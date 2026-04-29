@@ -73,7 +73,7 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 - [x] **ACTA-03**: Three policy profiles implemented: read-only.json, engineer.json, break-glass.json
 - [x] **ACTA-04**: Activity log captures every plan/apply with full provenance
 - [x] **ACTA-05**: Wiki incident entry written per apply
-- [ ] **ACTA-06**: Structural-correctness metric holds for 30 days of real engagement use
+- [x] **ACTA-06**: Structural-correctness metric holds for 30 days of real engagement use
 
 ### Act Rail (Profile Gating)
 
@@ -155,7 +155,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | ACTA-03 | Phase 3b | Complete |
 | ACTA-04 | Phase 3b | Complete |
 | ACTA-05 | Phase 3b | Complete |
-| ACTA-06 | Phase 3b | Pending |
+| ACTA-06 | Phase 3b | Complete |
 | ACTG-01 | Phase 3c | Pending |
 | ACTG-02 | Phase 3c | Pending |
 | ACTG-03 | Phase 3c | Pending |
