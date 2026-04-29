@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03B-act-rail-apply 03B-02-PLAN.md
-last_updated: "2026-04-29T13:13:29.213Z"
+stopped_at: Completed 03B-act-rail-apply 03B-01-PLAN.md
+last_updated: "2026-04-29T13:14:13.457Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 18
-  completed_plans: 16
+  completed_plans: 17
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: 03B (act-rail-apply) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -68,6 +68,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03A-act-rail-plan P02 | 3 | 2 tasks | 5 files |
 | Phase 03A-act-rail-plan P03 | 3 | 2 tasks | 24 files |
 | Phase 03B-act-rail-apply P02 | 2 | 1 tasks | 1 files |
+| Phase 03B-act-rail-apply P01 | 2 | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,10 @@ Recent decisions affecting current work:
 - [Phase 03B-act-rail-apply]: gate-bypass excluded from apply skill; unconditional gate re-run at apply time catches state drift
 - [Phase 03B-act-rail-apply]: Step 7 stub emits deferred-to-mcp-runtime; real MCP execution wired in Phase 3c per-tool classification
 - [Phase 03B-act-rail-apply]: Bypass refusal pattern covers 'apply immediately' / 'skip confirmation' / 'just do it' vectors with activity log entry per ACTA-02
+- [Phase 03B-act-rail-apply]: VALID_PROFILES explicit set (not filesystem scan) — unknown names fail immediately, fail-closed enforcement before any gate chain runs
+- [Phase 03B-act-rail-apply]: Wildcard '*' in break-glass allowed_operations covers Phase 3b scope; per-tool enumeration deferred to Phase 3c for mcp-confluent tool classification
+- [Phase 03B-act-rail-apply]: Activity log uses 11-field schema for /dsp:apply entries matching ACTA-04: operator, profile, confirmation_status, execution_result, duration_seconds plus overlay, artifact, plan, gates, canon_stack, skill
+- [Phase 03B-act-rail-apply]: Incident articles use YAML frontmatter (7 keys: artifact, operator, profile, outcome, canon_hash, plan_ref, timestamp) + 4 sections (What Changed, Why, Gate Results, Provenance)
 
 ### Pending Todos
 
@@ -130,6 +135,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T13:13:29.211Z
-Stopped at: Completed 03B-act-rail-apply 03B-02-PLAN.md
+Last session: 2026-04-29T13:14:13.455Z
+Stopped at: Completed 03B-act-rail-apply 03B-01-PLAN.md
 Resume file: None

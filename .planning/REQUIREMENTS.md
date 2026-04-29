@@ -69,10 +69,10 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 ### Act Rail (Apply)
 
 - [x] **ACTA-01**: /dsp:apply skill with human-in-the-loop confirmation enforced
-- [ ] **ACTA-02**: Bypass attempts tested and blocked
-- [ ] **ACTA-03**: Three policy profiles implemented: read-only.json, engineer.json, break-glass.json
-- [ ] **ACTA-04**: Activity log captures every plan/apply with full provenance
-- [ ] **ACTA-05**: Wiki incident entry written per apply
+- [x] **ACTA-02**: Bypass attempts tested and blocked
+- [x] **ACTA-03**: Three policy profiles implemented: read-only.json, engineer.json, break-glass.json
+- [x] **ACTA-04**: Activity log captures every plan/apply with full provenance
+- [x] **ACTA-05**: Wiki incident entry written per apply
 - [ ] **ACTA-06**: Structural-correctness metric holds for 30 days of real engagement use
 
 ### Act Rail (Profile Gating)
@@ -151,10 +151,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | ACT-07 | Phase 3a | Complete |
 | ACT-08 | Phase 3a | Complete |
 | ACTA-01 | Phase 3b | Complete |
-| ACTA-02 | Phase 3b | Pending |
-| ACTA-03 | Phase 3b | Pending |
-| ACTA-04 | Phase 3b | Pending |
-| ACTA-05 | Phase 3b | Pending |
+| ACTA-02 | Phase 3b | Complete |
+| ACTA-03 | Phase 3b | Complete |
+| ACTA-04 | Phase 3b | Complete |
+| ACTA-05 | Phase 3b | Complete |
 | ACTA-06 | Phase 3b | Pending |
 | ACTG-01 | Phase 3c | Pending |
 | ACTG-02 | Phase 3c | Pending |
