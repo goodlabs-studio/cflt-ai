@@ -13,7 +13,7 @@ Six phases deliver a Confluent operational and knowledge agent for FSI engagemen
 - [x] **Phase 0: Foundation** - Fix bugs, establish MANIFEST.yaml contract, scaffold canon overlay stack, and get both repos to clean-clone health (completed 2026-04-28)
 - [ ] **Phase 1: Knowledge Skill** - Unify /ask + /wiki:recommend, add triage classifier, golden harness, and wiki decay rules
 - [x] **Phase 2: Review Skill** - Reproducible claim extraction, premise-challenge step, .docx output, multi-document support, customer overlay validation (completed 2026-04-28)
-- [ ] **Phase 3a: Act Rail — Plan** - Four-gate validation chain, /dsp:plan read-only rail, structural-correctness harness, CI parity in both repos
+- [x] **Phase 3a: Act Rail — Plan** - Four-gate validation chain, /dsp:plan read-only rail, structural-correctness harness, CI parity in both repos (completed 2026-04-29)
 - [ ] **Phase 3b: Act Rail — Apply** - /dsp:apply with human-in-the-loop confirmation, three policy profiles, activity log, incident entries
 - [ ] **Phase 3c: Act Rail — Profile Gating** - Per-tool classification of all 50+ mcp-confluent tools, negative-space test suites, break-glass two-step, customer fork demo
 
@@ -82,7 +82,7 @@ Plans:
   3. Each of the four gates (canon compliance, fsi-dsp coverage, confluent-docs schema, mcp-confluent state) can be individually tested and bypassed in dev mode without affecting the others
   4. The golden harness at tests/golden/act/ contains >= 20 cases (including negative-space), structural correctness >= 95%
   5. Canon-to-fsi-dsp parity CI runs in both repos and blocks merges on drift
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 03A-01-PLAN.md — Wire Terraform MCP, build four-gate chain module, and unit tests (ACT-01, ACT-02, ACT-03, ACT-06)
@@ -122,6 +122,6 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 | 0. Foundation | 6/6 | Complete   | 2026-04-28 |
 | 1. Knowledge Skill | 0/3 | Planning complete | - |
 | 2. Review Skill | 3/3 | Complete   | 2026-04-28 |
-| 3a. Act Rail — Plan | 0/3 | Planning complete | - |
+| 3a. Act Rail — Plan | 0/3 | Complete    | 2026-04-29 |
 | 3b. Act Rail — Apply | 0/TBD | Not started | - |
 | 3c. Act Rail — Profile Gating | 0/TBD | Not started | - |
