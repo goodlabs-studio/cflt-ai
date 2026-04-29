@@ -82,7 +82,12 @@ Plans:
   3. Each of the four gates (canon compliance, fsi-dsp coverage, confluent-docs schema, mcp-confluent state) can be individually tested and bypassed in dev mode without affecting the others
   4. The golden harness at tests/golden/act/ contains >= 20 cases (including negative-space), structural correctness >= 95%
   5. Canon-to-fsi-dsp parity CI runs in both repos and blocks merges on drift
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 03A-01-PLAN.md — Wire Terraform MCP, build four-gate chain module, and unit tests (ACT-01, ACT-02, ACT-03, ACT-06)
+- [ ] 03A-02-PLAN.md — Create /dsp:plan skill file, canon parity checker with tests, and CI workflow (ACT-04, ACT-06, ACT-08)
+- [ ] 03A-03-PLAN.md — Build golden test harness with 22 cases and structural pytest runner (ACT-05, ACT-07)
 
 ### Phase 3b: Act Rail — Apply
 **Goal**: /dsp:apply executes planned changes with mandatory human confirmation, three policy profiles enforce least-privilege, and every operation is logged with full provenance
@@ -117,6 +122,6 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 | 0. Foundation | 6/6 | Complete   | 2026-04-28 |
 | 1. Knowledge Skill | 0/3 | Planning complete | - |
 | 2. Review Skill | 3/3 | Complete   | 2026-04-28 |
-| 3a. Act Rail — Plan | 0/TBD | Not started | - |
+| 3a. Act Rail — Plan | 0/3 | Planning complete | - |
 | 3b. Act Rail — Apply | 0/TBD | Not started | - |
 | 3c. Act Rail — Profile Gating | 0/TBD | Not started | - |
