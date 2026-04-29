@@ -1,0 +1,5 @@
+{
+  "name": "break-glass",
+  "description": "All operations including destructive (DR failover, cluster reconfig, deletion).",
+  "allowed_operations": ["*"]
+}

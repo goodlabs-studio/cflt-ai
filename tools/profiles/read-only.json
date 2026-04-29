@@ -1,0 +1,5 @@
+{
+  "name": "read-only",
+  "description": "Plan and inspect only. No apply operations.",
+  "allowed_operations": []
+}
