@@ -14,7 +14,7 @@ Six phases deliver a Confluent operational and knowledge agent for FSI engagemen
 - [ ] **Phase 1: Knowledge Skill** - Unify /ask + /wiki:recommend, add triage classifier, golden harness, and wiki decay rules
 - [x] **Phase 2: Review Skill** - Reproducible claim extraction, premise-challenge step, .docx output, multi-document support, customer overlay validation (completed 2026-04-28)
 - [x] **Phase 3a: Act Rail — Plan** - Four-gate validation chain, /dsp:plan read-only rail, structural-correctness harness, CI parity in both repos (completed 2026-04-29)
-- [ ] **Phase 3b: Act Rail — Apply** - /dsp:apply with human-in-the-loop confirmation, three policy profiles, activity log, incident entries
+- [x] **Phase 3b: Act Rail — Apply** - /dsp:apply with human-in-the-loop confirmation, three policy profiles, activity log, incident entries (completed 2026-04-29)
 - [ ] **Phase 3c: Act Rail — Profile Gating** - Per-tool classification of all 50+ mcp-confluent tools, negative-space test suites, break-glass two-step, customer fork demo
 
 ## Phase Details
@@ -99,7 +99,7 @@ Plans:
   3. Every plan and apply appends to the activity log with the full provenance schema (artifact ID, canon stack hash, model, operator, timestamp)
   4. Every apply produces a wiki incident entry
   5. Structural-correctness metric holds >= 95% across 30 days of real engagement use
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 03B-01-PLAN.md — Profile JSON files + apply_engine.py with TDD unit tests (ACTA-02, ACTA-03, ACTA-04, ACTA-05)
@@ -128,5 +128,5 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 | 1. Knowledge Skill | 0/3 | Planning complete | - |
 | 2. Review Skill | 3/3 | Complete   | 2026-04-28 |
 | 3a. Act Rail — Plan | 0/3 | Complete    | 2026-04-29 |
-| 3b. Act Rail — Apply | 0/3 | Planning complete | - |
+| 3b. Act Rail — Apply | 0/3 | Complete    | 2026-04-29 |
 | 3c. Act Rail — Profile Gating | 0/TBD | Not started | - |
