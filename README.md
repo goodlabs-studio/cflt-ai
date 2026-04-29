@@ -1,6 +1,6 @@
-# cflt-ai — Confluent Knowledge Base for Claude Code
+# cflt-ai — Confluent Operational & Knowledge Agent
 
-A shared knowledge base of Kafka, Flink, Schema Registry, and Confluent architecture patterns. Claude Code does the heavy lifting — validating configs, reviewing architecture docs, and answering Kafka/Flink/DR questions against a compiled wiki and live MCP sources.
+A Confluent operational and knowledge agent for FSI engagements, built as Claude Code skills against a compounding wiki of validated canon. Three skills serve the engagement lifecycle: `/ask` for peer-level answers, `/review` for customer deliverables, and `/dsp:plan` + `/dsp:apply` for canon-compliant infrastructure operations through a four-gate act rail.
 
 No custom application code. The "app" is Claude Code itself, configured via committed files.
 
@@ -26,21 +26,45 @@ That's it. Ask a question, paste a config, or run a skill.
 
 ### `/ask` — Get a validated answer
 
-Paste a config snippet, error message, or architecture question. Claude searches the wiki, applies Confluent Canon defaults, and validates claims against live MCP sources.
+Paste a config snippet, error message, or architecture question. Claude searches the wiki, applies Confluent Canon defaults, and validates claims against live MCP sources. A triage classifier routes queries through wiki-only, wiki+MCP, or deep reasoning paths.
 
 ```
 /ask What's the right acks setting for a transactional producer writing to a compacted topic?
 ```
 
+Modes: `--mode ephemeral` (quick answer), `--mode report` (structured output), `--mode reconsolidate` (answer + write back to wiki). `/wiki:recommend` is an alias for `--mode reconsolidate`.
+
 ### `/review` — Evaluate a document
 
-Point at a file and get a structured review with claim-by-claim validation.
+Point at a file and get a structured review with deterministic claim extraction, premise-challenge validation, and provenance-stamped output.
 
 ```
 /review kafka-dr-framework-v3.md
 ```
 
+Supports multi-document input (deck + tfvars + runbook as a single scope), customer overlays for differential canon, and `.docx` export with full provenance footer.
+
 Output lands in `outputs/reports/<slug>-review-<date>.md`.
+
+### `/dsp:plan` — Plan infrastructure changes (read-only)
+
+Plan a Confluent infrastructure change through the four-gate validation chain. The agent selects an existing fsi-dsp artifact (never generates inline Terraform) and validates it against canon compliance, fsi-dsp coverage, confluent-docs schema, and mcp-confluent state.
+
+```
+/dsp:plan Create a compacted topic for customer events with Schema Registry
+```
+
+### `/dsp:apply` — Execute changes (human-gated)
+
+Execute a planned change with mandatory human confirmation. Three policy profiles enforce least-privilege:
+
+| Profile | Scope | Use Case |
+|---------|-------|----------|
+| `read-only` | Inspect only | Default for assessments |
+| `engineer` | Create/modify within guardrails | Day-to-day operations |
+| `break-glass` | Full access, two-step confirmation | Incident response |
+
+Every apply is logged with full provenance and generates a wiki incident entry. 81 mcp-confluent tools are explicitly classified per profile — unclassified tools fail closed.
 
 ### Wiki Skills
 
@@ -56,7 +80,7 @@ Output lands in `outputs/reports/<slug>-review-<date>.md`.
 
 ```bash
 wiki-search "cluster linking DR"    # full-text search
-wiki-lint --full                     # health check
+wiki-lint --full                     # health check (includes decay audit)
 wiki-stats                           # coverage metrics
 wiki-compile --delta                 # process raw ingest queue
 ```
@@ -73,50 +97,110 @@ cflt-ai/
 │   └── commands/
 │       ├── ask.md                   # /ask skill
 │       ├── review.md                # /review skill
-│       └── wiki/                    # Wiki reconsolidation skills
+│       ├── dsp-plan.md              # /dsp:plan skill (act rail — plan)
+│       ├── dsp-apply.md             # /dsp:apply skill (act rail — apply)
+│       └── wiki/                    # Wiki skills (ingest, validate, etc.)
+├── canon/                           # Four-layer overlay stack
+│   ├── stack.py                     # Stack resolution engine
+│   ├── base/defaults.yaml           # GoodLabs canonical defaults
+│   ├── industry/fsi/overrides.yaml  # FSI-specific overrides
+│   ├── customer/acme-bank/          # Customer overlay (demo)
+│   │   ├── overrides.yaml
+│   │   └── profiles/engineer.json   # Customer-specific profile gating
+│   └── engagement/                  # Per-engagement overrides
 ├── wiki/
 │   ├── _index.md                    # Master article index
 │   ├── _graph.md                    # Backlink registry
-│   ├── _queue.md                    # Work queue
-│   ├── concepts/                    # Foundational knowledge
-│   ├── patterns/                    # Reusable architecture patterns
-│   └── synthesis/                   # Cross-cutting analysis (ADRs)
+│   ├── _queue.md                    # Auto-stub work queue
+│   ├── activity/                    # Per-overlay activity logs
+│   ├── incidents/                   # Apply incident entries
+│   ├── concepts/                    # Foundational knowledge (11 articles)
+│   ├── patterns/                    # Reusable architecture patterns (8 articles)
+│   └── synthesis/                   # Cross-cutting analysis, ADR index
+├── tools/                           # Python CLI tools + act rail engine
+│   ├── act_gates.py                 # Four-gate validation chain
+│   ├── apply_engine.py              # Apply execution with profile gating
+│   ├── review-to-docx.py            # .docx export with provenance footer
+│   ├── check-canon-parity.py        # Canon ↔ fsi-dsp drift detector
+│   ├── check-citations.py           # Wiki citation resolver
+│   ├── wiki-lint.py                 # Wiki linter with decay audit
+│   ├── wiki-compile.py              # Raw source compiler
+│   ├── wiki-search.py               # Full-text wiki search
+│   ├── wiki-stats.py                # Coverage metrics
+│   └── profiles/                    # Policy profile definitions
+│       ├── read-only.json
+│       ├── engineer.json
+│       ├── break-glass.json
+│       └── tool_classification.json # 81 mcp-confluent tools classified
+├── tests/                           # Golden test harnesses + unit tests
+│   ├── golden/ask/                  # 40+ /ask test cases
+│   ├── golden/act/                  # 30+ /dsp:plan and /dsp:apply cases
+│   ├── test_act_gates.py            # Four-gate unit tests
+│   ├── test_apply_engine.py         # Apply engine + profile gating tests
+│   ├── test_profile_gating.py       # Per-tool negative-space suites
+│   └── ...                          # Canon overlay, citation, decay tests
 ├── raw/
-│   └── repos/fsi-dsp/              # Git submodule: Ansible, Terraform, ADRs, reference code
-├── tools/                           # Python CLI tools
-├── outputs/                         # Generated reports
+│   └── repos/fsi-dsp/              # Git submodule: Terraform, Ansible, ADRs
+├── outputs/                         # Generated reports and .docx files
 ├── bin/
 │   └── setup                        # First-run setup script
 └── .github/
-    ├── PULL_REQUEST_TEMPLATE.md     # PR template for contributions
-    └── workflows/wiki-lint.yml      # CI lint for wiki PRs
+    └── workflows/
+        ├── wiki-lint.yml            # CI lint for wiki PRs
+        ├── canon-parity.yml         # Canon ↔ fsi-dsp drift CI
+        └── manifest-citations.yml   # Citation resolution CI
 ```
 
 ## How It Works
 
 ```
-                    ┌─────────────────┐
-                    │   Claude Code   │
-                    │   (the "app")   │
-                    └────────┬────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              │              │              │
-     ┌────────▼──────┐ ┌────▼────┐ ┌───────▼───────┐
-     │  Compiled Wiki │ │ Canon   │ │ MCP Servers   │
-     │  (wiki/)       │ │(CLAUDE  │ │ - context7    │
-     │  19 articles   │ │  .md)   │ │ - cflt-docs   │
-     │  concepts +    │ │ defaults│ │ - mcp-cflt    │
-     │  patterns +    │ │ + FSI   │ │   (optional)  │
-     │  synthesis     │ │ overlay │ │               │
-     └───────────────┘ └─────────┘ └───────────────┘
+                      ┌─────────────────┐
+                      │   Claude Code    │
+                      │   (the "app")    │
+                      └────────┬─────────┘
+                               │
+            ┌──────────────────┼──────────────────┐
+            │                  │                   │
+   ┌────────▼───────┐  ┌──────▼──────┐  ┌─────────▼─────────┐
+   │ Compiled Wiki   │  │ Canon Stack │  │   MCP Servers      │
+   │ (wiki/)         │  │ (CLAUDE.md  │  │  - context7        │
+   │ 20 articles     │  │  + canon/)  │  │  - confluent-docs  │
+   │ concepts +      │  │ base → FSI  │  │  - mcp-confluent   │
+   │ patterns +      │  │ → customer  │  │    (optional)      │
+   │ synthesis       │  │ → engage    │  │                    │
+   └────────┬────────┘  └──────┬──────┘  └─────────┬─────────┘
+            │                  │                    │
+            └──────────────────┼────────────────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │   fsi-dsp Artifacts  │
+                    │   (MANIFEST.yaml)    │
+                    │   Terraform modules  │
+                    │   Ansible roles      │
+                    │   ADRs, ref code     │
+                    └─────────────────────┘
 ```
 
-Skills combine these three sources: the wiki provides institutional knowledge, CLAUDE.md provides canonical defaults, and MCP servers provide live validation against current Confluent docs and APIs.
+**Skills** combine these sources: the wiki provides institutional knowledge, the canon overlay stack provides layered defaults (base → industry → customer → engagement), MCP servers provide live validation, and fsi-dsp provides the artifact library that the act rail operates against.
+
+**The act rail** never generates infrastructure code. It selects existing fsi-dsp artifacts through a four-gate chain (canon compliance → fsi-dsp coverage → schema validation → state check), applies profile-based least-privilege gating, and executes only after explicit human confirmation.
+
+## Canon Overlay Stack
+
+The canon overlay stack lets customers fork and override safely:
+
+```
+base/defaults.yaml          # GoodLabs canonical Confluent defaults
+  └─ industry/fsi/          # FSI: latency SLA tiers, exactly-once for reg reporting
+      └─ customer/acme-bank/ # Acme Bank: zstd compression, sub-100μs latency floor
+          └─ engagement/     # Per-engagement overrides (ephemeral)
+```
+
+Each layer overrides the layer above. Every override is an ADR in the layer that introduces it. The active stack hash is recorded in every artifact's provenance footer.
 
 ## fsi-dsp Reference Repo (Optional)
 
-The [fsi-dsp](https://github.com/goodlabs-studio/fsi-dsp) repo is linked as a git submodule at `raw/repos/fsi-dsp/`. It contains Ansible vars, Terraform configs, ADRs, and reference Java/Python implementations that 10+ wiki articles cite as sources.
+The [fsi-dsp](https://github.com/goodlabs-studio/fsi-dsp) repo is linked as a git submodule at `raw/repos/fsi-dsp/`. It contains Terraform modules, Ansible roles, ADRs, and reference implementations. MANIFEST.yaml is the binding contract — cflt-ai cites artifacts by stable ID; CI in both repos enforces ID stability and citation resolution.
 
 `bin/setup` offers to initialize it. You can also do it manually:
 
@@ -124,7 +208,7 @@ The [fsi-dsp](https://github.com/goodlabs-studio/fsi-dsp) repo is linked as a gi
 git submodule update --init raw/repos/fsi-dsp
 ```
 
-Requires SSH access to `goodlabs-studio/fsi-dsp`. Without it, wiki skills still work — `/wiki:evaluate` skips code-delta checks and notes the gap in its report.
+Requires SSH access to `goodlabs-studio/fsi-dsp`. Without it, wiki and knowledge skills still work — the act rail (`/dsp:plan`, `/dsp:apply`) requires it.
 
 ## Confluent Cloud Integration (Optional)
 
@@ -139,7 +223,7 @@ EOF
 export CONFLUENT_MCP_ENV_FILE=~/.config/confluent/mcp.env
 ```
 
-Without CC credentials, the wiki and skills still work — you just can't query live clusters.
+Without CC credentials, the wiki and skills still work — you just can't query live clusters or run gate 4 (state check) of the act rail.
 
 ## Contributing
 
@@ -147,7 +231,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. The short version:
 
 1. Branch from `main`
 2. Add/modify wiki articles, run `/wiki:lint`
-3. Open a PR — CI validates wiki structure automatically
+3. Open a PR — CI validates wiki structure, citation resolution, and canon parity automatically
 4. Note which claims were MCP-validated in the PR description
 
 ## Requirements
