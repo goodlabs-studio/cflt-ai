@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 03A-act-rail-plan 03A-02-PLAN.md
-last_updated: "2026-04-29T01:13:24.636Z"
+status: verifying
+stopped_at: Completed 03A-act-rail-plan 03A-03-PLAN.md
+last_updated: "2026-04-29T01:19:17.308Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 15
-  completed_plans: 14
+  completed_plans: 15
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 
 Phase: 03A (act-rail-plan) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-29
 
 Progress: [░░░░░░░░░░] 0%
@@ -66,6 +66,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-review-skill P03 | 4 | 2 tasks | 27 files |
 | Phase 03A-act-rail-plan P01 | 3 | 2 tasks | 3 files |
 | Phase 03A-act-rail-plan P02 | 3 | 2 tasks | 5 files |
+| Phase 03A-act-rail-plan P03 | 3 | 2 tasks | 24 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,9 @@ Recent decisions affecting current work:
 - [Phase 03A-act-rail-plan]: /dsp:plan Rules section enforces ACT-06 read-only: NEVER generate inline Terraform or invoke mcp-confluent write tools
 - [Phase 03A-act-rail-plan]: MODULE_TO_CANON_KEY is explicit (not heuristic) — each new terraform-module requires a conscious canon key assignment; unknown modules produce blocking DRIFT-1 violations
 - [Phase 03A-act-rail-plan]: Canon parity CI covers both repos via submodule pointer: raw/repos/fsi-dsp/** path catches fsi-dsp MANIFEST changes without duplicating the workflow in fsi-dsp
+- [Phase 03A-act-rail-plan]: Golden act harness mirrors ask/review harness pattern exactly: load_case, ALL_CASES glob, parametrize, REQUIRED_FIELDS for consistency across all skill harnesses
+- [Phase 03A-act-rail-plan]: REQUIRED_FIELDS for act cases: 8 fields (id, request, expected_artifact, floor_model, tags, required_claims, forbidden_claims, negative_space) capturing the act rail's unique concerns
+- [Phase 03A-act-rail-plan]: Negative-space cases enforce ACT-06 at structural level: forbidden_claims must contain 'resource "confluent_' — catches core hand-rolled Terraform violation in every negative-space case
 
 ### Pending Todos
 
@@ -122,6 +126,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T01:13:24.634Z
-Stopped at: Completed 03A-act-rail-plan 03A-02-PLAN.md
+Last session: 2026-04-29T01:19:17.306Z
+Stopped at: Completed 03A-act-rail-plan 03A-03-PLAN.md
 Resume file: None
