@@ -47,9 +47,9 @@ The canon overlay stack works — customers can fork and override safely. Base (
 - ✓ Phase 3a: /dsp:plan read-only act rail — Validated in Phase 3a: act-rail-plan
 - ✓ Phase 3a: Structural correctness >= 95% (right artifact, right args) — Validated in Phase 3a: act-rail-plan
 - ✓ Phase 3a: Canon <-> fsi-dsp parity CI in both repos — Validated in Phase 3a: act-rail-plan
-- [ ] Phase 3b: /dsp:apply with human-in-the-loop confirmation
-- [ ] Phase 3b: Three policy profiles (read-only, engineer, break-glass)
-- [ ] Phase 3b: Activity log captures every plan/apply with provenance
+- ✓ Phase 3b: /dsp:apply with human-in-the-loop confirmation — Validated in Phase 3b: act-rail-apply
+- ✓ Phase 3b: Three policy profiles (read-only, engineer, break-glass) — Validated in Phase 3b: act-rail-apply
+- ✓ Phase 3b: Activity log captures every plan/apply with provenance — Validated in Phase 3b: act-rail-apply
 - [ ] Phase 3c: Every mcp-confluent tool classified by profile (by name, not regex)
 - [ ] Phase 3c: Per-profile negative-space test suites
 - [ ] Phase 3c: Break-glass two-step confirmation with override logging
@@ -108,4 +108,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-29 after Phase 3a (act-rail-plan) completion*
+*Last updated: 2026-04-29 after Phase 3b (act-rail-apply) completion*
