@@ -9,6 +9,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from tools.apply_engine import (
     load_profile,
     check_profile_permits,
+    check_tool_permitted,
+    load_tool_classification,
     emit_activity_log_apply,
     write_incident_article,
 )
@@ -410,3 +412,126 @@ class TestBypassPrevention:
         assert "bypass_confirmation" not in source_text, (
             "apply_engine.py must not contain bypass_confirmation"
         )
+
+
+# ---------------------------------------------------------------------------
+# TestToolClassification (ACTG-01)
+# ---------------------------------------------------------------------------
+
+
+class TestToolClassification:
+    def test_load_tool_classification_returns_dict(self):
+        """load_tool_classification() returns dict with 'tools' and 'unclassified_policy'."""
+        classification = load_tool_classification()
+        assert isinstance(classification, dict)
+        assert "tools" in classification
+        assert "unclassified_policy" in classification
+
+    def test_read_only_profile_permits_read_only_tool(self):
+        """read-only profile permits a read-only classified tool."""
+        assert check_tool_permitted("read-only", "confluent_kafka_topic_list") is True
+
+    def test_read_only_profile_denies_engineer_tool(self):
+        """read-only profile denies an engineer-tier tool."""
+        assert check_tool_permitted("read-only", "confluent_kafka_topic_create") is False
+
+    def test_engineer_profile_permits_engineer_tool(self):
+        """engineer profile permits an engineer-tier tool."""
+        assert check_tool_permitted("engineer", "confluent_kafka_topic_create") is True
+
+    def test_engineer_profile_denies_break_glass_tool(self):
+        """engineer profile denies a break-glass-tier tool."""
+        assert check_tool_permitted("engineer", "confluent_kafka_cluster_delete") is False
+
+    def test_break_glass_profile_permits_break_glass_tool(self):
+        """break-glass profile permits a break-glass-tier tool."""
+        assert check_tool_permitted("break-glass", "confluent_kafka_cluster_delete") is True
+
+    def test_unclassified_tool_denied_fail_closed(self):
+        """Unclassified tool is denied (fail-closed) regardless of profile."""
+        assert check_tool_permitted("engineer", "nonexistent_tool_xyz") is False
+
+
+# ---------------------------------------------------------------------------
+# TestCustomerOverlay (ACTG-04)
+# ---------------------------------------------------------------------------
+
+
+class TestCustomerOverlay:
+    def test_acme_bank_engineer_missing_flink(self):
+        """acme-bank engineer overlay does NOT have module/flink in allowed_operations."""
+        profile = load_profile("engineer", customer="acme-bank")
+        assert "module/flink" not in profile["allowed_operations"]
+
+    def test_acme_bank_engineer_has_cp_audit(self):
+        """acme-bank engineer overlay has role/cp_audit in allowed_operations."""
+        profile = load_profile("engineer", customer="acme-bank")
+        assert "role/cp_audit" in profile["allowed_operations"]
+
+    def test_nonexistent_customer_falls_back_to_base(self):
+        """load_profile() with nonexistent customer falls back to base engineer profile."""
+        profile = load_profile("engineer", customer="nonexistent-customer-xyz")
+        # base engineer has module/flink
+        assert "module/flink" in profile["allowed_operations"]
+
+    def test_no_customer_param_backward_compat(self):
+        """load_profile() without customer param still works (backward compat)."""
+        profile = load_profile("engineer")
+        assert isinstance(profile, dict)
+        assert profile["name"] == "engineer"
+
+
+# ---------------------------------------------------------------------------
+# TestOverrideReasonLogging (ACTG-03)
+# ---------------------------------------------------------------------------
+
+
+class TestOverrideReasonLogging:
+    def test_emit_activity_log_includes_override_reason(self, tmp_path, monkeypatch):
+        """emit_activity_log_apply with override_reason writes reason to log content."""
+        import tools.apply_engine as ae
+        monkeypatch.setattr(ae, "PROJECT_ROOT", tmp_path)
+
+        activity_dir = tmp_path / "wiki" / "activity"
+        activity_dir.mkdir(parents=True)
+
+        emit_activity_log_apply(
+            overlay="base",
+            plan_path="plans/dr-failover.md",
+            artifact_id="module/topic",
+            profile_name="break-glass",
+            confirmation_status="confirmed",
+            execution_result="success",
+            duration_seconds=2.5,
+            gate_results=[],
+            operator="ops-lead",
+            override_reason="P0 incident",
+        )
+
+        log_files = list(activity_dir.glob("*.md"))
+        content = log_files[0].read_text()
+        assert "P0 incident" in content
+
+    def test_write_incident_article_includes_override_reason_frontmatter(self, tmp_path, monkeypatch):
+        """write_incident_article with override_reason writes it to frontmatter."""
+        import tools.apply_engine as ae
+        monkeypatch.setattr(ae, "PROJECT_ROOT", tmp_path)
+
+        incidents_dir = tmp_path / "wiki" / "incidents"
+        incidents_dir.mkdir(parents=True)
+
+        result_path = write_incident_article(
+            slug="dr-failover",
+            artifact_id="module/topic",
+            operator="ops-lead",
+            profile_name="break-glass",
+            outcome="success",
+            canon_hash="abcd1234abcd5678",
+            plan_path="plans/dr-failover.md",
+            gate_results=[],
+            execution_result="success",
+            override_reason="DR failover",
+        )
+
+        content = result_path.read_text()
+        assert "override_reason: DR failover" in content

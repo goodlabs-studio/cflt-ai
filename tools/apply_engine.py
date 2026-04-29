@@ -31,19 +31,68 @@ PROFILES_DIR = PROJECT_ROOT / "tools" / "profiles"
 # Explicit set of valid profile names — fail-closed: unrecognized names raise ValueError
 VALID_PROFILES = {"read-only", "engineer", "break-glass"}
 
+# Tier order for hierarchy comparison: read-only < engineer < break-glass
+PROFILE_TIER_ORDER = ["read-only", "engineer", "break-glass"]
+
+
+# ---------------------------------------------------------------------------
+# Tool Classification (ACTG-01)
+# ---------------------------------------------------------------------------
+
+_tool_classification_cache = None
+
+
+def load_tool_classification() -> Dict:
+    """Load tool_classification.json. Cached after first load."""
+    global _tool_classification_cache
+    if _tool_classification_cache is None:
+        path = PROFILES_DIR / "tool_classification.json"
+        _tool_classification_cache = json.loads(path.read_text())
+    return _tool_classification_cache
+
+
+def check_tool_permitted(profile_name: str, tool_name: str, customer: Optional[str] = None) -> bool:
+    """Check whether profile_name permits invoking tool_name via classification table.
+
+    Returns False (fail-closed) if tool_name is not in classification table.
+    Uses tier hierarchy: read-only < engineer < break-glass.
+
+    Args:
+        profile_name: One of VALID_PROFILES.
+        tool_name:    Exact mcp-confluent tool name.
+        customer:     Optional customer name (reserved for future overlay use).
+
+    Returns:
+        True if permitted; False otherwise (fail-closed).
+    """
+    classification = load_tool_classification()
+    tools = classification.get("tools", {})
+
+    if tool_name not in tools:
+        return False
+
+    required_tier = tools[tool_name]
+    profile_idx = PROFILE_TIER_ORDER.index(profile_name)
+    required_idx = PROFILE_TIER_ORDER.index(required_tier)
+    return profile_idx >= required_idx
+
 
 # ---------------------------------------------------------------------------
 # Profile Loading (ACTA-03)
 # ---------------------------------------------------------------------------
 
-def load_profile(profile_name: str) -> Dict:
+def load_profile(profile_name: str, *, customer: Optional[str] = None) -> Dict:
     """Load a policy profile by name from PROFILES_DIR.
 
     Profile names must be one of the VALID_PROFILES set. Unknown names raise
     ValueError immediately (fail-closed — never silently degrades to permissive mode).
 
+    If customer is provided, checks canon/customer/<name>/profiles/<profile>.json first,
+    falling back to the base profile in PROFILES_DIR if the customer overlay is absent.
+
     Args:
         profile_name: Name of the profile to load (e.g., "engineer").
+        customer:     Optional customer name for overlay resolution (keyword-only).
 
     Returns:
         Dict with keys: name (str), description (str), allowed_operations (list).
@@ -59,6 +108,13 @@ def load_profile(profile_name: str) -> Dict:
             f"Unknown profile: {profile_name!r} — must be one of {sorted(VALID_PROFILES)}"
         )
 
+    # Check customer overlay first (ACTG-04)
+    if customer:
+        customer_profile = PROJECT_ROOT / "canon" / "customer" / customer / "profiles" / f"{profile_name}.json"
+        if customer_profile.exists():
+            return json.loads(customer_profile.read_text())
+
+    # Fall back to base profile
     profile_path = PROFILES_DIR / f"{profile_name}.json"
     profile_data = json.loads(profile_path.read_text())
     return profile_data
@@ -104,6 +160,7 @@ def emit_activity_log_apply(
     duration_seconds: float,
     gate_results: List[Dict],
     operator: str,
+    override_reason: Optional[str] = None,
 ) -> None:
     """Append a /dsp:apply entry to the overlay-scoped activity log.
 
@@ -121,6 +178,7 @@ def emit_activity_log_apply(
         duration_seconds:    Wall-clock seconds from confirmation to execution complete.
         gate_results:        List of gate result dicts from run_gate_chain().
         operator:            Operator identifier (user/service account name).
+        override_reason:     Break-glass override reason (ACTG-03); omit for non-break-glass.
     """
     now = datetime.now(timezone.utc)
     timestamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -152,8 +210,10 @@ def emit_activity_log_apply(
         f"**Duration seconds:** {duration_seconds:.1f}",
         f"**Gates:** {gate_summary}",
         f"**Canon stack:** {canon_stack}",
-        "",
     ]
+    if override_reason is not None:
+        entry_lines.append(f"**Override reason:** {override_reason}")
+    entry_lines.append("")
     entry = "\n".join(entry_lines)
 
     # Resolve log file path
@@ -187,6 +247,7 @@ def write_incident_article(
     plan_path: str,
     gate_results: List[Dict],
     execution_result: str,
+    override_reason: Optional[str] = None,
 ) -> Path:
     """Write a wiki incident article for a /dsp:apply execution.
 
@@ -206,6 +267,7 @@ def write_incident_article(
         plan_path:        Path to the source plan file.
         gate_results:     List of gate result dicts from run_gate_chain().
         execution_result: Detailed execution result string.
+        override_reason:  Break-glass override reason (ACTG-03); omit for non-break-glass.
 
     Returns:
         Path to the created incident article.
@@ -220,7 +282,7 @@ def write_incident_article(
     incidents_dir.mkdir(parents=True, exist_ok=True)
     article_path = incidents_dir / filename
 
-    # Build YAML frontmatter (7 required keys)
+    # Build YAML frontmatter (7 required keys + optional override_reason for break-glass)
     frontmatter_lines = [
         "---",
         f"artifact: {artifact_id}",
@@ -230,9 +292,10 @@ def write_incident_article(
         f"canon_hash: {canon_hash}",
         f"plan_ref: {plan_path}",
         f"timestamp: {timestamp}",
-        "---",
-        "",
     ]
+    if override_reason is not None:
+        frontmatter_lines.append(f"override_reason: {override_reason}")
+    frontmatter_lines += ["---", ""]
 
     # Build gate results markdown table
     if gate_results:
@@ -265,6 +328,10 @@ def write_incident_article(
         "## Why",
         "",
         f"See plan: `{plan_path}`",
+    ]
+    if override_reason is not None:
+        body_sections.append(f"Override reason: {override_reason}")
+    body_sections += [
         "",
         "## Gate Results",
         "",
