@@ -1,0 +1,32 @@
+name: Canon Parity
+
+# Trigger on any PR that touches:
+# - canon/ configs (cflt-ai canon changes)
+# - raw/repos/fsi-dsp/** (fsi-dsp submodule pointer updates — covers both repos without
+#   duplicating this workflow in fsi-dsp, which would require duplicating canon/ context there)
+# - the parity script itself
+on:
+  pull_request:
+    paths:
+      - 'canon/**'
+      - 'raw/repos/fsi-dsp/**'
+      - 'tools/check-canon-parity.py'
+
+jobs:
+  check-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true  # fsi-dsp is a submodule — required to access MANIFEST.yaml
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Check canon <-> fsi-dsp parity
+        # Exit 0 = parity confirmed, exit 1 = drift detected (blocks merge)
+        run: python tools/check-canon-parity.py
