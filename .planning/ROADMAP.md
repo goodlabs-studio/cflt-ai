@@ -104,7 +104,7 @@ Plans:
 Plans:
 - [x] 03B-01-PLAN.md — Profile JSON files + apply_engine.py with TDD unit tests (ACTA-02, ACTA-03, ACTA-04, ACTA-05)
 - [x] 03B-02-PLAN.md — /dsp:apply skill file with 9-step structure and mandatory human confirmation (ACTA-01)
-- [ ] 03B-03-PLAN.md — Golden test harness with 10 apply cases and extended test runner (ACTA-06)
+- [x] 03B-03-PLAN.md — Golden test harness with 10 apply cases and extended test runner (ACTA-06)
 
 ### Phase 3c: Act Rail — Profile Gating
 **Goal**: Every mcp-confluent tool is explicitly classified into a profile by name, per-profile negative-space suites prove forbidden tools fail closed, break-glass requires two-step confirmation, and a customer fork demonstrates differential gating
