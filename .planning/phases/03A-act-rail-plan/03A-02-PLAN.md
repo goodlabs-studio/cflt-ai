@@ -20,6 +20,7 @@ must_haves:
     - "/dsp:plan skill file exists with structured steps that never generate inline Terraform"
     - "Parity checker detects drift between MANIFEST capabilities and canon defaults keys"
     - "CI workflow runs parity check on PR and blocks on drift"
+    - "Parity CI covers both repos: cflt-ai workflow triggers on canon/ and MANIFEST changes, fsi-dsp PRs update the submodule pointer which triggers cflt-ai CI"
   artifacts:
     - path: ".claude/commands/dsp-plan.md"
       provides: "/dsp:plan skill with flag parsing, gate chain invocation, plan output, activity log"
@@ -40,6 +41,10 @@ must_haves:
       to: "tools/act_gates.py"
       via: "Step 3 calls run_gate_chain()"
       pattern: "run_gate_chain"
+    - from: ".claude/commands/dsp-plan.md"
+      to: "canon/stack.py"
+      via: "Steps 2 and 5 call resolve_stack() and provenance_footer()"
+      pattern: "resolve_stack|provenance_footer"
     - from: "tools/check-canon-parity.py"
       to: "raw/repos/fsi-dsp/MANIFEST.yaml"
       via: "YAML load of capability IDs"
@@ -150,7 +155,7 @@ $ARGUMENTS
 ## Step 1: Parse arguments
 - Extract `--overlay <name>` (customer overlay, e.g., "acme-bank")
 - Extract `--dry-run` (default: true, plan-only mode)
-- Extract `--gate-bypass <gate>` (repeatable; dev mode — skip named gates)
+- Extract `--gate-bypass <gate>` (repeatable; dev mode — skip named gates per ACT-03)
   Valid gate names: canon_compliance, fsi_dsp_coverage, confluent_docs_schema, mcp_confluent_state
 - Remaining text is the natural language request string
 - Validation:
@@ -259,6 +264,7 @@ Test class **TestParityScript:**
     - .claude/commands/dsp-plan.md contains "NEVER generate inline Terraform" in Rules section
     - .claude/commands/dsp-plan.md contains "--gate-bypass" flag documentation
     - .claude/commands/dsp-plan.md contains "run_gate_chain" reference in Step 3
+    - .claude/commands/dsp-plan.md contains "resolve_stack" reference in Step 2 and "provenance_footer" reference in Step 5
     - .claude/commands/dsp-plan.md contains "outputs/plans/" as output path
     - .claude/commands/dsp-plan.md contains activity log emission in Step 6 referencing "wiki/activity/"
     - tools/check-canon-parity.py contains `def check_parity` function
@@ -287,7 +293,7 @@ on:
   pull_request:
     paths:
       - 'canon/**'
-      - 'raw/repos/fsi-dsp/MANIFEST.yaml'
+      - 'raw/repos/fsi-dsp/**'
       - 'tools/check-canon-parity.py'
 
 jobs:
@@ -309,24 +315,28 @@ jobs:
         run: python tools/check-canon-parity.py
 ```
 
-Key details:
-- Triggers on changes to canon/, MANIFEST.yaml, or the parity script itself
-- Uses submodules: true (fsi-dsp is a submodule)
+Key details (ACT-08 "parity CI in both repos"):
+- Triggers on changes to canon/, the fsi-dsp submodule path (raw/repos/fsi-dsp/**), or the parity script itself
+- Uses `submodules: true` — this is the mechanism for covering "both repos":
+  - cflt-ai PRs that change canon/ trigger the parity check directly
+  - fsi-dsp PRs that change MANIFEST.yaml update the submodule pointer in cflt-ai, which triggers this workflow via the `raw/repos/fsi-dsp/**` path filter
+  - This bidirectional trigger via the submodule relationship satisfies ACT-08 "both repos" without duplicating the workflow in fsi-dsp (which would require duplicating canon/ context there)
 - Installs pyyaml (only dependency)
 - Script exit code 0/1 determines CI pass/fail
   </action>
   <verify>
-    <automated>python3 -c "import yaml; wf=yaml.safe_load(open('.github/workflows/canon-parity.yml')); assert 'check-parity' in wf['jobs']; assert 'canon/**' in wf['on']['pull_request']['paths']; print('OK: CI workflow valid')"</automated>
+    <automated>python3 -c "import yaml; wf=yaml.safe_load(open('.github/workflows/canon-parity.yml')); assert 'check-parity' in wf['jobs']; assert 'canon/**' in wf['on']['pull_request']['paths']; assert 'raw/repos/fsi-dsp/**' in wf['on']['pull_request']['paths']; print('OK: CI workflow valid, both-repo paths covered')"</automated>
   </verify>
   <acceptance_criteria>
     - .github/workflows/canon-parity.yml exists
     - Workflow name is "Canon Parity"
-    - Triggers on pull_request with paths including 'canon/**' and 'raw/repos/fsi-dsp/MANIFEST.yaml'
+    - Triggers on pull_request with paths including 'canon/**' and 'raw/repos/fsi-dsp/**'
     - Job uses actions/checkout@v4 with submodules: true
     - Job runs `python tools/check-canon-parity.py`
     - Job installs pyyaml dependency
+    - ACT-08 both-repos coverage: cflt-ai canon changes trigger directly, fsi-dsp changes trigger via submodule pointer update on raw/repos/fsi-dsp/** path
   </acceptance_criteria>
-  <done>CI workflow blocks merges on canon-fsi-dsp drift (ACT-08). Workflow structure matches existing manifest-citations.yml pattern.</done>
+  <done>CI workflow blocks merges on canon-fsi-dsp drift (ACT-08). Both-repo coverage achieved via submodule path trigger: cflt-ai canon/ changes and fsi-dsp submodule pointer updates both fire the parity check. Workflow structure matches existing manifest-citations.yml pattern.</done>
 </task>
 
 </tasks>
@@ -341,7 +351,7 @@ Key details:
 <success_criteria>
 - /dsp:plan skill file exists with all 6 steps and read-only rules (ACT-04, ACT-06)
 - Parity checker runs clean on current state (ACT-08)
-- CI workflow triggers on canon/ and MANIFEST changes (ACT-08)
+- CI workflow triggers on canon/ and fsi-dsp submodule changes, covering both repos (ACT-08)
 - Parity unit tests all pass
 </success_criteria>
 

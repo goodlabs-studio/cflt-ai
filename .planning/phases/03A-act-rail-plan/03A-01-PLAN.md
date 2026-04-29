@@ -185,12 +185,13 @@ Gate functions (each takes request: str, overlay: Optional[str] = None) -> Dict:
 - Include `if __name__ == "__main__":` guard for CLI testing (matches tools/ convention)
   </action>
   <verify>
-    <automated>python3 -c "from tools.act_gates import run_gate_chain, GATE_NAMES; assert len(GATE_NAMES) == 4; print('OK: act_gates importable')" && python3 -c "import json; d=json.load(open('.mcp.json')); assert 'terraform' in d['mcpServers']; assert 'context7' in d['mcpServers']; print('OK: .mcp.json valid')"</automated>
+    <automated>python3 -c "from tools.act_gates import gate1_canon_compliance, gate2_fsi_dsp_coverage, gate3_confluent_docs_schema, gate4_mcp_confluent_state, run_gate_chain, GATE_NAMES; assert len(GATE_NAMES) == 4; print('OK: act_gates importable, all 4 gates + orchestrator exported')" && python3 -c "import json; d=json.load(open('.mcp.json')); assert 'terraform' in d['mcpServers']; assert 'context7' in d['mcpServers']; print('OK: .mcp.json valid')"</automated>
   </verify>
   <acceptance_criteria>
     - .mcp.json contains key "terraform" under mcpServers with command "npx" and args containing "@hashicorp/terraform-mcp-server"
     - .mcp.json still contains keys "context7", "confluent-docs", "mcp-confluent" (no existing entries removed)
     - tools/act_gates.py exports GATE_NAMES with exactly ["canon_compliance", "fsi_dsp_coverage", "confluent_docs_schema", "mcp_confluent_state"]
+    - tools/act_gates.py exports all four gate functions: gate1_canon_compliance, gate2_fsi_dsp_coverage, gate3_confluent_docs_schema, gate4_mcp_confluent_state
     - tools/act_gates.py contains `from canon.stack import resolve_stack`
     - tools/act_gates.py contains `yaml.safe_load` for MANIFEST loading
     - tools/act_gates.py contains `if __name__ == "__main__":` guard
@@ -212,7 +213,7 @@ Gate functions (each takes request: str, overlay: Optional[str] = None) -> Dict:
   <behavior>
     - test_gate_names_count: GATE_NAMES has exactly 4 entries
     - test_gate_names_order: GATE_NAMES is ["canon_compliance", "fsi_dsp_coverage", "confluent_docs_schema", "mcp_confluent_state"]
-    - test_gate1_pass_on_compliant_request: "create a topic with DR and replication factor 3" returns pass
+    - test_gate1_pass_on_compliant_request: "create a topic with replication factor 3 and DR" returns pass
     - test_gate1_fail_on_noncompliant_request: "create topic with acks=0" returns fail with evidence mentioning "acks"
     - test_gate2_pass_matches_manifest_artifact: "create a topic" matches module/topic
     - test_gate2_fail_no_matching_artifact: "provision a MongoDB cluster" returns fail
@@ -293,7 +294,7 @@ Test classes:
 
 <verification>
 - `python3 -c "import json; d=json.load(open('.mcp.json')); assert 'terraform' in d['mcpServers']"` exits 0
-- `python3 -c "from tools.act_gates import run_gate_chain, GATE_NAMES"` exits 0
+- `python3 -c "from tools.act_gates import gate1_canon_compliance, gate2_fsi_dsp_coverage, gate3_confluent_docs_schema, gate4_mcp_confluent_state, run_gate_chain, GATE_NAMES"` exits 0
 - `python3 -m pytest tests/test_act_gates.py -v --tb=short -q` all green
 </verification>
 

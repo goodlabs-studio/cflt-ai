@@ -19,7 +19,8 @@ must_haves:
     - "Golden harness directory exists with >= 20 case files including >= 3 negative-space"
     - "Structural pytest runner validates all case files have required fields"
     - "Negative-space cases enforce no inline Terraform in expected output"
-    - "All golden cases pass structural validation at >= 95% rate"
+    - "All 22 authored case files pass structural validation at 100%"
+    - "ACT-07 >= 95% structural correctness applies to live model accuracy measured at runtime"
   artifacts:
     - path: "tests/golden/act/test_golden_act.py"
       provides: "Structural golden harness runner mirroring test_golden_ask.py"
@@ -225,7 +226,7 @@ VALIDATION CHECKLIST:
 - Floor model distribution: 10 haiku, 12 sonnet (both >= 5)
   </action>
   <verify>
-    <automated>python3 -m pytest tests/golden/act/test_golden_act.py -v --tb=short -q</automated>
+    <automated>test -f tests/golden/act/test_golden_act.py && python3 -m pytest tests/golden/act/test_golden_act.py -v --tb=short -q</automated>
   </verify>
   <acceptance_criteria>
     - tests/golden/act/cases/ directory contains >= 20 .md files
@@ -238,7 +239,7 @@ VALIDATION CHECKLIST:
     - python3 -m pytest tests/golden/act/test_golden_act.py -v --tb=short exits 0 with all tests passing
     - No duplicate case IDs
   </acceptance_criteria>
-  <done>Golden harness contains 22 cases (4 negative-space), all passing structural validation. Structural correctness baseline >= 95% (ACT-07). Negative-space cases enforce ACT-06 no-inline-Terraform constraint. Distribution covers terraform-modules, ansible-roles, scenarios, overlays, gate-bypass, and out-of-scope requests.</done>
+  <done>Golden harness contains 22 cases (4 negative-space), all passing structural validation at 100%. Structural correctness baseline established for ACT-07 runtime measurement (>= 95% live model accuracy). Negative-space cases enforce ACT-06 no-inline-Terraform constraint. Distribution covers terraform-modules, ansible-roles, scenarios, overlays, gate-bypass, and out-of-scope requests.</done>
 </task>
 
 </tasks>
@@ -253,7 +254,8 @@ VALIDATION CHECKLIST:
 <success_criteria>
 - >= 20 golden cases exist with valid structure (ACT-05)
 - >= 3 negative-space cases enforce no inline Terraform (ACT-05, ACT-06)
-- All structural tests pass (ACT-07 >= 95% baseline)
+- All authored cases pass structural validation at 100% (ACT-07 structural baseline)
+- ACT-07 >= 95% threshold applies to live model accuracy at runtime, measured against these cases
 - Floor model distribution covers both haiku and sonnet (ACT-07)
 </success_criteria>
 
