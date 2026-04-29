@@ -27,3 +27,12 @@ _spec = _ilu.spec_from_file_location(
 _mod = _ilu.module_from_spec(_spec)
 sys.modules["tools.review_to_docx"] = _mod
 _spec.loader.exec_module(_mod)
+
+# Pre-register so `from tools.check_canon_parity import ...` works
+_spec2 = _ilu.spec_from_file_location(
+    "tools.check_canon_parity",
+    _tools_dir / "check-canon-parity.py",
+)
+_mod2 = _ilu.module_from_spec(_spec2)
+sys.modules["tools.check_canon_parity"] = _mod2
+_spec2.loader.exec_module(_mod2)
