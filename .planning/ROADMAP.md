@@ -115,11 +115,11 @@ Plans:
   2. Per-profile negative-space test suites run and confirm that tools forbidden by a profile return a closed failure, not a partial result
   3. The break-glass profile requires two distinct confirmation prompts and logs the override reason before any tool executes
   4. At least one customer fork exists with a profile configuration that differs from base, and a test demonstrates the differential gating works
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 03C-01-PLAN.md — Classification table (50+ tools), profile JSON updates, acme-bank customer overlay (ACTG-01, ACTG-04)
-- [ ] 03C-02-PLAN.md — Extend apply_engine.py with tool classification check, customer overlay loading, two-step break-glass in dsp-apply.md (ACTG-01, ACTG-03, ACTG-04)
+- [x] 03C-02-PLAN.md — Extend apply_engine.py with tool classification check, customer overlay loading, two-step break-glass in dsp-apply.md (ACTG-01, ACTG-03, ACTG-04)
 - [ ] 03C-03-PLAN.md — Per-profile negative-space test suite with full tool x profile parametrized matrix (ACTG-01, ACTG-02, ACTG-03, ACTG-04)
 
 ## Progress
@@ -134,4 +134,4 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 | 2. Review Skill | 3/3 | Complete   | 2026-04-28 |
 | 3a. Act Rail — Plan | 0/3 | Complete    | 2026-04-29 |
 | 3b. Act Rail — Apply | 0/3 | Complete    | 2026-04-29 |
-| 3c. Act Rail — Profile Gating | 0/3 | Planning complete | - |
+| 3c. Act Rail — Profile Gating | 2/3 | In Progress|  |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03C-act-rail-profile-gating 03C-01-PLAN.md
-last_updated: "2026-04-29T15:53:47.731Z"
+stopped_at: Completed 03C-act-rail-profile-gating 03C-02-PLAN.md
+last_updated: "2026-04-29T15:57:59.039Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 21
-  completed_plans: 19
+  completed_plans: 20
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: 03C (act-rail-profile-gating) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -71,6 +71,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03B-act-rail-apply P01 | 2 | 1 tasks | 5 files |
 | Phase 03B-act-rail-apply P03 | 8 | 2 tasks | 11 files |
 | Phase 03C-act-rail-profile-gating P01 | 8 | 2 tasks | 5 files |
+| Phase 03C-act-rail-profile-gating P02 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,9 @@ Recent decisions affecting current work:
 - [Phase 03B-act-rail-apply]: test_apply_case_has_valid_profile skips validation for negative-space cases to allow unknown profile rejection tests
 - [Phase 03C-act-rail-profile-gating]: 81 mcp-confluent tools explicitly classified into three tiers by exact name; unclassified_policy=deny for fail-closed enforcement
 - [Phase 03C-act-rail-profile-gating]: break-glass wildcard replaced with explicit artifact operation list; acme-bank engineer overlay is complete profile doc (not partial diff)
+- [Phase 03C-act-rail-profile-gating]: check_tool_permitted() is parallel to check_profile_permits() — separate namespaces: MCP tool names vs fsi-dsp artifact IDs
+- [Phase 03C-act-rail-profile-gating]: customer param on load_profile() is keyword-only per RESEARCH.md Pitfall 2 — existing positional callers unaffected
+- [Phase 03C-act-rail-profile-gating]: override_reason Optional[str]=None — backward compatible; None means omit the field from log/frontmatter
 
 ### Pending Todos
 
@@ -142,6 +146,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T15:53:47.729Z
-Stopped at: Completed 03C-act-rail-profile-gating 03C-01-PLAN.md
+Last session: 2026-04-29T15:57:59.037Z
+Stopped at: Completed 03C-act-rail-profile-gating 03C-02-PLAN.md
 Resume file: None
