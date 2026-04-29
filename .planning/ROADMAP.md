@@ -99,7 +99,12 @@ Plans:
   3. Every plan and apply appends to the activity log with the full provenance schema (artifact ID, canon stack hash, model, operator, timestamp)
   4. Every apply produces a wiki incident entry
   5. Structural-correctness metric holds >= 95% across 30 days of real engagement use
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 03B-01-PLAN.md — Profile JSON files + apply_engine.py with TDD unit tests (ACTA-02, ACTA-03, ACTA-04, ACTA-05)
+- [ ] 03B-02-PLAN.md — /dsp:apply skill file with 9-step structure and mandatory human confirmation (ACTA-01)
+- [ ] 03B-03-PLAN.md — Golden test harness with 10 apply cases and extended test runner (ACTA-06)
 
 ### Phase 3c: Act Rail — Profile Gating
 **Goal**: Every mcp-confluent tool is explicitly classified into a profile by name, per-profile negative-space suites prove forbidden tools fail closed, break-glass requires two-step confirmation, and a customer fork demonstrates differential gating
@@ -123,5 +128,5 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 | 1. Knowledge Skill | 0/3 | Planning complete | - |
 | 2. Review Skill | 3/3 | Complete   | 2026-04-28 |
 | 3a. Act Rail — Plan | 0/3 | Complete    | 2026-04-29 |
-| 3b. Act Rail — Apply | 0/TBD | Not started | - |
+| 3b. Act Rail — Apply | 0/3 | Planning complete | - |
 | 3c. Act Rail — Profile Gating | 0/TBD | Not started | - |
