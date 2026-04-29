@@ -57,12 +57,12 @@ Requirements for v1 milestone (Phase 0 through Phase 3c).
 
 ### Act Rail (Plan)
 
-- [ ] **ACT-01**: Terraform MCP wired into .mcp.json
-- [ ] **ACT-02**: Four-gate validation chain implemented (canon compliance → fsi-dsp coverage → confluent-docs schema → mcp-confluent state)
-- [ ] **ACT-03**: Each gate individually testable and bypassable in dev mode
+- [x] **ACT-01**: Terraform MCP wired into .mcp.json
+- [x] **ACT-02**: Four-gate validation chain implemented (canon compliance → fsi-dsp coverage → confluent-docs schema → mcp-confluent state)
+- [x] **ACT-03**: Each gate individually testable and bypassable in dev mode
 - [ ] **ACT-04**: /dsp:plan read-only act rail skill implemented
 - [ ] **ACT-05**: Golden test harness at tests/golden/act/ with >= 20 cases including negative-space
-- [ ] **ACT-06**: Agent never generates inline Terraform; never invokes mcp-confluent write tools directly
+- [x] **ACT-06**: Agent never generates inline Terraform; never invokes mcp-confluent write tools directly
 - [ ] **ACT-07**: Structural correctness >= 95% (right artifact selected, right arguments, schemas validate)
 - [ ] **ACT-08**: Canon <-> fsi-dsp parity test running in both repos' CI and blocking on drift
 
@@ -142,12 +142,12 @@ Deferred to future release. Tracked but not in current roadmap.
 | REVW-04 | Phase 2 | Complete |
 | REVW-05 | Phase 2 | Complete |
 | REVW-06 | Phase 2 | Complete |
-| ACT-01 | Phase 3a | Pending |
-| ACT-02 | Phase 3a | Pending |
-| ACT-03 | Phase 3a | Pending |
+| ACT-01 | Phase 3a | Complete |
+| ACT-02 | Phase 3a | Complete |
+| ACT-03 | Phase 3a | Complete |
 | ACT-04 | Phase 3a | Pending |
 | ACT-05 | Phase 3a | Pending |
-| ACT-06 | Phase 3a | Pending |
+| ACT-06 | Phase 3a | Complete |
 | ACT-07 | Phase 3a | Pending |
 | ACT-08 | Phase 3a | Pending |
 | ACTA-01 | Phase 3b | Pending |
