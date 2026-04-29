@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03A-act-rail-plan 03A-01-PLAN.md
-last_updated: "2026-04-29T01:07:12.304Z"
+stopped_at: Completed 03A-act-rail-plan 03A-02-PLAN.md
+last_updated: "2026-04-29T01:13:24.636Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 14
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: 03A (act-rail-plan) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-29
 
@@ -65,6 +65,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-review-skill P02 | 3 | 3 tasks | 6 files |
 | Phase 02-review-skill P03 | 4 | 2 tasks | 27 files |
 | Phase 03A-act-rail-plan P01 | 3 | 2 tasks | 3 files |
+| Phase 03A-act-rail-plan P02 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,9 @@ Recent decisions affecting current work:
 - [Phase 03A-act-rail-plan]: Gate 2 prefers terraform-module over ansible-role when create/provision verb detected in request
 - [Phase 03A-act-rail-plan]: Gates 3 and 4 are stubs returning pass — MCP connectivity required for real validation; unit tests verify structure only
 - [Phase 03A-act-rail-plan]: Violation pattern matching uses explicit lowercase string patterns (not regex or NLP) for determinism
+- [Phase 03A-act-rail-plan]: /dsp:plan Rules section enforces ACT-06 read-only: NEVER generate inline Terraform or invoke mcp-confluent write tools
+- [Phase 03A-act-rail-plan]: MODULE_TO_CANON_KEY is explicit (not heuristic) — each new terraform-module requires a conscious canon key assignment; unknown modules produce blocking DRIFT-1 violations
+- [Phase 03A-act-rail-plan]: Canon parity CI covers both repos via submodule pointer: raw/repos/fsi-dsp/** path catches fsi-dsp MANIFEST changes without duplicating the workflow in fsi-dsp
 
 ### Pending Todos
 
@@ -118,6 +122,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T01:07:12.302Z
-Stopped at: Completed 03A-act-rail-plan 03A-01-PLAN.md
+Last session: 2026-04-29T01:13:24.634Z
+Stopped at: Completed 03A-act-rail-plan 03A-02-PLAN.md
 Resume file: None

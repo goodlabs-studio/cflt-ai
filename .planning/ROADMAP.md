@@ -86,7 +86,7 @@ Plans:
 
 Plans:
 - [x] 03A-01-PLAN.md — Wire Terraform MCP, build four-gate chain module, and unit tests (ACT-01, ACT-02, ACT-03, ACT-06)
-- [ ] 03A-02-PLAN.md — Create /dsp:plan skill file, canon parity checker with tests, and CI workflow (ACT-04, ACT-06, ACT-08)
+- [x] 03A-02-PLAN.md — Create /dsp:plan skill file, canon parity checker with tests, and CI workflow (ACT-04, ACT-06, ACT-08)
 - [ ] 03A-03-PLAN.md — Build golden test harness with 22 cases and structural pytest runner (ACT-05, ACT-07)
 
 ### Phase 3b: Act Rail — Apply
