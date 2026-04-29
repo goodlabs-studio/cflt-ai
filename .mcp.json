@@ -20,6 +20,10 @@
       "env": {
         "CONFLUENT_MCP_ENV_FILE": "${CONFLUENT_MCP_ENV_FILE}"
       }
+    },
+    "terraform": {
+      "command": "npx",
+      "args": ["-y", "@hashicorp/terraform-mcp-server"]
     }
   }
 }
