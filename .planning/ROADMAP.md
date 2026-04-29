@@ -15,7 +15,7 @@ Six phases deliver a Confluent operational and knowledge agent for FSI engagemen
 - [x] **Phase 2: Review Skill** - Reproducible claim extraction, premise-challenge step, .docx output, multi-document support, customer overlay validation (completed 2026-04-28)
 - [x] **Phase 3a: Act Rail — Plan** - Four-gate validation chain, /dsp:plan read-only rail, structural-correctness harness, CI parity in both repos (completed 2026-04-29)
 - [x] **Phase 3b: Act Rail — Apply** - /dsp:apply with human-in-the-loop confirmation, three policy profiles, activity log, incident entries (completed 2026-04-29)
-- [ ] **Phase 3c: Act Rail — Profile Gating** - Per-tool classification of all 50+ mcp-confluent tools, negative-space test suites, break-glass two-step, customer fork demo
+- [x] **Phase 3c: Act Rail — Profile Gating** - Per-tool classification of all 50+ mcp-confluent tools, negative-space test suites, break-glass two-step, customer fork demo (completed 2026-04-29)
 
 ## Phase Details
 
@@ -115,7 +115,7 @@ Plans:
   2. Per-profile negative-space test suites run and confirm that tools forbidden by a profile return a closed failure, not a partial result
   3. The break-glass profile requires two distinct confirmation prompts and logs the override reason before any tool executes
   4. At least one customer fork exists with a profile configuration that differs from base, and a test demonstrates the differential gating works
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 03C-01-PLAN.md — Classification table (50+ tools), profile JSON updates, acme-bank customer overlay (ACTG-01, ACTG-04)
@@ -134,4 +134,4 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 | 2. Review Skill | 3/3 | Complete   | 2026-04-28 |
 | 3a. Act Rail — Plan | 0/3 | Complete    | 2026-04-29 |
 | 3b. Act Rail — Apply | 0/3 | Complete    | 2026-04-29 |
-| 3c. Act Rail — Profile Gating | 2/3 | In Progress|  |
+| 3c. Act Rail — Profile Gating | 2/3 | Complete    | 2026-04-29 |
