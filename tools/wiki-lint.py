@@ -128,6 +128,8 @@ def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
                 findings["broken_links"].append(f"{rel} → {link}")
 
     # Orphans: articles not referenced in _index.md
+    # _index.md uses paths relative to the wiki dir (e.g. "concepts/foo.md"),
+    # so compare against wiki-relative paths, not project-root-relative ones.
     if full:
         index = wiki / "_index.md"
         if index.exists():
@@ -135,9 +137,9 @@ def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
             for md in sorted(wiki.rglob("*.md")):
                 if md.name.startswith("_"):
                     continue
-                rel = str(md.relative_to(root))
-                if rel not in index_content:
-                    findings["orphans"].append(rel)
+                rel_wiki = str(md.relative_to(wiki))
+                if rel_wiki not in index_content:
+                    findings["orphans"].append(str(md.relative_to(root)))
 
     return findings
 

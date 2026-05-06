@@ -1,6 +1,6 @@
 ---
 title: Wiki Index
-last_updated: 2026-05-04
+last_updated: 2026-05-05
 ---
 
 # cflt-ai Wiki Index
@@ -55,3 +55,10 @@ The LLM maintains this file. Do not edit manually.
 ## Synthesis
 
 [ADR Index](synthesis/adr-index.md) — Summary of 8 architecture decision records: Avro, compatibility tiers, Consul, Connect on-prem, CL over MRC, OAuth, naming, DR tiers — #adr #fsi #architecture
+
+## Activity
+
+Append-only audit trail of skill invocations. One file per calendar month; see [activity/README.md](activity/README.md) for format.
+
+[2026-04](activity/2026-04.md) — Skill invocations during April 2026 — #activity
+[2026-05](activity/2026-05.md) — Skill invocations during May 2026 — #activity
