@@ -5,10 +5,12 @@
       "args": ["-y", "@upstash/context7-mcp"]
     },
     "confluent-docs": {
-      "command": "npx",
+      "command": "uvx",
       "args": [
-        "-y", "@langchain/mcpdoc-server",
-        "--url", "https://docs.confluent.io/llms.txt"
+        "--from", "mcpdoc",
+        "mcpdoc",
+        "--urls", "Confluent:https://docs.confluent.io/llms.txt",
+        "--transport", "stdio"
       ]
     },
     "mcp-confluent": {

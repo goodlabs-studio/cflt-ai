@@ -1,6 +1,6 @@
 ---
 title: Wiki Index
-last_updated: 2026-04-17
+last_updated: 2026-05-04
 ---
 
 # cflt-ai Wiki Index
@@ -38,6 +38,11 @@ The LLM maintains this file. Do not edit manually.
 [AKS Kafka Tuning](patterns/aks-kafka-tuning.md) — VM SKU selection (Edsv5/Lsv3/Ebsv5), storage tiering (Premium SSD v2/Ultra/NVMe), network config, broker JVM tuning, OS sysctl, CFK on AKS, monitoring — #kafka #azure #kubernetes #cfk #performance
 [Dead Letter Queue Design](patterns/dead-letter-queue-design.md) — DLQ architecture variants (simple, retry, multi-level, error categorization), Kafka Connect/Spring Kafka/Streams implementations, topic design, reprocessing strategies, monitoring — #kafka #patterns #error-handling #connect #spring-kafka #streams
 [FSI Exactly-Once Pattern](patterns/fsi-exactly-once.md) — Five-layer EOS for financial services: idempotent/transactional producers, read_committed consumers, outbox pattern, application idempotency keys; saga orchestration, audit trails, failure modes — #kafka #fsi #exactly-once #transactions #compliance
+[Audit Log SIEM Integration](patterns/audit-log-siem-integration.md) — Forwarding Confluent Cloud audit log events (auth failures, RBAC denials, config changes, access transparency) to SIEM/observability platforms via HTTP Sink Connector pipeline — #kafka #confluent-cloud #observability #security #fsi #audit #compliance #dynatrace #splunk
+[LinuxONE Kafka Validation & Benchmarking Suite](patterns/linuxone-validation-suite.md) — KRaft-native validation plan for CP 8.2 on Emperor 5; HiperSockets/SMC-D/CEX8S/NNPA tests beyond canonical x86 suites — #kafka #linuxone #ibm #s390x #kraft #validation #benchmark #fips #fsi
+[LinuxONE Kafka Tuning](patterns/linuxone-kafka-tuning.md) — Validated Kafka 4.2 / CP 8.2 tuning with FSI tier overlay; HiperSockets MTU, SMC-D, Crypto Express offload, NUMA pinning, KRaft-specific knobs — #kafka #linuxone #ibm #s390x #kraft #tuning #fips #fsi
+[LinuxONE Flink Validation, Tuning & Telum II Inference](patterns/linuxone-flink-validation-tuning.md) — CMF on s390x validation + tuning; sub-ms anomaly detection via on-chip Telum II NNPA invoked from Flink UDFs — #flink #linuxone #ibm #s390x #telum #nnpa #zdnn #validation #tuning #fsi
+[FSI Reference Architecture — LinuxONE + Off-Platform Analytics](patterns/fsi-l1-reference-architecture.md) — L1 operational plane (Mongo, Cockroach, Postgres, Redis, Neo4j, Confluent, Flink+Telum II) with off-platform analytics via Cluster Linking → CC Tableflow → Databricks — #fsi #linuxone #reference-architecture #confluent #mongodb #cockroachdb #postgres #redis #neo4j #databricks #telum
 
 ## Incidents
 
