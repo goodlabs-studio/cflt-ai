@@ -124,6 +124,15 @@ None — no external service configuration required.
 - Citation enforcement tests in tests/test_wiki_citations.py provide ongoing regression coverage; runs in CI via `pytest tests/`
 - LinuxONE article is wired into _index.md and _graph.md; Plan 06 link-checking will validate the new cross-links
 
+## Self-Check: PASSED
+
+- wiki/concepts/linuxone-kafka-integration.md: FOUND
+- tests/test_wiki_citations.py: FOUND
+- 00-05-SUMMARY.md: FOUND
+- Task 1 commit 349b533: FOUND
+- Task 2 commit 4b09320: FOUND
+- Final metadata commit edf518d: FOUND
+
 ---
 *Phase: 00-foundation*
 *Completed: 2026-04-28*
