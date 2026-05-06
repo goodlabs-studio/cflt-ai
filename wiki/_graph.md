@@ -127,3 +127,8 @@ concepts/linuxone-kafka-integration → concepts/fsi-data-streaming-platform : p
 concepts/linuxone-kafka-integration → concepts/sla-tiers : latency tiers (market_data, risk) drive LinuxONE adoption
 concepts/linuxone-kafka-integration → concepts/fsi-compliance : FIPS 140-2 and audit trail requirements
 concepts/linuxone-kafka-integration → patterns/dr-cluster-linking : DR pattern for LinuxONE-produced topics
+
+patterns/audit-log-siem-integration → concepts/fsi-data-streaming-platform : observability templates cover operational metrics; audit log is the security complement
+patterns/audit-log-siem-integration → concepts/fsi-compliance : audit trail for regulatory frameworks
+patterns/audit-log-siem-integration → concepts/consumer-lag-monitoring : operational metrics monitoring (other half of observability)
+patterns/audit-log-siem-integration → patterns/fsi-exactly-once : audit logging requirements for transactional processing
