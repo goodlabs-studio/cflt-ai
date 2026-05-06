@@ -133,6 +133,12 @@ None - no external service configuration required.
   - `execution_result = "deferred-to-mcp-runtime"`, `duration_seconds = 0.0`
   - Intentional: Phase 3c wires real MCP invocation per-tool. The confirmation, profile, and provenance infrastructure are the Phase 3b deliverables.
 
+## Self-Check: PASSED
+
+- FOUND: `.claude/commands/dsp-apply.md`
+- FOUND: `.planning/phases/03B-act-rail-apply/03B-02-SUMMARY.md`
+- FOUND: commit `30693c8`
+
 ---
 *Phase: 03B-act-rail-apply*
 *Completed: 2026-04-29*
