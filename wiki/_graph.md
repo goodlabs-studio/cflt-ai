@@ -132,3 +132,10 @@ patterns/audit-log-siem-integration → concepts/fsi-data-streaming-platform : o
 patterns/audit-log-siem-integration → concepts/fsi-compliance : audit trail for regulatory frameworks
 patterns/audit-log-siem-integration → concepts/consumer-lag-monitoring : operational metrics monitoring (other half of observability)
 patterns/audit-log-siem-integration → patterns/fsi-exactly-once : audit logging requirements for transactional processing
+
+patterns/low-latency-kafka-azure → concepts/sla-tiers : sub-100ms latency tier framing
+patterns/low-latency-kafka-azure → concepts/fsi-data-streaming-platform : Azure deployment model context
+patterns/low-latency-kafka-azure → concepts/consumer-group-rebalancing : cooperative-sticky + static membership rationale
+patterns/low-latency-kafka-azure → concepts/producer-batching-config : latency-favored tuning (linger.ms=0, batch.size=16384, compression=none)
+patterns/low-latency-kafka-azure → patterns/aks-kafka-tuning : Azure-specific deployment patterns
+patterns/low-latency-kafka-azure → patterns/dr-cluster-linking : DR pattern compatible with this client profile
