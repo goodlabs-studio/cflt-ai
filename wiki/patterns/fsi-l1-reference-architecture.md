@@ -36,7 +36,8 @@ Reference architecture for FSI workloads that pins the **operational data plane*
 │  ┌─ Operational Stores LPAR ─────────────────────────────────────────────────────┐    │
 │  │ MongoDB  │  CockroachDB  │  PostgreSQL  │  Redis  │  Neo4j                     │    │
 │  └──────────────────────────┬────────────────────────────────────────────────────┘    │
-│                              │  CDC (Debezium / Cockroach changefeed / pg_logical)    │
+│                              │  CDC via Confluent Connect (Mongo CDC, Postgres CDC V2,│
+│                              │  Cockroach native changefeed, IBM MQ Source)           │
 │                              ▼                                                        │
 │  ┌─ Confluent Platform LPAR ─────────────────────────────────────────────────────┐    │
 │  │ Kafka brokers (KRaft)  │  Schema Registry  │  Connect (CDC, MQ, JDBC)          │    │
@@ -55,7 +56,7 @@ Reference architecture for FSI workloads that pins the **operational data plane*
                             ┌─  Confluent Cloud (cross-region) ─┐
                             │  Mirror topics, governed          │
                             └─────────────┬─────────────────────┘
-                                          │  Iceberg / Tableflow
+                                          │  Iceberg / Delta Lake via Tableflow
                                           ▼
                             ┌─  Databricks (off-platform)  ────┐
                             │  Lakehouse, ML training, BI       │
