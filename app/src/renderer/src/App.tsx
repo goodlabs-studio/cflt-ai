@@ -5,6 +5,8 @@ import { Titlebar } from '@/components/Titlebar';
 import { Placeholder } from '@/pages/Placeholder';
 import { WikiPage } from '@/pages/Wiki';
 import { ReportsPage } from '@/pages/Reports';
+import { AskPage } from '@/pages/Ask';
+import { ActivityPage } from '@/pages/Activity';
 
 export function App(): React.JSX.Element {
   const page = useNav((s) => s.page);
@@ -25,23 +27,13 @@ export function App(): React.JSX.Element {
 function renderPage(page: string): React.JSX.Element {
   switch (page) {
     case 'ask':
-      return (
-        <Placeholder
-          title="Ask"
-          hint="Phase B. Streaming /ask responses with mode selector and route badge."
-        />
-      );
+      return <AskPage />;
     case 'wiki':
       return <WikiPage />;
     case 'reports':
       return <ReportsPage />;
     case 'activity':
-      return (
-        <Placeholder
-          title="Activity"
-          hint="Phase B. Chronological feed of skill invocations with provenance footers."
-        />
-      );
+      return <ActivityPage />;
     case 'queue':
       return (
         <Placeholder
