@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Confluent-evocative palette. Dark-mode-first; light overrides under :root.
+   Values are RGB triples so Tailwind's `<alpha-value>` works.
+   Tuning: edit these vars only. Do not hardcode colors elsewhere. */
+:root {
+  /* Confluent-derived tokens */
+  --cflt-blue: 38 99 235;     /* deep blue */
+  --cflt-red: 232 65 66;      /* signal red */
+  --cflt-ink: 11 16 20;       /* off-black background */
+  --cflt-paper: 234 238 244;  /* near-white text */
+
+  /* Functional aliases (dark mode by default in this app) */
+  --bg: 11 16 20;
+  --fg: 234 238 244;
+  --muted: 23 30 38;
+  --muted-fg: 156 168 184;
+  --accent: 38 99 235;
+  --accent-fg: 234 238 244;
+  --border: 30 39 49;
+  --ring: 56 124 247;
+
+  --success: 56 174 119;
+  --warning: 220 152 62;
+  --danger: 232 65 66;
+
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* macOS hidden-inset titlebar drag region for the top strip. */
+.titlebar-drag {
+  -webkit-app-region: drag;
+}
+.titlebar-drag button,
+.titlebar-drag a,
+.titlebar-drag input {
+  -webkit-app-region: no-drag;
+}
+
+/* Subtle focus ring consistent with shadcn defaults */
+:focus-visible {
+  outline: 2px solid rgb(var(--ring));
+  outline-offset: 2px;
+}
+
+/* ── Markdown rendering for wiki articles & reports ───────────────────── */
+.wiki-prose {
+  color: rgb(var(--fg));
+  line-height: 1.65;
+  font-size: 14px;
+  max-width: 72ch;
+}
+.wiki-prose h1,
+.wiki-prose h2,
+.wiki-prose h3,
+.wiki-prose h4 {
+  color: rgb(var(--fg));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+}
+.wiki-prose h1 { font-size: 1.5em; }
+.wiki-prose h2 { font-size: 1.25em; border-bottom: 1px solid rgb(var(--border)); padding-bottom: 0.25em; }
+.wiki-prose h3 { font-size: 1.1em; }
+.wiki-prose h4 { font-size: 1em; color: rgb(var(--muted-fg)); }
+.wiki-prose p { margin: 0.85em 0; }
+.wiki-prose ul, .wiki-prose ol { margin: 0.85em 0; padding-left: 1.5em; }
+.wiki-prose ul { list-style: disc; }
+.wiki-prose ol { list-style: decimal; }
+.wiki-prose li { margin: 0.25em 0; }
+.wiki-prose a {
+  color: rgb(var(--accent));
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.wiki-prose strong { color: rgb(var(--fg)); font-weight: 600; }
+.wiki-prose em { color: rgb(var(--fg)); }
+.wiki-prose blockquote {
+  border-left: 3px solid rgb(var(--cflt-blue));
+  padding: 0.25em 0 0.25em 1em;
+  margin: 1em 0;
+  color: rgb(var(--muted-fg));
+}
+.wiki-prose code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.875em;
+  background: rgb(var(--muted));
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+}
+.wiki-prose pre {
+  background: rgb(var(--muted));
+  border: 1px solid rgb(var(--border));
+  border-radius: 6px;
+  padding: 0.85em 1em;
+  margin: 1em 0;
+  overflow-x: auto;
+  font-size: 0.85em;
+}
+.wiki-prose pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.wiki-prose table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.9em;
+  width: 100%;
+}
+.wiki-prose th, .wiki-prose td {
+  border: 1px solid rgb(var(--border));
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.wiki-prose th { background: rgb(var(--muted) / 0.6); font-weight: 600; }
+.wiki-prose hr { border: 0; border-top: 1px solid rgb(var(--border)); margin: 2em 0; }
+
+/* Minimal one-dark-ish syntax highlighting for rehype-highlight (.hljs) */
+.hljs { color: rgb(var(--fg)); }
+.hljs-comment, .hljs-quote { color: rgb(var(--muted-fg)); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal { color: #c678dd; }
+.hljs-string, .hljs-attr, .hljs-template-variable { color: #98c379; }
+.hljs-number, .hljs-built_in { color: #d19a66; }
+.hljs-title, .hljs-section, .hljs-name { color: #61afef; }
+.hljs-type, .hljs-class .hljs-title { color: #e5c07b; }
+.hljs-variable, .hljs-tag { color: #e06c75; }
+.hljs-symbol, .hljs-bullet, .hljs-link { color: #56b6c2; }
