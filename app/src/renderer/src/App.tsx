@@ -10,6 +10,7 @@ import { ActivityPage } from '@/pages/Activity';
 import { QueuePage } from '@/pages/Queue';
 import { ReviewPage } from '@/pages/Review';
 import { PlanPage } from '@/pages/Plan';
+import { ApplyPage } from '@/pages/Apply';
 
 export function App(): React.JSX.Element {
   const page = useNav((s) => s.page);
@@ -44,12 +45,7 @@ function renderPage(page: string): React.JSX.Element {
     case 'plan':
       return <PlanPage />;
     case 'apply':
-      return (
-        <Placeholder
-          title="Apply"
-          hint="Phase D. Plan picker → profile selector → native confirmation modal → execution log."
-        />
-      );
+      return <ApplyPage />;
     default:
       return <Placeholder title={page} />;
   }

@@ -290,6 +290,31 @@ export interface ParsedReview {
   validationComplete: boolean;
 }
 
+// ─── Act-rail / dsp:apply (Phase D.2) ─────────────────────────────────────
+
+export type ApplyProfile = 'read-only' | 'engineer' | 'break-glass';
+
+export interface PlanSummary {
+  slug: string;
+  path: string;
+  date?: string;
+  artifact?: SelectedArtifact;
+  /** "key: value" pairs from the Arguments section, in source order. */
+  arguments?: Array<{ key: string; value: string }>;
+  /** GateInfo[] parsed from the saved plan's Gate Results table. */
+  gates?: GateInfo[];
+  /** Canon Compliance section as raw markdown so the modal can render. */
+  canonCompliance?: string;
+  /** Provenance line ("Canon stack: ...") when present. */
+  provenance?: string;
+}
+
+export interface ApplyConfirmation {
+  confirmed: boolean;
+  /** Required when profile=break-glass. */
+  reason?: string;
+}
+
 // ─── Act-rail / dsp:plan (Phase D.1) ──────────────────────────────────────
 
 export const GATE_NAMES = [
