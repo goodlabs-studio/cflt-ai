@@ -9,6 +9,7 @@ import { AskPage } from '@/pages/Ask';
 import { ActivityPage } from '@/pages/Activity';
 import { QueuePage } from '@/pages/Queue';
 import { ReviewPage } from '@/pages/Review';
+import { PlanPage } from '@/pages/Plan';
 
 export function App(): React.JSX.Element {
   const page = useNav((s) => s.page);
@@ -41,12 +42,7 @@ function renderPage(page: string): React.JSX.Element {
     case 'review':
       return <ReviewPage />;
     case 'plan':
-      return (
-        <Placeholder
-          title="Plan"
-          hint="Phase D. NL request → 4-gate chain visualization → selected fsi-dsp artifact preview."
-        />
-      );
+      return <PlanPage />;
     case 'apply':
       return (
         <Placeholder
