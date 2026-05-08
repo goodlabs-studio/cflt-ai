@@ -2,6 +2,10 @@ import { app, BrowserWindow, shell } from 'electron';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { registerFsHandlers } from './ipc/fs.js';
+import {
+  registerSkillHandlers,
+  disposeSkillSubprocesses,
+} from './ipc/skill.js';
 import { getRepoRoot } from './repo.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -50,6 +54,7 @@ app.whenReady().then(() => {
   }
 
   registerFsHandlers();
+  registerSkillHandlers();
   createWindow();
 
   app.on('activate', () => {
@@ -59,4 +64,8 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('before-quit', () => {
+  disposeSkillSubprocesses();
 });

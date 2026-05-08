@@ -1,23 +1,33 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { Settings } from 'lucide-react';
+import { useMcp } from '@/store/mcp';
 
-interface McpDot {
-  name: string;
-  status: 'unknown' | 'ok' | 'fail';
-}
-
-const INITIAL_DOTS: McpDot[] = [
-  { name: 'context7', status: 'unknown' },
-  { name: 'confluent-docs', status: 'unknown' },
-  { name: 'mcp-confluent', status: 'unknown' },
-  { name: 'terraform', status: 'unknown' },
+const EXPECTED_MCP_SERVERS = [
+  'context7',
+  'confluent-docs',
+  'mcp-confluent',
+  'terraform',
 ];
 
 export function Titlebar(): React.JSX.Element {
   const [overlay, setOverlay] = useState<string>('base');
-  const [dots] = useState<McpDot[]>(INITIAL_DOTS);
+  const servers = useMcp((s) => s.servers);
+  const lastUpdate = useMcp((s) => s.lastUpdate);
   const [profile] = useState<string>('read-only');
+
+  // Render dots in expected order; merge in any extra servers we see.
+  const seen = new Set(servers.map((s) => s.name));
+  const dots = [
+    ...EXPECTED_MCP_SERVERS.map((name) => {
+      const match = servers.find((s) => s.name === name);
+      return {
+        name,
+        status: match?.status ?? 'unknown',
+      };
+    }),
+    ...servers.filter((s) => !EXPECTED_MCP_SERVERS.includes(s.name) && seen.has(s.name)),
+  ];
 
   useEffect(() => {
     let mounted = true;
@@ -45,7 +55,14 @@ export function Titlebar(): React.JSX.Element {
           canon: <span className="text-foreground">{overlay}</span>
         </span>
         <Sep />
-        <span className="flex items-center gap-1.5">
+        <span
+          className="flex items-center gap-1.5"
+          title={
+            lastUpdate
+              ? `Last MCP probe: ${new Date(lastUpdate).toLocaleTimeString()}`
+              : 'MCP health populates after first skill run'
+          }
+        >
           MCP
           <span className="flex items-center gap-0.5">
             {dots.map((d) => (
@@ -53,11 +70,13 @@ export function Titlebar(): React.JSX.Element {
                 key={d.name}
                 title={`${d.name}: ${d.status}`}
                 className={
-                  d.status === 'ok'
+                  d.status === 'connected'
                     ? 'h-1.5 w-1.5 rounded-full bg-success'
-                    : d.status === 'fail'
+                    : d.status === 'failed'
                       ? 'h-1.5 w-1.5 rounded-full bg-danger'
-                      : 'h-1.5 w-1.5 rounded-full bg-muted-foreground/40'
+                      : d.status === 'needs-auth'
+                        ? 'h-1.5 w-1.5 rounded-full bg-warning'
+                        : 'h-1.5 w-1.5 rounded-full bg-muted-foreground/40'
                 }
               />
             ))}

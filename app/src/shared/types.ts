@@ -97,13 +97,125 @@ export interface CfltFsAPI {
   watch(globs: string[], cb: (event: FsEvent) => void): WatchUnsubscribe;
 }
 
-// Future surfaces (stubbed in Phase A; expanded in B-E)
-export interface CfltSkillAPI {
-  // run(req): { events, cancel, result } — Phase B
-  // listProfiles(): Promise<Profile[]> — Phase D
+// ─── Skill streaming (Phase B) ────────────────────────────────────────────
+
+export type ClaudeRoute = 'wiki' | 'mcp' | 'deep';
+export type AskMode = 'ephemeral' | 'report' | 'reconsolidate';
+
+export interface McpServerStatus {
+  name: string;
+  status: 'connected' | 'failed' | 'needs-auth' | 'unknown';
 }
+
+export interface InitInfo {
+  cwd: string;
+  model: string;
+  tools: string[];
+  mcpServers: McpServerStatus[];
+  sessionId: string;
+}
+
+export interface ToolUseEvent {
+  id: string;
+  name: string;
+  input: unknown;
+}
+
+export interface ToolResultEvent {
+  toolUseId: string;
+  output: unknown;
+  isError?: boolean;
+}
+
+export interface RateLimitEvent {
+  status: string; // "allowed" | "throttled" | ...
+  resetsAt?: number;
+  isUsingOverage?: boolean;
+}
+
+export interface SkillResult {
+  success: boolean;
+  text: string;
+  durationMs: number;
+  costUsd: number;
+  inputTokens: number;
+  outputTokens: number;
+  sessionId?: string;
+}
+
+/**
+ * Normalized event stream from a claude subprocess. Discriminated union for
+ * exhaustive handling. Unknown raw events fall through to `raw` so the UI
+ * can degrade without crashing on CLI version drift.
+ */
+export type StreamEvent =
+  | { type: 'init'; info: InitInfo }
+  | { type: 'assistant_text'; text: string; messageId: string }
+  | { type: 'tool_use'; tool: ToolUseEvent }
+  | { type: 'tool_result'; result: ToolResultEvent }
+  | { type: 'route'; route: ClaudeRoute }
+  | { type: 'rate_limit'; info: RateLimitEvent }
+  | { type: 'system'; subtype: string; data: Record<string, unknown> }
+  | { type: 'result'; result: SkillResult }
+  | { type: 'error'; message: string; recoverable?: boolean }
+  | { type: 'raw'; raw: Record<string, unknown> };
+
+/**
+ * Skill invocation requests. Flat shape matched on `kind` for dispatch.
+ * Phase B.1 implements `ask` and the `wiki:*` family. Other kinds are
+ * accepted by IPC but invoked unchanged.
+ */
+export type SkillRequest =
+  | {
+      kind: 'ask';
+      query: string;
+      mode: AskMode;
+      forceRoute?: ClaudeRoute;
+    }
+  | {
+      kind: 'review';
+      docPaths: string[];
+      output?: 'md' | 'docx' | 'both';
+      overlay?: string;
+    }
+  | {
+      kind:
+        | 'wiki:lint'
+        | 'wiki:validate'
+        | 'wiki:ingest'
+        | 'wiki:evaluate'
+        | 'wiki:recommend';
+      args?: string;
+    }
+  | { kind: 'dsp:plan'; request: string; overlay?: string; gateBypass?: string[] }
+  | {
+      kind: 'dsp:apply';
+      planPath: string;
+      profile: 'read-only' | 'engineer' | 'break-glass';
+      overlay?: string;
+      operator?: string;
+    };
+
+export interface RunHandle {
+  sessionId: string;
+  events: AsyncIterable<StreamEvent>;
+  cancel(): void;
+  result: Promise<SkillResult>;
+}
+
+export interface Profile {
+  name: string;
+  allowedOperations: string[];
+  description?: string;
+}
+
+export interface CfltSkillAPI {
+  run(req: SkillRequest): RunHandle;
+  listProfiles(): Promise<Profile[]>;
+}
+
 export interface CfltToolAPI {
-  // wikiLint, wikiSearch, wikiStats, reviewToDocx — Phase B
+  // wikiLint, wikiSearch, wikiStats, reviewToDocx — Phase B.2
 }
 export interface CfltConfirmAPI {
   // onRequest, respond — Phase D
