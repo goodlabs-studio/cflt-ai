@@ -11,15 +11,21 @@ import {
   disposeToolSubprocesses,
 } from './ipc/tool.js';
 import { registerDialogHandlers } from './ipc/dialog.js';
+import { registerMcpHandlers, probeMcpServers } from './ipc/mcp.js';
+import { registerConfigHandlers, loadConfig } from './ipc/config.js';
+import { attachWindowState, loadWindowBounds } from './window-state.js';
 import { broadcastTo } from './concurrency.js';
 import { getRepoRoot } from './repo.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function createWindow(): void {
+  const bounds = loadWindowBounds();
   const win = new BrowserWindow({
-    width: 1280,
-    height: 820,
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
     minWidth: 980,
     minHeight: 640,
     show: false,
@@ -34,6 +40,7 @@ function createWindow(): void {
     },
   });
 
+  attachWindowState(win);
   win.on('ready-to-show', () => win.show());
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -59,11 +66,23 @@ app.whenReady().then(() => {
     return;
   }
 
+  loadConfig(); // warm cache
   registerFsHandlers();
   registerSkillHandlers();
   registerToolHandlers();
   registerDialogHandlers();
+  registerMcpHandlers();
+  registerConfigHandlers();
   createWindow();
+  // Kick off an MCP health probe in the background; renderer subscribes
+  // via the `mcp:health:initial` push channel below.
+  probeMcpServers()
+    .then((servers) => {
+      for (const w of BrowserWindow.getAllWindows()) {
+        if (!w.isDestroyed()) w.webContents.send('mcp:health:initial', servers);
+      }
+    })
+    .catch(() => {});
   // Broadcast concurrency snapshots to the renderer so the titlebar can
   // surface queued runs.
   broadcastTo(BrowserWindow.getAllWindows());

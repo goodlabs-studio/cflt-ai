@@ -8,6 +8,7 @@ import type { WebContents } from 'electron';
 import { getRepoRoot } from '../repo.js';
 import { LineParser } from './parser.js';
 import { acquire, classify, release } from '../concurrency.js';
+import { loadConfig } from '../ipc/config.js';
 import type { SkillRequest, StreamEvent, SkillResult } from '@shared/types';
 
 interface ActiveSession {
@@ -22,7 +23,6 @@ interface ActiveSession {
 
 const sessions = new Map<string, ActiveSession>();
 
-const DEFAULT_MAX_BUDGET_USD = 2.0;
 const DEFAULT_MAX_TURNS_BY_KIND: Record<string, number> = {
   ask: 10,
   review: 30,
@@ -192,7 +192,7 @@ function cleanup(sessionId: string): void {
  * The string is passed to `zsh -ilc`, so we shell-quote user input.
  */
 function buildClaudeCommand(req: SkillRequest): string {
-  const maxBudget = DEFAULT_MAX_BUDGET_USD;
+  const maxBudget = loadConfig().maxBudgetUsd;
   const maxTurns = DEFAULT_MAX_TURNS_BY_KIND[req.kind] ?? 20;
   const base = [
     'claude',
