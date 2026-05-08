@@ -6,6 +6,11 @@ import {
   registerSkillHandlers,
   disposeSkillSubprocesses,
 } from './ipc/skill.js';
+import {
+  registerToolHandlers,
+  disposeToolSubprocesses,
+} from './ipc/tool.js';
+import { broadcastTo } from './concurrency.js';
 import { getRepoRoot } from './repo.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -55,7 +60,11 @@ app.whenReady().then(() => {
 
   registerFsHandlers();
   registerSkillHandlers();
+  registerToolHandlers();
   createWindow();
+  // Broadcast concurrency snapshots to the renderer so the titlebar can
+  // surface queued runs.
+  broadcastTo(BrowserWindow.getAllWindows());
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -68,4 +77,5 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   disposeSkillSubprocesses();
+  disposeToolSubprocesses();
 });

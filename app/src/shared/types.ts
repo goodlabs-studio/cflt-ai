@@ -214,8 +214,59 @@ export interface CfltSkillAPI {
   listProfiles(): Promise<Profile[]>;
 }
 
+export interface SearchHit {
+  path: string;       // repo-relative wiki path
+  score: number;      // raw score from wiki-search.py
+  preview: string;    // title or first-match line
+}
+
+export interface WikiStatsBucket {
+  name: string;
+  count: number;
+}
+
+export interface WikiStats {
+  articles: number;
+  totalWords: number;
+  rawSources: number;
+  bySection: WikiStatsBucket[];
+  byConfidence: WikiStatsBucket[];
+  topTags: WikiStatsBucket[];
+}
+
+export interface ToolRunHandle {
+  /** AsyncIterable yielding raw stdout chunks plus a terminal {kind:'exit'} */
+  output: AsyncIterable<ToolOutputChunk>;
+  cancel(): void;
+  /** Resolves with exit code when subprocess closes */
+  result: Promise<{ exitCode: number; stdout: string; stderr: string }>;
+}
+
+export type ToolOutputChunk =
+  | { kind: 'stdout'; text: string }
+  | { kind: 'stderr'; text: string }
+  | { kind: 'exit'; code: number };
+
 export interface CfltToolAPI {
-  // wikiLint, wikiSearch, wikiStats, reviewToDocx — Phase B.2
+  /** Streaming wiki lint. Returns a handle whose output emits stdout chunks. */
+  wikiLint(args?: { full?: boolean; fix?: boolean }): ToolRunHandle;
+  wikiSearch(query: string): Promise<SearchHit[]>;
+  wikiStats(): Promise<WikiStats>;
+  /** Returns the absolute output .docx path on success. */
+  reviewToDocx(reportPath: string): Promise<string>;
+}
+
+// ─── Concurrency guard (Phase B.2) ────────────────────────────────────────
+
+export type SkillClass = 'mutating' | 'non-mutating';
+
+export interface ConcurrencyState {
+  /** Number of mutating runs currently active. Max 1. */
+  mutatingActive: number;
+  /** Number of non-mutating runs currently active. Max 3. */
+  nonMutatingActive: number;
+  /** Pending runs waiting for a slot (FIFO). */
+  queueDepth: number;
 }
 export interface CfltConfirmAPI {
   // onRequest, respond — Phase D

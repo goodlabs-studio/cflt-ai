@@ -7,6 +7,7 @@ import { WikiPage } from '@/pages/Wiki';
 import { ReportsPage } from '@/pages/Reports';
 import { AskPage } from '@/pages/Ask';
 import { ActivityPage } from '@/pages/Activity';
+import { QueuePage } from '@/pages/Queue';
 
 export function App(): React.JSX.Element {
   const page = useNav((s) => s.page);
@@ -35,12 +36,7 @@ function renderPage(page: string): React.JSX.Element {
     case 'activity':
       return <ActivityPage />;
     case 'queue':
-      return (
-        <Placeholder
-          title="Queue"
-          hint="Phase B. wiki/_queue.md sections rendered as kanban with one-click run buttons."
-        />
-      );
+      return <QueuePage />;
     case 'review':
       return (
         <Placeholder

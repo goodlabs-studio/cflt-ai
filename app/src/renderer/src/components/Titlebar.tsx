@@ -2,6 +2,10 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { Settings } from 'lucide-react';
 import { useMcp } from '@/store/mcp';
+import {
+  useConcurrency,
+  initConcurrencySubscription,
+} from '@/store/concurrency';
 
 const EXPECTED_MCP_SERVERS = [
   'context7',
@@ -15,6 +19,11 @@ export function Titlebar(): React.JSX.Element {
   const servers = useMcp((s) => s.servers);
   const lastUpdate = useMcp((s) => s.lastUpdate);
   const [profile] = useState<string>('read-only');
+  const concurrency = useConcurrency();
+
+  useEffect(() => {
+    initConcurrencySubscription();
+  }, []);
 
   // Render dots in expected order; merge in any extra servers we see.
   const seen = new Set(servers.map((s) => s.name));
@@ -86,6 +95,27 @@ export function Titlebar(): React.JSX.Element {
         <span>
           profile: <span className="text-foreground">{profile}</span>
         </span>
+        {(concurrency.mutatingActive > 0 ||
+          concurrency.nonMutatingActive > 0 ||
+          concurrency.queueDepth > 0) && (
+          <>
+            <Sep />
+            <span
+              className="flex items-center gap-1"
+              title={`mutating ${concurrency.mutatingActive}/1 · non-mutating ${concurrency.nonMutatingActive}/3 · queued ${concurrency.queueDepth}`}
+            >
+              <span className="text-muted-foreground">runs:</span>
+              <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-foreground">
+                {concurrency.mutatingActive + concurrency.nonMutatingActive}
+              </span>
+              {concurrency.queueDepth > 0 && (
+                <span className="rounded bg-warning/15 px-1.5 py-0.5 font-mono text-[10px] text-warning">
+                  +{concurrency.queueDepth} queued
+                </span>
+              )}
+            </span>
+          </>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <button
