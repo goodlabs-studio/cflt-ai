@@ -290,6 +290,40 @@ export interface ParsedReview {
   validationComplete: boolean;
 }
 
+// ─── Act-rail / dsp:plan (Phase D.1) ──────────────────────────────────────
+
+export const GATE_NAMES = [
+  'canon_compliance',
+  'fsi_dsp_coverage',
+  'confluent_docs_schema',
+  'mcp_confluent_state',
+] as const;
+export type GateName = (typeof GATE_NAMES)[number];
+
+export type GateState = 'pending' | 'running' | 'pass' | 'fail' | 'skipped';
+
+export interface GateInfo {
+  name: GateName;
+  state: GateState;
+  detail?: string;
+  evidence?: string[];
+}
+
+export interface SelectedArtifact {
+  id: string;        // e.g. "module/topic"
+  path?: string;
+  description?: string;
+}
+
+export interface ParsedPlan {
+  gates: GateInfo[];
+  /** True once a Gate Results table has been parsed end-to-end. */
+  gatesComplete: boolean;
+  artifact?: SelectedArtifact;
+  /** Provenance footer "Gate results:" line, if seen. */
+  footerGateLine?: string;
+}
+
 // ─── File dialog (Phase C) ────────────────────────────────────────────────
 
 export interface CfltDialogAPI {
