@@ -3,12 +3,14 @@ import type {
   CfltAPI,
   ConcurrencyState,
   FsEvent,
+  McpServerStatus,
   SkillRequest,
   StreamEvent,
   SkillResult,
   RunHandle,
   ToolOutputChunk,
   ToolRunHandle,
+  UserConfig,
 } from '@shared/types';
 
 let watchSeq = 0;
@@ -55,9 +57,15 @@ const api: CfltAPI = {
     reviewToDocx: (path) => ipcRenderer.invoke('tool:reviewToDocx', path),
   },
   confirm: {} as never,
-  mcp: {} as never,
+  mcp: {
+    health: () => ipcRenderer.invoke('mcp:health'),
+  },
   dialog: {
     openReviewFiles: () => ipcRenderer.invoke('dialog:openReviewFiles'),
+  },
+  config: {
+    get: () => ipcRenderer.invoke('config:get'),
+    set: (patch: Partial<UserConfig>) => ipcRenderer.invoke('config:set', patch),
   },
   meta: {
     repoRoot: () => ipcRenderer.invoke('meta:repoRoot'),
@@ -82,6 +90,24 @@ contextBridge.exposeInMainWorld('cfltConcurrency', {
     };
     ipcRenderer.on('concurrency:state', handler);
     return () => ipcRenderer.removeListener('concurrency:state', handler);
+  },
+});
+
+// ─── Initial MCP probe push (Phase E) ──────────────────────────────────
+//
+// Main fires `mcp:health:initial` once at boot after `claude mcp list`
+// resolves. We bridge it to a single-fire callback the renderer can
+// subscribe to in its store init.
+contextBridge.exposeInMainWorld('cfltMcp', {
+  onInitialHealth(cb: (servers: McpServerStatus[]) => void): () => void {
+    const handler = (
+      _e: Electron.IpcRendererEvent,
+      servers: McpServerStatus[],
+    ): void => {
+      cb(servers);
+    };
+    ipcRenderer.on('mcp:health:initial', handler);
+    return () => ipcRenderer.removeListener('mcp:health:initial', handler);
   },
 });
 

@@ -372,7 +372,27 @@ export interface CfltConfirmAPI {
   // onRequest, respond — Phase D
 }
 export interface CfltMcpAPI {
-  // health() — Phase E
+  /**
+   * Run an out-of-band health probe against all MCP servers configured
+   * in .mcp.json. Zero LLM cost — shells `claude mcp list`. Returns the
+   * latest snapshot and updates the renderer's MCP slice as a side
+   * effect.
+   */
+  health(): Promise<McpServerStatus[]>;
+}
+
+// ─── Settings (Phase E) ──────────────────────────────────────────────────
+
+export interface UserConfig {
+  maxBudgetUsd: number;
+  defaultAskMode: AskMode;
+  defaultApplyProfile: ApplyProfile;
+  defaultOverlay: string;
+}
+
+export interface CfltConfigAPI {
+  get(): Promise<UserConfig>;
+  set(patch: Partial<UserConfig>): Promise<UserConfig>;
 }
 
 export interface CfltAPI {
@@ -382,6 +402,7 @@ export interface CfltAPI {
   confirm: CfltConfirmAPI;
   mcp: CfltMcpAPI;
   dialog: CfltDialogAPI;
+  config: CfltConfigAPI;
   /** Surface info for the titlebar; populated as features come online. */
   meta: {
     repoRoot(): Promise<string>;

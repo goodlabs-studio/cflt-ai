@@ -1,11 +1,15 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, RefreshCw } from 'lucide-react';
 import { useMcp } from '@/store/mcp';
 import {
   useConcurrency,
   initConcurrencySubscription,
 } from '@/store/concurrency';
+
+interface TitlebarProps {
+  onOpenSettings?: () => void;
+}
 
 const EXPECTED_MCP_SERVERS = [
   'context7',
@@ -14,10 +18,12 @@ const EXPECTED_MCP_SERVERS = [
   'terraform',
 ];
 
-export function Titlebar(): React.JSX.Element {
+export function Titlebar({ onOpenSettings }: TitlebarProps = {}): React.JSX.Element {
   const [overlay, setOverlay] = useState<string>('base');
   const servers = useMcp((s) => s.servers);
   const lastUpdate = useMcp((s) => s.lastUpdate);
+  const refreshing = useMcp((s) => s.refreshing);
+  const refresh = useMcp((s) => s.refresh);
   const [profile] = useState<string>('read-only');
   const concurrency = useConcurrency();
 
@@ -117,10 +123,22 @@ export function Titlebar(): React.JSX.Element {
           </>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <button
           type="button"
+          onClick={() => refresh()}
+          disabled={refreshing}
+          aria-label="Refresh MCP health"
+          title="Refresh MCP health (⌘⇧R)"
+          className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40"
+        >
+          <RefreshCw className={refreshing ? 'h-3.5 w-3.5 animate-spin' : 'h-3.5 w-3.5'} />
+        </button>
+        <button
+          type="button"
+          onClick={onOpenSettings}
           aria-label="Settings"
+          title="Settings (⌘,)"
           className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <Settings className="h-3.5 w-3.5" />
