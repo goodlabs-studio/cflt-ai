@@ -8,6 +8,7 @@ import { ReportsPage } from '@/pages/Reports';
 import { AskPage } from '@/pages/Ask';
 import { ActivityPage } from '@/pages/Activity';
 import { QueuePage } from '@/pages/Queue';
+import { ReviewPage } from '@/pages/Review';
 
 export function App(): React.JSX.Element {
   const page = useNav((s) => s.page);
@@ -38,12 +39,7 @@ function renderPage(page: string): React.JSX.Element {
     case 'queue':
       return <QueuePage />;
     case 'review':
-      return (
-        <Placeholder
-          title="Review"
-          hint="Phase C. Drag-drop document → editable claim YAML table → validation chips."
-        />
-      );
+      return <ReviewPage />;
     case 'plan':
       return (
         <Placeholder

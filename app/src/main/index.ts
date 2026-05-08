@@ -10,6 +10,7 @@ import {
   registerToolHandlers,
   disposeToolSubprocesses,
 } from './ipc/tool.js';
+import { registerDialogHandlers } from './ipc/dialog.js';
 import { broadcastTo } from './concurrency.js';
 import { getRepoRoot } from './repo.js';
 
@@ -61,6 +62,7 @@ app.whenReady().then(() => {
   registerFsHandlers();
   registerSkillHandlers();
   registerToolHandlers();
+  registerDialogHandlers();
   createWindow();
   // Broadcast concurrency snapshots to the renderer so the titlebar can
   // surface queued runs.
