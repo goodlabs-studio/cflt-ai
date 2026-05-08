@@ -56,6 +56,9 @@ const api: CfltAPI = {
   },
   confirm: {} as never,
   mcp: {} as never,
+  dialog: {
+    openReviewFiles: () => ipcRenderer.invoke('dialog:openReviewFiles'),
+  },
   meta: {
     repoRoot: () => ipcRenderer.invoke('meta:repoRoot'),
     appVersion: () => ipcRenderer.invoke('meta:appVersion'),

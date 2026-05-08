@@ -256,6 +256,47 @@ export interface CfltToolAPI {
   reviewToDocx(reportPath: string): Promise<string>;
 }
 
+// ─── Review parsing (Phase C) ─────────────────────────────────────────────
+
+export type ClaimCategory =
+  | 'config_value'
+  | 'behavior_assertion'
+  | 'architecture_choice'
+  | 'metric_sla'
+  | 'comparison';
+
+export type ClaimVerdict = 'Confirmed' | 'Corrected' | 'Unverifiable' | 'Pending';
+
+export interface ReviewClaim {
+  id: string; // e.g., "deck-1"
+  sourceFile: string;
+  sourceSection: string;
+  category: ClaimCategory;
+  text: string;
+  /** Filled in after Step 5 validation table is rendered. Undefined while
+   * the YAML block is the only thing parsed. */
+  wikiSource?: string;
+  mcpSource?: string;
+  verdict?: ClaimVerdict;
+}
+
+export interface ParsedReview {
+  /** Title from H1; empty if not yet emitted. */
+  title: string;
+  claims: ReviewClaim[];
+  /** True once the model has emitted the closing ``` of the claims YAML. */
+  claimsComplete: boolean;
+  /** True once the ## Claim Validation section has been rendered. */
+  validationComplete: boolean;
+}
+
+// ─── File dialog (Phase C) ────────────────────────────────────────────────
+
+export interface CfltDialogAPI {
+  /** Open a file picker for review document input. Returns absolute paths. */
+  openReviewFiles(): Promise<string[]>;
+}
+
 // ─── Concurrency guard (Phase B.2) ────────────────────────────────────────
 
 export type SkillClass = 'mutating' | 'non-mutating';
@@ -281,6 +322,7 @@ export interface CfltAPI {
   tools: CfltToolAPI;
   confirm: CfltConfirmAPI;
   mcp: CfltMcpAPI;
+  dialog: CfltDialogAPI;
   /** Surface info for the titlebar; populated as features come online. */
   meta: {
     repoRoot(): Promise<string>;
