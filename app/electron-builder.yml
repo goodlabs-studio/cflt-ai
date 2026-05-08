@@ -1,0 +1,65 @@
+# electron-builder config for Spicy Flute (cflt-ai desktop UI).
+#
+# Local `pnpm package:mac` produces an unsigned .dmg if no Developer ID
+# certificate is in the Keychain — useful for dev. CI builds sign and
+# notarize when APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID
+# are set; the afterSign hook handles notarization explicitly so we can
+# skip it gracefully on dev machines without those secrets.
+
+appId: studio.goodlabs.cflt-ai
+productName: Spicy Flute
+copyright: Copyright © 2026 GoodLabs Studio
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - 'out/**/*'
+  - 'package.json'
+  - '!**/node_modules/*/{CHANGELOG.md,README.md,readme.md,*.d.ts.map}'
+  - '!**/.{DS_Store,git,svn,hg,idea,vscode}'
+
+# We do not ship the user's `claude` or `python3` — they're invoked from
+# the user's $PATH via `zsh -ilc`. Treating those as runtime deps means
+# we sidestep most hardened-runtime entitlements complexity.
+asar: true
+
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip       # required by electron-updater (F.3)
+      arch: [arm64, x64]
+  hardenedRuntime: true
+  gatekeeperAssess: false       # electron-builder signs; Gatekeeper assess unnecessary
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  # `mac.identity` is read from CSC_NAME env var in CI; locally
+  # electron-builder auto-discovers a Developer ID Application cert
+  # in the login keychain. Set CSC_IDENTITY_AUTO_DISCOVERY=false to
+  # force an unsigned build during development.
+  notarize: false               # handled by afterSign hook below
+  extendInfo:
+    NSHumanReadableCopyright: Copyright © 2026 GoodLabs Studio
+    LSMinimumSystemVersion: '11.0'
+
+dmg:
+  sign: false                   # the .app inside is what matters
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+afterSign: build/notarize.cjs
+
+# Publishing channel for electron-updater (F.3 wires the client side).
+publish:
+  provider: github
+  owner: goodlabs-studio
+  repo: cflt-ai
+  releaseType: release

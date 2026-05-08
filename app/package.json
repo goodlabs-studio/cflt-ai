@@ -2,6 +2,7 @@
   "name": "cflt-ai-app",
   "version": "0.1.0",
   "description": "Spicy Flute — desktop UI for cflt-ai skills",
+  "author": "GoodLabs Studio",
   "main": "./out/main/index.js",
   "private": true,
   "type": "module",
@@ -11,6 +12,7 @@
     "preview": "electron-vite preview",
     "package": "electron-vite build && electron-builder",
     "package:mac": "electron-vite build && electron-builder --mac",
+    "package:mac:unsigned": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-vite build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
   },
   "dependencies": {
@@ -32,6 +34,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@electron/notarize": "^2.5.0",
     "@types/node": "^22.13.5",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
