@@ -1,6 +1,6 @@
 ---
 title: Wiki Index
-last_updated: 2026-05-05
+last_updated: 2026-05-07
 ---
 
 # cflt-ai Wiki Index
@@ -27,6 +27,7 @@ The LLM maintains this file. Do not edit manually.
 [Flink Checkpointing](concepts/flink-checkpointing.md) — Chandy-Lamport barrier mechanism, aligned vs unaligned checkpoints, state backends (HashMap/RocksDB), incremental checkpoints, Kafka source/sink interaction, CC Flink managed checkpointing — #flink #confluent-cloud #performance
 [Producer Batching Configuration](concepts/producer-batching-config.md) — RecordAccumulator internals, batch.size/linger.ms interaction, compression trade-offs, tuning profiles (latency/throughput/balanced), acks interaction, JMX monitoring metrics — #kafka #performance #producers
 [LinuxONE Kafka Integration](concepts/linuxone-kafka-integration.md) — IBM LinuxONE as preferred compute for z/OS Kafka offload via MQ Source Connector bridge pattern — #linuxone #ibm #mainframe #z/os #mq #kafka-connect #fips #dr
+[LinuxONE Platform Foundations](concepts/linuxone-platform-foundations.md) — L1-specific foundations spanning Kafka/Flink/data layer: STP time sync, CBU capacity-on-demand, SMC-R cross-frame transport, UKO key lifecycle, Telum II / Spyre two-tier inference, crun on s390x, IBM benchmark anchors — #linuxone #ibm #s390x #stp #ctn #cbu #smc-r #roce #uko #keys #telum #spyre #crun #fsi
 
 ## Patterns
 

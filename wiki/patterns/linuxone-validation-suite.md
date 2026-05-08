@@ -9,7 +9,7 @@ sources:
   - https://www.ibm.com/products/linuxone/ai-processor
   - https://github.com/IBM/zDNN
   - https://www.ibm.com/support/pages/node/7262649
-related: [concepts/linuxone-kafka-integration, concepts/sla-tiers, concepts/fsi-compliance, patterns/linuxone-kafka-tuning, patterns/linuxone-flink-validation-tuning, patterns/aks-kafka-tuning]
+related: [concepts/linuxone-kafka-integration, concepts/linuxone-platform-foundations, concepts/sla-tiers, concepts/fsi-compliance, patterns/linuxone-kafka-tuning, patterns/linuxone-flink-validation-tuning, patterns/aks-kafka-tuning]
 confidence: medium
 last_updated: 2026-05-07
 last_validated: 2026-05-07
@@ -208,6 +208,7 @@ Historical reports feed a Grafana dashboard sourced from the `fsi.validation.res
 ## Related
 
 - [LinuxONE Kafka Integration](concepts/linuxone-kafka-integration.md) — the architectural rationale this validates
+- [LinuxONE Platform Foundations](../concepts/linuxone-platform-foundations.md) — STP for dual-frame timing, CBU sizing, SMC-R cross-frame transport, IBM benchmark anchors
 - [LinuxONE Kafka Tuning](linuxone-kafka-tuning.md) — tuning knobs the suite exercises
 - [LinuxONE Flink Validation & Tuning](linuxone-flink-validation-tuning.md) — paired Flink suite with Telum II inference path
 - [SLA Tiers](concepts/sla-tiers.md) — pass criteria mapped to tier

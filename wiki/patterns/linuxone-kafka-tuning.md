@@ -8,7 +8,7 @@ sources:
   - https://docs.confluent.io/platform/current/kafka-metadata/kraft.html
   - https://docs.confluent.io/platform/current/kafka/post-deployment.html
   - https://www.ibm.com/docs/en/linux-on-systems
-related: [concepts/producer-batching-config, concepts/sla-tiers, concepts/linuxone-kafka-integration, patterns/linuxone-validation-suite, patterns/aks-kafka-tuning, patterns/fsi-exactly-once]
+related: [concepts/producer-batching-config, concepts/sla-tiers, concepts/linuxone-kafka-integration, concepts/linuxone-platform-foundations, patterns/linuxone-validation-suite, patterns/aks-kafka-tuning, patterns/fsi-exactly-once]
 confidence: medium
 last_updated: 2026-05-07
 last_validated: 2026-05-07
@@ -222,6 +222,7 @@ For Kafka traffic that crosses CECs within the same data center — cross-frame 
 ## Related
 
 - [Producer Batching Configuration](concepts/producer-batching-config.md) — internals; this article applies them to L1
+- [LinuxONE Platform Foundations](../concepts/linuxone-platform-foundations.md) — SMC-R cross-frame transport details, UKO key lifecycle, JDK / IBM JCE provider rationale
 - [LinuxONE Validation Suite](linuxone-validation-suite.md) — the test plan that exercises these knobs
 - [LinuxONE Flink Validation & Tuning](linuxone-flink-validation-tuning.md) — paired Flink overlay
 - [SLA Tiers](concepts/sla-tiers.md) — what you may and may not tune per tier

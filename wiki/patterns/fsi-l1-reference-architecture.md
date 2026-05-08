@@ -8,7 +8,7 @@ sources:
   - https://neo4j.com/docs/operations-manual/current/installation/linux/
   - https://www.confluent.io/customers/ibm/
   - https://www.databricks.com/product/data-intelligence-platform
-related: [concepts/fsi-data-streaming-platform, concepts/linuxone-kafka-integration, concepts/sla-tiers, concepts/fsi-compliance, patterns/linuxone-validation-suite, patterns/linuxone-kafka-tuning, patterns/linuxone-flink-validation-tuning, patterns/dr-cluster-linking, patterns/fsi-exactly-once]
+related: [concepts/fsi-data-streaming-platform, concepts/linuxone-kafka-integration, concepts/linuxone-platform-foundations, concepts/sla-tiers, concepts/fsi-compliance, patterns/linuxone-validation-suite, patterns/linuxone-kafka-tuning, patterns/linuxone-flink-validation-tuning, patterns/dr-cluster-linking, patterns/fsi-exactly-once]
 confidence: medium
 last_updated: 2026-05-07
 last_validated: 2026-05-07
@@ -187,6 +187,7 @@ Same Tableflow pattern fans out to additional analytical destinations without re
 ## Related
 
 - [FSI Data Streaming Platform](concepts/fsi-data-streaming-platform.md) — the platform layer that this architecture deploys onto
+- [LinuxONE Platform Foundations](../concepts/linuxone-platform-foundations.md) — STP, CBU, SMC-R, UKO key lifecycle, Telum/Spyre tiering, crun, IBM benchmark anchors that this architecture assumes
 - [LinuxONE Kafka Integration](concepts/linuxone-kafka-integration.md) — the frame-level mainframe-bridge precedent
 - [LinuxONE Validation Suite](linuxone-validation-suite.md) — how to prove this works
 - [LinuxONE Kafka Tuning](linuxone-kafka-tuning.md) — operational tuning for the event plane

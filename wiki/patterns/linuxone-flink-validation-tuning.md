@@ -9,7 +9,7 @@ sources:
   - https://github.com/IBM/zDNN
   - https://github.com/IBM/zDLC
   - https://ibm.github.io/ai-on-z-101/onnxdlc/
-related: [concepts/flink-checkpointing, concepts/exactly-once-semantics, concepts/linuxone-kafka-integration, patterns/linuxone-validation-suite, patterns/linuxone-kafka-tuning, patterns/fsi-exactly-once]
+related: [concepts/flink-checkpointing, concepts/exactly-once-semantics, concepts/linuxone-kafka-integration, concepts/linuxone-platform-foundations, patterns/linuxone-validation-suite, patterns/linuxone-kafka-tuning, patterns/fsi-exactly-once]
 confidence: medium
 last_updated: 2026-05-07
 last_validated: 2026-05-07
@@ -201,6 +201,7 @@ Same convention as the validation suite — Markdown report per run committed to
 
 ## Related
 
+- [LinuxONE Platform Foundations](../concepts/linuxone-platform-foundations.md) — Spyre integration boundary, Telum II vs Spyre tier decision, IBM benchmark anchors, STP for event-time consistency
 - [LinuxONE Validation Suite](linuxone-validation-suite.md) — paired Kafka validation
 - [LinuxONE Kafka Tuning](linuxone-kafka-tuning.md) — broker tuning consumed by the Flink pipeline
 - [Flink Checkpointing](concepts/flink-checkpointing.md) — barrier mechanics, aligned vs unaligned
