@@ -8,14 +8,15 @@ sources:
   - https://neo4j.com/docs/operations-manual/current/installation/linux/
   - https://www.confluent.io/customers/ibm/
   - https://www.databricks.com/product/data-intelligence-platform
-related: [concepts/fsi-data-streaming-platform, concepts/linuxone-kafka-integration, concepts/sla-tiers, concepts/fsi-compliance, patterns/linuxone-validation-suite, patterns/linuxone-kafka-tuning, patterns/linuxone-flink-validation-tuning, patterns/dr-cluster-linking, patterns/fsi-exactly-once]
+related: [concepts/fsi-data-streaming-platform, concepts/linuxone-kafka-integration, concepts/linuxone-platform-foundations, concepts/sla-tiers, concepts/fsi-compliance, patterns/linuxone-validation-suite, patterns/linuxone-kafka-tuning, patterns/linuxone-flink-validation-tuning, patterns/dr-cluster-linking, patterns/fsi-exactly-once]
 confidence: medium
-last_updated: 2026-05-05
-last_validated: 2026-05-05
-validated_via: [confluent-docs (cloud connectors index, versions-interoperability.html, postgresql cdc v1 EOL page), context7]
+last_updated: 2026-05-07
+last_validated: 2026-05-07
+validated_via: [confluent-docs (cloud connectors index, versions-interoperability.html, postgresql cdc v1 EOL page, tiered-storage.html), context7]
 changelog:
   - 2026-05-04 (rev 2) — Replaced Debezium-direct CDC references with Confluent-supported connectors per Confluent Hub: MongoDB Connector for Apache Kafka, PostgreSQL CDC Source V2 (Debezium V1 EOL 2026-03-31), CockroachDB CDC Connector, Neo4j Connector for Confluent. Single-vendor support model under IBM Confluent Platform for Z/LinuxONE bundle.
   - 2026-05-05 (rev 3) — MCP-validated. Tableflow output confirmed as Iceberg AND Delta Lake (not Iceberg only). PostgreSQL CDC V1 EOL date verified at March 31, 2026. CockroachDB integration mechanism clarified (native changefeed; Hub entry exists but is self-managed only — not in CC fully-managed list).
+  - 2026-05-07 (rev 4) — Peer-review pass. Topology diagram redrawn to separate KRaft Controller LPAR from Broker LPAR (prior diagram showed combined-mode anti-pattern, contradicting §7). MRC vs Cluster Linking story reconciled: MRC stretches intra-DC for compliance-tier RPO=0 (sub-50 ms RTT requirement); CL is for off-platform analytical mirroring. Added CockroachDB SoR-vs-derived-event RPO footnote, audit-log latency clarification, MRC+CL anti-pattern, and "Why not Debezium-direct" governance hook.
 ---
 
 # FSI Reference Architecture — LinuxONE Operational Plane + Off-Platform Analytics
@@ -31,39 +32,45 @@ Reference architecture for FSI workloads that pins the **operational data plane*
 ### 1. Topology
 
 ```
-┌─────────────────────────  IBM LinuxONE Emperor 5 (frame 1)  ─────────────────────────┐
-│                                                                                       │
-│  ┌─ Operational Stores LPAR ─────────────────────────────────────────────────────┐    │
-│  │ MongoDB  │  CockroachDB  │  PostgreSQL  │  Redis  │  Neo4j                     │    │
-│  └──────────────────────────┬────────────────────────────────────────────────────┘    │
-│                              │  CDC via Confluent Connect (Mongo CDC, Postgres CDC V2,│
-│                              │  Cockroach native changefeed, IBM MQ Source)           │
-│                              ▼                                                        │
-│  ┌─ Confluent Platform LPAR ─────────────────────────────────────────────────────┐    │
-│  │ Kafka brokers (KRaft)  │  Schema Registry  │  Connect (CDC, MQ, JDBC)          │    │
-│  └────────┬────────────────────────────────────────┬─────────────────────────────┘    │
-│           │ HiperSockets / SMC-D                   │                                  │
-│           ▼                                         ▼                                  │
-│  ┌─ Flink LPAR (CMF) ─────────┐         ┌─ z/OS LPAR ──────────────┐                  │
-│  │ Stateful streams + UDFs    │         │ Mainframe apps via IBM MQ │                  │
-│  │ Telum II NNPA inference    │         └──────────────────────────┘                  │
-│  └────────────────────────────┘                                                       │
-│           │                                                                            │
-│           ▼  Kafka topics: scored events, alerts, decisions                            │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-                                          │  Cluster Linking over OSA-Express
-                                          ▼
-                            ┌─  Confluent Cloud (cross-region) ─┐
-                            │  Mirror topics, governed          │
-                            └─────────────┬─────────────────────┘
-                                          │  Iceberg / Delta Lake via Tableflow
-                                          ▼
-                            ┌─  Databricks (off-platform)  ────┐
-                            │  Lakehouse, ML training, BI       │
-                            └───────────────────────────────────┘
+┌──────────────────  IBM LinuxONE Emperor 5 (frame 1)  ──────────────────┐
+│                                                                        │
+│  ┌─ Operational Stores LPAR ─────────────────────────────────────┐     │
+│  │  MongoDB │ CockroachDB │ PostgreSQL │ Redis │ Neo4j           │     │
+│  └────────────────────┬──────────────────────────────────────────┘     │
+│                       │ CDC via Confluent Connect                      │
+│                       │ (Mongo CDC, Postgres CDC V2, Cockroach         │
+│                       │  native changefeed, IBM MQ Source)             │
+│                       ▼                                                │
+│  ┌─ Broker LPAR(s) ────────────────────┐  ┌─ KRaft Controller LPAR ─┐  │
+│  │ Kafka brokers │ SR │ Connect        │◄─►│ 3 dedicated voters      │  │
+│  └────────────┬────────────────────────┘  └─────────────────────────┘  │
+│               │ HiperSockets / SMC-D                                   │
+│               ▼                                                        │
+│  ┌─ Flink LPAR (CMF) ─────────┐   ┌─ z/OS LPAR ──────────────┐         │
+│  │ Stateful streams + UDFs    │   │ Mainframe apps via IBM MQ│         │
+│  │ Telum II NNPA / Spyre      │   └──────────────────────────┘         │
+│  └─────────┬──────────────────┘                                        │
+│            │ Kafka topics: scored events, alerts, decisions            │
+└────────────┼───────────────────────────────────────────────────────────┘
+             │
+             ├── MRC stretch (RoCE Express + SMC-R) ──► Frame 2 (paired DC, intra-campus)
+             │   compliance-tier RPO=0; sub-50 ms RTT requirement
+             │
+             └── Cluster Linking (OSA-Express) ───────► Confluent Cloud (cross-region/cloud)
+                                                              │
+                                                              ▼
+                                                   Tableflow → Iceberg / Delta Lake
+                                                              │
+                                                              ▼
+                                                          Databricks
 ```
 
-A second Emperor 5 in a paired data center mirrors the operational plane via store-native replication (Cockroach multi-region, Mongo replica set, etc.) and Confluent **Cluster Linking** for the event plane. RPO=0 for `compliance` tier is achieved via MRC on Confluent Platform.
+**Two distinct DR / replication mechanisms — they are not interchangeable:**
+
+- **Multi-Region Clusters (MRC)** — single logical cluster stretched across frames within the same data center, synchronous quorum + observers (`replica.selector.class=...RackAwareReplicaSelector`). Achieves **RPO=0** for compliance-tier topics if inter-frame RTT stays inside the latency budget (~50 ms p99 ceiling for sane producer p99). Cross-frame transport is RoCE Express + SMC-R; see [LinuxONE Platform Foundations § Cross-frame Transport](../concepts/linuxone-platform-foundations.md). For dual-frame timing across the MRC stretch you need [STP-coordinated time](../concepts/linuxone-platform-foundations.md#server-time-protocol) (the regulator's third question).
+- **Cluster Linking (CL)** — two independent clusters, asynchronous mirror. RPO bounded by link lag; **never zero**. Right tool for off-platform mirroring (CC, Databricks) and inter-DC / inter-cloud topologies.
+
+> **If your paired DC is geographically separated** (>50 ms RTT, e.g. cross-region), you cannot use MRC — accept bounded-but-nonzero RPO via async CL. The choice is between strict-RPO (intra-DC MRC) and geographic redundancy (inter-DC CL); you cannot have both with the operational stack alone. Layer store-native replication (Cockroach `survive=region`, Mongo replica set) for SoR survival underneath either choice.
 
 ### 2. Roles and Sizing
 
@@ -95,7 +102,7 @@ Every operational store emits CDC into Kafka via a **Confluent-supported connect
 
 All topics governed per [SLA Tiers](concepts/sla-tiers.md): tier-driven defaults for partitions, retention, compatibility, RBAC, and DR.
 
-> **Why not Debezium-direct?** Debezium is the OSS upstream that several Confluent connectors are built on (PostgreSQL CDC, SQL Server CDC, MySQL CDC). Running Debezium direct gives you the same engine without the Confluent support contract, certification, or governance hooks. In FSI on the IBM L1 bundle, that's the wrong trade — pick the Confluent-packaged variant on Confluent Hub.
+> **Why not Debezium-direct?** Debezium is the OSS upstream that several Confluent connectors are built on (PostgreSQL CDC, SQL Server CDC, MySQL CDC). Running Debezium direct gives you the same engine without the Confluent support contract, certification, or governance hooks — and **without Schema Registry integration**, which is a hard FSI governance hook for schema evolution and compatibility enforcement. The Confluent-packaged variant on Confluent Hub gives you all three. In FSI on the IBM L1 bundle, that's the wrong trade.
 
 #### 3.2 Real-Time Decisioning (the L1 differentiator)
 Flink jobs co-resident on L1 consume events, enrich via lookup joins to PostgreSQL or Redis (over HiperSockets), and call **Telum II NNPA** for sub-ms inference. Decisions land back on Kafka:
@@ -133,16 +140,16 @@ Same Tableflow pattern fans out to additional analytical destinations without re
 - **Schema Registry** is the canonical contract; all CDC connectors register Avro/Protobuf schemas; `compatibility.level` per tier.
 - **RBAC** — service accounts per app, never per team; topic prefixes derived from [Topic Naming](topic-naming.md). MDS/RBAC on the L1 cluster; Confluent Cloud RBAC on the analytical mirror.
 - **mTLS + OAUTHBEARER** end-to-end; FIPS 140-3 via CEX8S on L1 and the BCFIPS provider in JVMs.
-- **Audit log** — forwarded from CC to SIEM via the [Audit Log SIEM Integration](audit-log-siem-integration.md) pattern. On-frame audit goes to the same SIEM via Confluent Platform audit-log topic.
+- **Audit log** — the audit consumer reads the **on-frame Confluent audit topic**, NOT the CL mirror in CC, to avoid inheriting CL lag into the security-event pipeline. (A 30-second link lag means a 30-second blind spot for the SOC; compliance reviewers will not accept that.) The SIEM contract is "every denial captured within 30 s" per [LinuxONE Validation Suite §3.2](linuxone-validation-suite.md). Forwarding mechanism is the [Audit Log SIEM Integration](audit-log-siem-integration.md) pattern. CC audit log is a separate, additional feed for CC-side events.
 - **Data residency** — operational data physically stays on the customer's L1 frames; only mirrored topics leave the perimeter. Per-topic mirror policy = governance hook for residency rules (e.g., EU customer data: do not mirror).
 
 ### 5. SLA Tier Mapping
 
 | Workload | Stores | Tier | DR Target |
 |----------|--------|------|-----------|
-| Real-time payments | CockroachDB + Confluent + Flink | `critical` | RPO < 5 min (Cluster Linking + Cockroach multi-region) |
-| Fraud / AML decisioning | Neo4j + Redis + Confluent + Flink (NNPA) | `critical` | RPO < 5 min |
-| Regulatory reporting | PostgreSQL + Confluent (Tiered Storage to COS) | `compliance` | RPO = 0 (MRC on CP) |
+| Real-time payments | CockroachDB + Confluent + Flink | `critical` | **SoR (Cockroach `survive=region`): RPO=0** at the SQL layer (Raft groups span frames). **Derived events (alerts, scored events) on CL: RPO < 5 min** bounded by link lag. SoR survives a frame loss intact; downstream pipelines lose link-lag worth of records. Source-of-truth replays through the operational store after recovery. |
+| Fraud / AML decisioning | Neo4j + Redis + Confluent + Flink (NNPA) | `critical` | RPO < 5 min for derived signals; Neo4j causal cluster preserves graph SoR |
+| Regulatory reporting | PostgreSQL + Confluent (Tiered Storage to COS) | `compliance` | RPO = 0 via MRC on CP **intra-DC only** (sub-50 ms RTT). For geographically separated DR, accept bounded RPO via async CL — make the choice explicit in the SOW |
 | Customer profile / CRM | MongoDB | `standard` | RPO < 2 hr |
 | Audit trail | Confluent compacted topics + Iceberg/Delta Lake | `compliance` | RPO = 0; infinite retention |
 
@@ -170,14 +177,17 @@ Same Tableflow pattern fans out to additional analytical destinations without re
 
 - **Direct Databricks-to-operational-store JDBC pulls.** Breaks the audit boundary, blows the residency story, hammers OLTP locks. Always go through the event stream.
 - **Mirroring all topics by default.** Use explicit topic policy; default to *not* mirroring sensitive PII unless residency rules permit.
-- **Running combined-mode KRaft (controller + broker on same node).** Forbidden in production validation; see [LinuxONE Validation Suite §3.7](linuxone-validation-suite.md).
+- **Running combined-mode KRaft (controller + broker on same node).** Forbidden in production validation; see [LinuxONE Validation Suite §3.7](linuxone-validation-suite.md). The topology in §1 enforces this with a dedicated KRaft Controller LPAR.
+- **Treating MRC and Cluster Linking as interchangeable.** MRC is your synchronous DR (compliance-tier RPO=0, intra-DC only). CL is your asynchronous mirror (analytical, off-platform, inter-DC). Don't let CL lag bleed into compliance-tier auditability — never run CL as the sole DR mechanism for a `compliance`-tier topic. (See §5 SLA Tier Mapping for the explicit boundary.)
 - **Using Redis as a system of record.** Redis is hot cache and ephemeral state only — Cockroach or Postgres is the SoR.
 - **Skipping in-frame networking.** If brokers and producers are on the same frame and traffic still leaves via OSA, tuning is wrong — see [LinuxONE Kafka Tuning §LinuxONE Overlay](linuxone-kafka-tuning.md).
+- **Using OSA for cross-frame replication.** Cross-frame intra-DC traffic should use RoCE Express + SMC-R, not OSA. See [LinuxONE Platform Foundations § Cross-frame Transport](../concepts/linuxone-platform-foundations.md).
 - **Off-platform AI for sub-ms decisioning.** GPU microservices over 10 GbE p99 at 5–15 ms; that misses the FSI `critical`/`market_data` tier targets entirely.
 
 ## Related
 
 - [FSI Data Streaming Platform](concepts/fsi-data-streaming-platform.md) — the platform layer that this architecture deploys onto
+- [LinuxONE Platform Foundations](../concepts/linuxone-platform-foundations.md) — STP, CBU, SMC-R, UKO key lifecycle, Telum/Spyre tiering, crun, IBM benchmark anchors that this architecture assumes
 - [LinuxONE Kafka Integration](concepts/linuxone-kafka-integration.md) — the frame-level mainframe-bridge precedent
 - [LinuxONE Validation Suite](linuxone-validation-suite.md) — how to prove this works
 - [LinuxONE Kafka Tuning](linuxone-kafka-tuning.md) — operational tuning for the event plane

@@ -8,11 +8,13 @@ sources:
   - https://docs.confluent.io/platform/current/kafka-metadata/kraft.html
   - https://docs.confluent.io/platform/current/kafka/post-deployment.html
   - https://www.ibm.com/docs/en/linux-on-systems
-related: [concepts/producer-batching-config, concepts/sla-tiers, concepts/linuxone-kafka-integration, patterns/linuxone-validation-suite, patterns/aks-kafka-tuning, patterns/fsi-exactly-once]
+related: [concepts/producer-batching-config, concepts/sla-tiers, concepts/linuxone-kafka-integration, concepts/linuxone-platform-foundations, patterns/linuxone-validation-suite, patterns/aks-kafka-tuning, patterns/fsi-exactly-once]
 confidence: medium
-last_updated: 2026-05-05
-last_validated: 2026-05-05
-validated_via: [confluent-docs (producer-configs.html, consumer-configs.html, versions-interoperability.html), context7 (/websites/javadoc_io_doc_org_apache_kafka_kafka-clients_4_2_0)]
+last_updated: 2026-05-07
+last_validated: 2026-05-07
+validated_via: [confluent-docs (producer-configs.html, consumer-configs.html, versions-interoperability.html, tiered-storage.html), context7 (/websites/javadoc_io_doc_org_apache_kafka_kafka-clients_4_2_0)]
+changelog:
+  - 2026-05-07 (rev 2) — Peer-review pass. Replaced fabricated `-Dcom.ibm.crypto.provider.useIBMJCE` and `lscrypt` with real IBM JCE activation mechanism (java.security edit) and `lszcrypt -VV`. Added concrete `smc_run` systemd drop-in. New SMC-R cross-frame subsection. Disambiguated `confluent.tier.feature` vs `confluent.tier.enable`.
 ---
 
 # LinuxONE Kafka Tuning
@@ -125,7 +127,7 @@ These are knobs that do not exist on x86 or behave differently enough that defau
 #### HiperSockets MTU
 Set `mtu 8192` on `hsi0`. Kafka producer/consumer batches > 8 KB (the typical case once `batch.size=128 KB`) traverse multiple frames; HiperSockets handles segmentation in firmware, so the larger MTU reduces interrupt overhead vs. Ethernet's 1500 default.
 
-#### SMC-D
+#### SMC-D (intra-frame, same-CEC)
 Enable Shared Memory Communications - Direct on inter-LPAR Kafka traffic on the same frame:
 
 ```bash
@@ -134,12 +136,30 @@ modprobe smc
 smc_run java -jar kafka-producer.jar
 ```
 
-For Confluent Platform brokers, set the `smc_run` wrapper as the JVM launcher in systemd unit files. SMC-D bypasses the TCP stack entirely after handshake — measured at 2–3× lower p99 vs. raw HiperSockets in-house.
+For Confluent Platform brokers, drop in a systemd override so `smc_run` wraps the JVM launcher:
+
+```ini
+# /etc/systemd/system/confluent-kafka.service.d/smc.conf
+[Service]
+ExecStart=
+ExecStart=/usr/bin/smc_run /usr/bin/java -jar /opt/kafka/lib/kafka.jar ...
+```
+
+```bash
+systemctl daemon-reload && systemctl restart confluent-kafka
+```
+
+SMC-D bypasses the TCP stack entirely after handshake — measured at 2–3× lower p99 vs. raw HiperSockets in-house.
+
+#### SMC-R (cross-frame, same data center)
+For Kafka traffic that crosses CECs within the same data center — cross-frame replication, MRC quorum traffic, Cluster Linking — use **SMC-R over RoCE Express**, not OSA. SMC-R provides the same TCP-stack-bypass advantage as SMC-D but works across the RoCE fabric instead of in-frame shared memory; sub-100µs link-layer latency. OSA-Express is for off-campus egress only (e.g. CC, Databricks). See [LinuxONE Platform Foundations § Cross-frame Transport](../concepts/linuxone-platform-foundations.md) for the RoCE Express + SMC-R configuration steps.
 
 #### Crypto Express (CEX8S)
-- mTLS broker↔broker offloads to CEX8S automatically when the IBM JCE provider is selected. Set `-Dcom.ibm.crypto.provider.useIBMJCE=true` and `-Dcom.ibm.crypto.provider.IBMSecureRandom.NoConsume=true` in JVM args.
-- For FIPS 140-3, use `BCFIPS` provider for the JVM and `update-crypto-policies --set FIPS:OSPP` at OS level.
-- Watch CEX8S queue depth via `lscrypt -v`; > 80% sustained = saturation, add an adapter.
+- mTLS broker↔broker offloads to CEX8S when the IBM JCE provider is in the JVM provider chain. **There is no system-property switch for this** — activate IBM JCE by either:
+  - Editing `$JAVA_HOME/conf/security/java.security` to list `com.ibm.crypto.provider.IBMJCE` (or `IBMJCEPlus` for newer SDKs) above the default JCE provider in the `security.provider.<n>` ordering, or
+  - Programmatic `Security.insertProviderAt(new com.ibm.crypto.provider.IBMJCE(), 1)` at startup.
+- For FIPS 140-3 with a Confluent-supported JDK (OpenJDK 21 / Zulu / Oracle), use `BCFIPS` provider for the JVM and `update-crypto-policies --set FIPS:OSPP` at OS level. CEX8S offload still works via the OS crypto policy path even without IBMJCE.
+- Watch CEX8S contention via `lszcrypt -VV` — verbose output shows columns CARD.DOM, TYPE, MODE, STATUS, REQUESTS, **PENDING**, HWTYPE, **QDEPTH**, FUNCTIONS, DRIVER. Sample over time; sustained PENDING/QDEPTH > 0.5 indicates saturation. Mitigate by adding a CEX domain or adapter, or reduce TLS handshake frequency via long-lived connections.
 
 > **JDK posture (Confluent support).** CP 8.2 lists OpenJDK, Zulu OpenJDK, and Oracle JDK as supported (recommended: Java 21). **IBM Semeru / OpenJ9 is not on the Confluent support list** — using it for IBM JCE access is a deliberate L1 trade-off and a candidate workload for the IBM-bundled support contract. If you need vendor-supported BoringSSL/FIPS without Semeru, use OpenJDK 21 + BCFIPS provider; CEX8S offload still works via the OS crypto policy path, just not via IBMJCE-specific flags.
 
@@ -156,15 +176,19 @@ For Confluent Platform brokers, set the `smc_run` wrapper as the JVM launcher in
 - `vm.swappiness=1`. Never let Kafka swap.
 
 #### Tiered Storage Target
+- **Two distinct properties** (both required):
+  - `confluent.tier.feature=true` — broker-level enable for the tier fetcher (must be true on every broker for tier reads to work, even after disabling tiering).
+  - `confluent.tier.enable=true` — sets the **default for new topics**. Per-topic override via `kafka-topics --alter --config confluent.tier.enable={true|false}`.
+- Plus the backend-specific config: `confluent.tier.backend=S3` (works with IBM Cloud Object Storage via S3-compatible API), `confluent.tier.s3.bucket`, `confluent.tier.s3.region`, `confluent.tier.s3.prefix`.
 - Prefer **IBM Cloud Object Storage** with an OSA-Express path; no s390x-specific gotchas — uses standard S3 protocol.
 - Off-platform AWS S3 works but pays the OSA latency tax for every cold read; only use for non-FSI tiers.
 
 ### Kafka Streams (s390x)
 
-- `topology.optimization=all` (was `OPTIMIZE`; `all` is the modern equivalent)
-- `processing.guarantee=exactly_once_v2` for any FSI flow that crosses a state-store boundary
-- Embedded clients: prefix with `producer.` / `consumer.` and apply the profiles above
-- RocksDB on s390x: build is supported as of RocksDB 7.x; pin Streams to 7.10+ to avoid older s390x JNI issues
+- `topology.optimization=all` (was `OPTIMIZE`; `all` is the modern equivalent). When migrating from a prior version that had `exactly_once` (v1), follow the documented `processing.guarantee` upgrade dance: rolling-restart through the `at_least_once → exactly_once_v2` transition (you cannot directly hot-switch v1 ↔ v2 without a planned cutover).
+- `processing.guarantee=exactly_once_v2` for any FSI flow that crosses a state-store boundary.
+- Embedded clients: prefix with `producer.` / `consumer.` and apply the profiles above.
+- RocksDB on s390x: build is supported as of RocksDB 7.x; pin Streams to 7.10+ to avoid older s390x JNI issues.
 
 ### MCP Validation Notes
 
@@ -179,6 +203,9 @@ For Confluent Platform brokers, set the `smc_run` wrapper as the JVM launcher in
 | ZooKeeper removed in CP 8.0 (KRaft only) | confluent-docs versions-interoperability.html | Confirmed |
 | s390x architecture support posture | confluent-docs versions-interoperability.html | Confirmed: GA Dec 2025; "Confluent does not provide support for any issues specific to this architecture" |
 | Java 21 recommended for CP 8.2 | confluent-docs versions-interoperability.html | Confirmed: 21 recommended, 17 supported |
+| `confluent.tier.feature` (broker) vs `confluent.tier.enable` (per-topic default) | confluent-docs tiered-storage.html | Confirmed: distinct properties; both required for full Tiered Storage on a topic |
+| `lszcrypt -VV` is the correct s390-tools command | s390-tools manpage / IBM s390-tools repo | Confirmed; `lscrypt` does not exist on RHEL/Debian/Ubuntu |
+| IBM JCE provider activation mechanism | IBM Semeru documentation, Java Security API | Confirmed: java.security edit OR `Security.insertProviderAt`; **no system-property switch** like `-Dcom.ibm.crypto.provider.useIBMJCE` exists |
 
 ### What Was Wrong in the Source Doc
 
@@ -195,6 +222,7 @@ For Confluent Platform brokers, set the `smc_run` wrapper as the JVM launcher in
 ## Related
 
 - [Producer Batching Configuration](concepts/producer-batching-config.md) — internals; this article applies them to L1
+- [LinuxONE Platform Foundations](../concepts/linuxone-platform-foundations.md) — SMC-R cross-frame transport details, UKO key lifecycle, JDK / IBM JCE provider rationale
 - [LinuxONE Validation Suite](linuxone-validation-suite.md) — the test plan that exercises these knobs
 - [LinuxONE Flink Validation & Tuning](linuxone-flink-validation-tuning.md) — paired Flink overlay
 - [SLA Tiers](concepts/sla-tiers.md) — what you may and may not tune per tier

@@ -9,11 +9,13 @@ sources:
   - https://github.com/IBM/zDNN
   - https://github.com/IBM/zDLC
   - https://ibm.github.io/ai-on-z-101/onnxdlc/
-related: [concepts/flink-checkpointing, concepts/exactly-once-semantics, concepts/linuxone-kafka-integration, patterns/linuxone-validation-suite, patterns/linuxone-kafka-tuning, patterns/fsi-exactly-once]
+related: [concepts/flink-checkpointing, concepts/exactly-once-semantics, concepts/linuxone-kafka-integration, concepts/linuxone-platform-foundations, patterns/linuxone-validation-suite, patterns/linuxone-kafka-tuning, patterns/fsi-exactly-once]
 confidence: medium
-last_updated: 2026-05-05
-last_validated: 2026-05-05
+last_updated: 2026-05-07
+last_validated: 2026-05-07
 validated_via: [confluent-docs (versions-interoperability.html), context7 (/websites/nightlies_apache_flink_flink-docs-release-2_2)]
+changelog:
+  - 2026-05-07 (rev 2) — Peer-review pass. Replaced `TwoPhaseCommitSinkFunction` reference (deprecated in Flink 2.x) with SinkV2 / `SupportsCommitter` framing per FLIP-372/FLIP-453. Replaced fabricated zDLC compile flags with citation to IBM AI Toolkit docs. Added checkpoint write-amplification note and RocksDB localdir guidance. Softened CV-models statement (small CV inference can land on Spyre). L4 cache wording corrected to virtual cluster cache.
 ---
 
 # LinuxONE Flink Validation, Tuning & Telum II Inference
@@ -61,8 +63,9 @@ Aggressive validation, tuning, and AI-inference integration plan for **Confluent
 
 #### 2.4 Exactly-Once End-to-End
 - Source: Kafka `read_committed`.
-- Sink: Kafka with `KafkaSink.builder().setDeliveryGuarantee(EXACTLY_ONCE)` — uses 2PC via Flink's `TwoPhaseCommitSinkFunction`.
-- Producer transactional.id prefix unique per task slot.
+- Sink: `KafkaSink.builder().setDeliveryGuarantee(EXACTLY_ONCE)` — runs under the **SinkV2 API** (`SupportsCommitter` interface; `CommittingSinkWriter` for pre-commits, `Committer` for final commits per FLIP-372/FLIP-453). Pre-commit happens on each checkpoint barrier; final commit happens on `notifyCheckpointComplete`. The legacy `TwoPhaseCommitSinkFunction` was moved to a legacy package in Flink 2.0 and is `@Deprecated` for removal — do not write new code against it.
+- Producer `transactional.id` prefix unique per task slot.
+- Producer `transaction.timeout.ms` must exceed `execution.checkpointing.tolerable-failed-checkpoints × execution.checkpointing.interval` plus a safety margin (recommend ×1.5). Otherwise transactions abort during normal checkpoint backpressure and the sink falls back to AT_LEAST_ONCE silently.
 - Inject failures: TaskManager kill, JobManager kill, broker kill — verify zero duplicates and zero loss across 10M records.
 
 #### 2.5 Schema Evolution
@@ -95,12 +98,15 @@ Aggressive validation, tuning, and AI-inference integration plan for **Confluent
 | `state.backend.incremental` | true | Required at scale |
 | `state.checkpoints.dir` | `s3://<bucket>/flink-checkpoints/` | IBM COS preferred on L1 |
 | `execution.checkpointing.dir` | matches above | Flink 2.x preferred property name |
+| `state.backend.rocksdb.localdir` | dedicated NVMe / FCP mount | **Must not share volume with Flink logs.** Local SSD-class storage; sized for state × 1.5 to handle in-flight compactions |
+
+> **Checkpoint write amplification budget.** At 100 GB state/TM × 4 TMs × 30 s checkpoint interval, with incremental checkpoints producing typical deltas of 1–5% of state size, expect on the order of **8–40 TB/day** of object-store writes. Specify the COS bucket lifecycle policy (retain N latest, expire older incrementals after savepoint), reserve PUT/GET budget against the COS account quota, and validate your COS bucket TPS ceiling against your TM count.
 
 #### 3.3 LinuxONE Overlay
 - **JVM:** `-XX:+UseG1GC`, heap sized so that managed memory + heap < 75% of TM process size; `-XX:+UseTransparentHugePages`.
 - **CPU pinning:** identical to broker tuning — pin TaskManager containers to contiguous z/VM CPs to avoid cross-drawer cache misses.
 - **Network:** wrap TM startup in `smc_run` to use SMC-D for inter-TM/inter-LPAR shuffle traffic.
-- **Crypto:** mTLS to brokers offloads to CEX8S transparently with IBM JCE provider; same flags as Kafka tuning.
+- **Crypto:** mTLS to brokers offloads to CEX8S via the JVM's JCE provider chain — see [LinuxONE Kafka Tuning § Crypto Express (CEX8S)](linuxone-kafka-tuning.md). IBM JCE activation is via `java.security` edit or `Security.insertProviderAt`, not a system-property switch.
 - **RocksDB on s390x:** require Flink 1.20+ with RocksDB 7.10+ (older versions have s390x JNI bugs). For Flink 2.x, the embedded RocksDB ships in the `flink-statebackend-rocksdb` artifact under the new `org.apache.flink.state.rocksdb` package. Set `state.backend.rocksdb.thread.num=4` to match IFL count.
 
 ### MCP Validation Notes
@@ -112,6 +118,7 @@ Aggressive validation, tuning, and AI-inference integration plan for **Confluent
 | `EXACTLY_ONCE` Kafka sink uses Kafka transactions | context7 /websites/.../flink-docs-release-2_2 | Confirmed: KafkaSink supports NONE, AT_LEAST_ONCE, EXACTLY_ONCE; EXACTLY_ONCE uses transactions and commits on checkpoint |
 | RocksDB incremental checkpoints | context7 /websites/.../flink-docs-release-2_2 | Confirmed: `EmbeddedRocksDBStateBackend(true)` |
 | Flink 2.x state backend type config | context7 /websites/.../flink-docs-release-2_2 | Confirmed: `state.backend.type=rocksdb` and `execution.checkpointing.mode=EXACTLY_ONCE` |
+| `TwoPhaseCommitSinkFunction` deprecated in Flink 2.x | context7 /websites/.../flink-docs-release-2_2 | Confirmed: SinkV2 API uses `SupportsCommitter` (`CommittingSinkWriter` + `Committer`); legacy 2PC sink moved to legacy package and `@Deprecated` per FLIP-372/FLIP-453 |
 
 ### 4. Telum II Sub-Millisecond Anomaly Detection
 
@@ -134,7 +141,7 @@ The inference call is **in-process, on-LPAR, on-chip** — there is no network h
 
 1. **Train** the anomaly model on Databricks (off-platform, Spark/MLflow).
 2. **Export** to ONNX.
-3. **Compile** with zDLC: `docker run --rm -v $MODEL_DIR:/workdir ${ZDLC_IMAGE} --EmitJNI --O3 -march=z17 --mtriple=s390x-ibm-loz model.onnx` → produces `model.so` + `model.jar`.
+3. **Compile** with zDLC to produce a JNI-callable artifact (`model.so` + `model.jar`). Use the canonical compile invocation from the [zDLC release docs](https://github.com/IBM/zDLC) and the [AI Toolkit for IBM Z and LinuxONE](https://www.ibm.com/products/ai-toolkit-for-z-and-linuxone) — do not paste a flag string from secondary sources, since the LLVM target triple and `-march=` value vary by zDLC release and toolchain version (e.g., `-march=z17` works only when the toolchain aliases it; older toolchains use `-march=arch15`).
 4. **Sign + register** the JAR in Schema Registry-adjacent artifact store; record SHA-256 in the model registry.
 5. **Distribute** to TaskManager classpath via `flink run --classpath model.jar`.
 
@@ -177,7 +184,7 @@ To hit p99 < 1 ms event-to-decision, every hop must be sized:
 For comparison: a Flink job on x86 calling out to a GPU inference microservice over a 10 GbE link routinely sits at 5–15 ms p99 — not viable for sub-ms.
 
 #### 4.5 Co-Residency Validation
-A test in the [LinuxONE Validation Suite §5.4](linuxone-validation-suite.md) confirms NNPA workloads do not interfere with broker performance on the same LPAR — the accelerator runs on dedicated silicon and shares only the L4 cache. Run in production confidence after that test passes.
+A test in the [LinuxONE Validation Suite §5.4](linuxone-validation-suite.md) confirms NNPA workloads do not interfere with broker performance on the same LPAR — the accelerator runs on dedicated silicon and shares only the **cluster-level virtual L4 cache / interconnect** (Telum II's "L4" is a virtual aggregation across the chip cluster, not a discrete cache array). L1/L2 and memory bandwidth are not contended. Run in production confidence after that test passes.
 
 #### 4.6 Models that Fit
 - **Credit card fraud** (DLM, ~5–20 features, < 1M params) — IBM-published reference shows 5M ops/s at p99 < 1 ms on Emperor 5.
@@ -185,8 +192,8 @@ A test in the [LinuxONE Validation Suite §5.4](linuxone-validation-suite.md) co
 - **Real-time payment risk scoring** — fits.
 
 Models that **do not fit** the on-chip accelerator:
-- LLMs and transformers above ~1B params — these go to **IBM Spyre** (separate PCIe accelerator, also on z17/Emperor 5) with sub-ms still achievable for smaller variants.
-- Computer vision models — keep these off-platform.
+- LLMs and transformers above ~1B params — these go to **IBM Spyre** (separate PCIe accelerator, also on z17/Emperor 5). See [LinuxONE Platform Foundations § Spyre Integration Boundary](../concepts/linuxone-platform-foundations.md) — the on-frame two-tier inference story (NNPA for ~250 µs class; Spyre for larger models at ~500 µs–1 ms over PCIe; decision is at compile time via zDLC vs Spyre toolchain).
+- **Large** computer vision models (>500M params) — keep off-platform. **Small** CV inference (signature/check verification, document quality classification, e.g. <50M params) can land on Spyre with sub-ms latency.
 
 ### 5. Reporting
 
@@ -194,6 +201,7 @@ Same convention as the validation suite — Markdown report per run committed to
 
 ## Related
 
+- [LinuxONE Platform Foundations](../concepts/linuxone-platform-foundations.md) — Spyre integration boundary, Telum II vs Spyre tier decision, IBM benchmark anchors, STP for event-time consistency
 - [LinuxONE Validation Suite](linuxone-validation-suite.md) — paired Kafka validation
 - [LinuxONE Kafka Tuning](linuxone-kafka-tuning.md) — broker tuning consumed by the Flink pipeline
 - [Flink Checkpointing](concepts/flink-checkpointing.md) — barrier mechanics, aligned vs unaligned

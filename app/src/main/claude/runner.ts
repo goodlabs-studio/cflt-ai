@@ -7,13 +7,17 @@ import { randomUUID } from 'node:crypto';
 import type { WebContents } from 'electron';
 import { getRepoRoot } from '../repo.js';
 import { LineParser } from './parser.js';
+import { acquire, classify, release } from '../concurrency.js';
 import type { SkillRequest, StreamEvent, SkillResult } from '@shared/types';
 
 interface ActiveSession {
   sessionId: string;
-  child: ChildProcess;
+  child: ChildProcess | null;     // null while queued waiting for a slot
   webContents: WebContents | null;
   pendingResult: Partial<SkillResult> | null;
+  cancelled: boolean;
+  released: boolean;
+  cls: ReturnType<typeof classify>;
 }
 
 const sessions = new Map<string, ActiveSession>();
@@ -31,13 +35,65 @@ const DEFAULT_MAX_TURNS_BY_KIND: Record<string, number> = {
   'dsp:apply': 30,
 };
 
-/** Run a skill request. Emits events to the given WebContents until the
- * subprocess exits or is cancelled. Returns the sessionId. */
+/** Run a skill request. Returns the sessionId immediately; events stream
+ * to webContents until the subprocess exits or is cancelled. May queue
+ * behind the concurrency guard before spawning. */
 export function startRun(
   webContents: WebContents,
   req: SkillRequest,
 ): string {
   const sessionId = randomUUID();
+  const cls = classify(req);
+  const session: ActiveSession = {
+    sessionId,
+    child: null,
+    webContents,
+    pendingResult: null,
+    cancelled: false,
+    released: false,
+    cls,
+  };
+  sessions.set(sessionId, session);
+
+  const send = (ev: StreamEvent): void => {
+    if (!session.webContents || session.webContents.isDestroyed()) return;
+    session.webContents.send('skill:event', sessionId, ev);
+    if (ev.type === 'result') session.pendingResult = ev.result;
+  };
+
+  // Acquire concurrency slot before spawning. acquire() resolves
+  // immediately if a slot is free, or later when one frees up.
+  acquire(cls)
+    .then(() => {
+      if (session.cancelled) {
+        // Cancelled while queued — release the slot we just acquired.
+        if (!session.released) {
+          release(cls);
+          session.released = true;
+        }
+        send({
+          type: 'result',
+          result: blankResult(false),
+        });
+        cleanup(sessionId);
+        return;
+      }
+      spawnAndWire(session, req, send);
+    })
+    .catch((err: Error) => {
+      send({ type: 'error', message: `concurrency guard failed: ${err.message}` });
+      send({ type: 'result', result: blankResult(false) });
+      cleanup(sessionId);
+    });
+
+  return sessionId;
+}
+
+function spawnAndWire(
+  session: ActiveSession,
+  req: SkillRequest,
+  send: (ev: StreamEvent) => void,
+): void {
   const repoRoot = getRepoRoot();
   const cmd = buildClaudeCommand(req);
 
@@ -47,21 +103,9 @@ export function startRun(
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env },
   });
+  session.child = child;
 
   const parser = new LineParser();
-  const session: ActiveSession = {
-    sessionId,
-    child,
-    webContents,
-    pendingResult: null,
-  };
-  sessions.set(sessionId, session);
-
-  const send = (ev: StreamEvent): void => {
-    if (!session.webContents || session.webContents.isDestroyed()) return;
-    session.webContents.send('skill:event', sessionId, ev);
-    if (ev.type === 'result') session.pendingResult = ev.result;
-  };
 
   child.stdout?.setEncoding('utf-8');
   child.stdout?.on('data', (chunk: string) => {
@@ -72,54 +116,54 @@ export function startRun(
   let stderrBuf = '';
   child.stderr?.on('data', (chunk: string) => {
     stderrBuf += chunk;
-    // Throttle: only emit a synthesized error if stderr looks fatal
     if (stderrBuf.length > 4096) stderrBuf = stderrBuf.slice(-4096);
   });
 
   child.on('error', (err) => {
     send({ type: 'error', message: `Failed to spawn claude: ${err.message}` });
-    cleanup(sessionId);
+    cleanup(session.sessionId);
   });
 
   child.on('close', (code) => {
     for (const ev of parser.flush()) send(ev);
     if (!session.pendingResult) {
-      // No final result event arrived — synthesize one so the renderer
-      // always sees a terminal event.
       const message =
         code === 0
           ? 'subprocess exited without a result event'
           : `subprocess exited with code ${code}${stderrBuf ? `: ${stderrBuf.trim().slice(-400)}` : ''}`;
       send({ type: 'error', message });
-      send({
-        type: 'result',
-        result: {
-          success: code === 0,
-          text: '',
-          durationMs: 0,
-          costUsd: 0,
-          inputTokens: 0,
-          outputTokens: 0,
-        },
-      });
+      send({ type: 'result', result: blankResult(code === 0) });
     }
-    cleanup(sessionId);
+    cleanup(session.sessionId);
   });
+}
 
-  return sessionId;
+function blankResult(success: boolean): SkillResult {
+  return {
+    success,
+    text: '',
+    durationMs: 0,
+    costUsd: 0,
+    inputTokens: 0,
+    outputTokens: 0,
+  };
 }
 
 export function cancel(sessionId: string): boolean {
   const session = sessions.get(sessionId);
   if (!session) return false;
+  session.cancelled = true;
+  if (!session.child) {
+    // Still queued. cleanup happens when acquire() resolves.
+    return true;
+  }
   try {
     session.child.kill('SIGTERM');
   } catch {
     /* already dead */
   }
-  // Force-kill after 2s if SIGTERM didn't take.
   setTimeout(() => {
-    if (sessions.has(sessionId)) {
+    if (sessions.has(sessionId) && session.child) {
       try {
         session.child.kill('SIGKILL');
       } catch {
@@ -135,6 +179,11 @@ export function disposeAll(): void {
 }
 
 function cleanup(sessionId: string): void {
+  const session = sessions.get(sessionId);
+  if (session && !session.released) {
+    release(session.cls);
+    session.released = true;
+  }
   sessions.delete(sessionId);
 }
 

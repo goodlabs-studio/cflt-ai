@@ -1,11 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
   CfltAPI,
+  ConcurrencyState,
   FsEvent,
   SkillRequest,
   StreamEvent,
   SkillResult,
   RunHandle,
+  ToolOutputChunk,
+  ToolRunHandle,
 } from '@shared/types';
 
 let watchSeq = 0;
@@ -45,8 +48,12 @@ const api: CfltAPI = {
     run: (req: SkillRequest): RunHandle => createRunHandle(req),
     listProfiles: () => ipcRenderer.invoke('skill:listProfiles'),
   },
-  // Phase B.2 onward
-  tools: {} as never,
+  tools: {
+    wikiLint: (args) => createToolRunHandle('wikiLint', args),
+    wikiSearch: (q) => ipcRenderer.invoke('tool:wikiSearch', q),
+    wikiStats: () => ipcRenderer.invoke('tool:wikiStats'),
+    reviewToDocx: (path) => ipcRenderer.invoke('tool:reviewToDocx', path),
+  },
   confirm: {} as never,
   mcp: {} as never,
   meta: {
@@ -57,12 +64,120 @@ const api: CfltAPI = {
 
 contextBridge.exposeInMainWorld('cflt', api);
 
+// ─── Concurrency state subscription ────────────────────────────────────
+//
+// Main broadcasts {mutatingActive, nonMutatingActive, queueDepth} on every
+// change. Renderer can subscribe via window.cfltConcurrency.subscribe().
+
+contextBridge.exposeInMainWorld('cfltConcurrency', {
+  subscribe(cb: (s: ConcurrencyState) => void): () => void {
+    const handler = (
+      _e: Electron.IpcRendererEvent,
+      state: ConcurrencyState,
+    ): void => {
+      cb(state);
+    };
+    ipcRenderer.on('concurrency:state', handler);
+    return () => ipcRenderer.removeListener('concurrency:state', handler);
+  },
+});
+
 // ─── Skill streaming bridge ────────────────────────────────────────────
 //
 // Electron IPC is event-based, not stream-based. We:
 //   1. ipcRenderer.invoke('skill:run', req) → main returns sessionId
 //   2. main.webContents.send('skill:event', sessionId, ev) for each event
 //   3. Bridge buffers events into an AsyncIterable, terminates on result/error.
+
+// ─── Tool streaming bridge ─────────────────────────────────────────────
+
+type StreamingTool = 'wikiLint';
+
+function createToolRunHandle(
+  tool: StreamingTool,
+  args?: { full?: boolean; fix?: boolean },
+): ToolRunHandle {
+  const buffer: ToolOutputChunk[] = [];
+  let waker: (() => void) | null = null;
+  let terminated = false;
+  let toolId: string | null = null;
+  let stdoutAll = '';
+  let stderrAll = '';
+  let exitCode = -1;
+
+  let resolveResult: (r: { exitCode: number; stdout: string; stderr: string }) => void;
+  const result = new Promise<{ exitCode: number; stdout: string; stderr: string }>(
+    (resolve) => {
+      resolveResult = resolve;
+    },
+  );
+
+  const handler = (
+    _e: Electron.IpcRendererEvent,
+    tid: string,
+    chunk: ToolOutputChunk,
+  ): void => {
+    if (tid !== toolId) return;
+    buffer.push(chunk);
+    if (chunk.kind === 'stdout') stdoutAll += chunk.text;
+    else if (chunk.kind === 'stderr') stderrAll += chunk.text;
+    else if (chunk.kind === 'exit') {
+      exitCode = chunk.code;
+      terminated = true;
+      resolveResult({ exitCode, stdout: stdoutAll, stderr: stderrAll });
+    }
+    waker?.();
+  };
+
+  ipcRenderer.on('tool:output', handler);
+
+  ipcRenderer
+    .invoke(`tool:${tool}:start`, args ?? {})
+    .then((id: string) => {
+      toolId = id;
+    })
+    .catch((err) => {
+      buffer.push({
+        kind: 'stderr',
+        text: `[start error] ${err?.message ?? String(err)}`,
+      });
+      buffer.push({ kind: 'exit', code: -1 });
+      terminated = true;
+      resolveResult({ exitCode: -1, stdout: '', stderr: String(err) });
+      waker?.();
+    });
+
+  const output: AsyncIterable<ToolOutputChunk> = {
+    [Symbol.asyncIterator]: () => ({
+      next: async (): Promise<IteratorResult<ToolOutputChunk>> => {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          if (buffer.length > 0) {
+            return { value: buffer.shift()!, done: false };
+          }
+          if (terminated) {
+            ipcRenderer.removeListener('tool:output', handler);
+            return { value: undefined, done: true };
+          }
+          await new Promise<void>((resolve) => {
+            waker = (): void => {
+              waker = null;
+              resolve();
+            };
+          });
+        }
+      },
+    }),
+  };
+
+  return {
+    output,
+    cancel: (): void => {
+      if (toolId) ipcRenderer.invoke(`tool:${tool}:cancel`, toolId);
+    },
+    result,
+  };
+}
 
 function createRunHandle(req: SkillRequest): RunHandle {
   let resolveSession: (id: string) => void;

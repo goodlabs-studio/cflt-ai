@@ -1,6 +1,6 @@
 ---
 title: Work Queue
-last_updated: 2026-05-05
+last_updated: 2026-05-07
 ---
 
 # Wiki Work Queue
@@ -34,7 +34,7 @@ The LLM reads this at session start and clears items when complete.
 ## Lint Findings
 
 <!-- format: - [ ] finding from last lint run -->
-<!-- Last lint run: 2026-05-05 via /wiki:lint after fixing wiki-lint.py orphan-path comparison bug -->
+<!-- Last lint run: 2026-05-07 after Phase A+B peer-review pass on the four LinuxONE patterns + new linuxone-platform-foundations concept doc. Lint clean except for the pre-existing fsi-exactly-once unverified markers (already tracked above). -->
 - [ ] unverified: wiki/patterns/fsi-exactly-once.md (2 inline `⚠️ unverified` markers, both queued above for resolution)
 
 ## Candidate Articles (from lint / Q&A sessions)
