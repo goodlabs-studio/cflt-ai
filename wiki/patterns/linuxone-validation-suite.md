@@ -11,9 +11,11 @@ sources:
   - https://www.ibm.com/support/pages/node/7262649
 related: [concepts/linuxone-kafka-integration, concepts/sla-tiers, concepts/fsi-compliance, patterns/linuxone-kafka-tuning, patterns/linuxone-flink-validation-tuning, patterns/aks-kafka-tuning]
 confidence: medium
-last_updated: 2026-05-05
-last_validated: 2026-05-05
-validated_via: [confluent-docs (versions-interoperability.html, producer-configs.html), context7 (/websites/javadoc_io_doc_org_apache_kafka_kafka-clients_4_2_0)]
+last_updated: 2026-05-07
+last_validated: 2026-05-07
+validated_via: [confluent-docs (versions-interoperability.html, producer-configs.html, tiered-storage.html), context7 (/websites/javadoc_io_doc_org_apache_kafka_kafka-clients_4_2_0)]
+changelog:
+  - 2026-05-07 (rev 2) — Peer-review pass. Removed fabricated commands (`lscrypt`, `setsebool kafka_crypto_offload`, `kafka-storage.sh format --recover`, `kafka-tier-storage-tool`, `-Dcom.ibm.crypto.provider.useIBMJCE`). Replaced with real equivalents. Corrected KIP reference (KIP-858, not KIP-589/963). Reworded GC-pause and Telum II co-residency wording.
 ---
 
 # LinuxONE Kafka Validation & Benchmarking Suite
@@ -33,7 +35,7 @@ Three concurrent topologies cover 90% of FSI scenarios:
 | Topology | Frame Layout | Purpose |
 |----------|--------------|---------|
 | **Single-frame, multi-LPAR** | 3 brokers + 3 KRaft controllers across 6 LPARs on one Emperor 5; client LPAR co-resident | Latency floor, HiperSockets validation, sub-ms ceiling tests |
-| **Dual-frame DR** | 3-broker primary + 3-broker DR across two frames in same data center; cross-frame OSA-Express7S 25 GbE | Cluster Linking failover, RPO=0 attempt for compliance tier |
+| **Dual-frame DR** | 3-broker primary + 3-broker DR across two frames in same data center; cross-frame **RoCE Express + SMC-R** for replication / MRC quorum / CL traffic; OSA-Express7S 25 GbE for off-campus egress only — see [LinuxONE Platform Foundations § Cross-frame Transport](../concepts/linuxone-platform-foundations.md) | MRC stretch failover (compliance-tier RPO=0 when RTT < 50 ms) and Cluster Linking failover (analytical) |
 | **Hybrid edge** | 3 brokers on LinuxONE; 3 producers on x86 RHEL via OSA / SMC-R / RoCE | Mainframe-bridge SLA validation; the canonical FSI MQ-bridge pattern |
 
 All topologies run **KRaft mode** (Confluent Platform 8.0+ requires it; ZooKeeper is gone). Co-locate KRaft controllers on dedicated LPARs — never share with brokers in production validation.
@@ -76,8 +78,9 @@ Eight modules. Each yields a pass/fail; partial passes block tier-up.
 - Two-pass registration (the `fsi-dsp` pattern): first pass without check, second pass with `compatibility.level` enforced.
 
 #### 3.5 Tiered Storage
-- Topic with `segment.bytes=1073741824` (1 GiB), `retention.ms=604800000` (7d), `confluent.tier.enable=true`, target = IBM Cloud Object Storage on s390x or off-platform AWS S3 via OSA.
-- Produce ≥ 5 segments worth (~5 GiB/partition); confirm cold-tier offload via `kafka-tier-storage-tool`.
+- **Broker properties:** `confluent.tier.feature=true` (enables the tier fetcher on the broker; required), `confluent.tier.backend=S3` (or equivalent for IBM COS via S3-compatible API), plus the bucket / region / prefix properties. `confluent.tier.enable=true` set as the *broker default for new topics* OR set per-topic via `kafka-topics --alter --config confluent.tier.enable=true`.
+- Topic test config: `segment.bytes=1073741824` (1 GiB), `retention.ms=604800000` (7d), `confluent.tier.enable=true`. Target = IBM Cloud Object Storage on-frame (preferred) or off-platform AWS S3 via OSA.
+- Produce ≥ 5 segments worth (~5 GiB/partition); confirm cold-tier offload via `kafka-topics --describe` (shows tier config) plus broker JMX (`kafka.tier:type=TierFetcher,*` for tier fetcher activity, `kafka.log:type=Log,name=Size,*` for local log size). When offloaded segments exist, local log size shrinks while topic size stays stable.
 - **L1-specific:** measure cold-read latency over OSA vs warm-read from local FS-cache; warm read should be < 1 ms, cold read should be < 250 ms for objects under 64 MiB.
 
 #### 3.6 Cluster Linking
@@ -88,7 +91,10 @@ Eight modules. Each yields a pass/fail; partial passes block tier-up.
 #### 3.7 KRaft Controller Consistency
 - 3 controllers, 100 topics with varied configs. Stop the active controller mid-DDL, allow election, restart, replay metadata log.
 - Validate: post-restart `__cluster_metadata` topic snapshot offset matches active controller's high watermark; no metadata divergence.
-- Failure injection: corrupt one controller's snapshot file — the controller must refuse to start and log a recoverable error pointing to `kafka-storage.sh format --recover`.
+- Failure injection: corrupt one controller's snapshot file. The controller must refuse to start. Recovery flow:
+  1. Inspect the broken state via `kafka-dump-log.sh --cluster-metadata-decoder --files /var/lib/kafka/__cluster_metadata-0/*.log` to identify the corruption point.
+  2. **Preferred:** wipe the failed controller's data dir and let Raft reseed it from the remaining quorum — `rm -rf /var/lib/kafka/*`, then start the controller; it joins as a follower and pulls the metadata log from the leader.
+  3. **Fallback only if the quorum has degraded below majority:** re-format with `kafka-storage.sh format --cluster-id <existing-id> --config controller.properties --ignore-formatted` and reseed via the operating quorum. There is no `--recover` flag — `kafka-storage format` accepts `--config`/`-c`, `--cluster-id`/`-t`, `--add-scram`/`-S`, `--ignore-formatted`/`-g`, `--release-version`/`-r`, plus dynamic-quorum flags `--standalone`, `--initial-controllers`, `--no-initial-controllers`.
 
 #### 3.8 Self-Balancing Cluster (SBC)
 - 4-broker cluster, 30 topics × 12 partitions × RF=3.
@@ -99,8 +105,8 @@ Eight modules. Each yields a pass/fail; partial passes block tier-up.
 
 - **Power-loss simulation:** for KRaft, abrupt LPAR fence via z/VM `CP FORCE` mid-write. Producer with `acks=all` + `enable.idempotence=true` must produce zero duplicates and zero losses.
 - **Network partition:** isolate one broker via OSA filter rules. Followers must drop from ISR within `replica.lag.time.max.ms` (default 30 s); producer with `acks=all` and `min.insync.replicas=2` must continue if 2 of 3 remain.
-- **Disk failure:** scratch one broker's log dir. With `log.dirs` set to a single mount, the broker must self-fence; with multiple log dirs, only the failed dir goes offline (KIP-589 / KIP-963 — JBOD recovery validated in Kafka 4.0+).
-- **GC pause:** force a 4 s G1 pause via `-XX:+PrintGCApplicationStoppedTime` and a synthetic allocation burst. Validate `replica.lag.time.max.ms=30000` is well above 95p pause time.
+- **Disk failure:** scratch one broker's log dir. With `log.dirs` set to a single mount, the broker must self-fence; with multiple log dirs, only the failed dir goes offline ([KIP-858](https://cwiki.apache.org/confluence/display/KAFKA/KIP-858%3A+Handle+JBOD+broker+disk+failure+in+KRaft) — JBOD-on-KRaft, early access in Kafka 3.7, production-ready in 3.8 / Confluent Platform 7.8+).
+- **GC pause:** force a 4 s G1 pause via `-XX:+PrintGCApplicationStoppedTime` and a synthetic allocation burst. **p95 GC pause must stay well below the 30 s `replica.lag.time.max.ms` window — target ≤ 2 s with G1 on a heap sized at ~ `taskmanager.memory.process.size × 0.4`** (or equivalent for broker JVM). If p95 pauses approach `replica.lag.time.max.ms`, the broker churns in/out of ISR and replication stalls.
 
 ### 5. Performance & Scale
 
@@ -118,7 +124,7 @@ Use `kafka-producer-perf-test.sh` with `--num-records 10000000 --record-size 102
 
 | Test | Producer | Consumer | Pass criterion (single broker) |
 |------|----------|----------|--------------------------------|
-| Single-partition latency | 1 thread, `acks=all`, `linger.ms=0` | 1 thread | p99 < 5 ms intra-frame |
+| Single-partition latency | 1 thread, `acks=all`, `linger.ms=0` | 1 thread | p99 < 5 ms intra-frame (anchored against IBM Emperor 5 reference benchmarks — see [LinuxONE Platform Foundations § IBM Benchmark Anchors](../concepts/linuxone-platform-foundations.md)) |
 | Multi-partition throughput | 16 threads, `linger.ms=20`, `lz4` | 8 threads | ≥ 600 MB/s sustained |
 | Compression compare | `lz4`, `zstd`, `snappy` | matching | zstd within 15% of lz4 throughput; gzip excluded |
 
@@ -145,9 +151,12 @@ SMC-D (Shared Memory Communications - Direct) is z/Linux's userspace shortcut fo
 | OSA-Express7S 25 GbE | 2–5 ms | line rate |
 
 ##### Crypto Express FIPS Throughput
-- mTLS-only listeners, force CEX8S offload via `setsebool -P kafka_crypto_offload=1` and per-jvm `-Dcom.ibm.crypto.provider.useIBMJCE=true`.
+- mTLS-only listeners. CEX offload routing is determined by the **JCE provider chain** in the JVM and the OS-level crypto policy — not by an SELinux boolean. To activate IBM JCE (only available on IBM Semeru / OpenJ9 — not on Confluent's supported JDK list; see [LinuxONE Kafka Tuning § JDK posture](linuxone-kafka-tuning.md)):
+  - Edit `$JAVA_HOME/conf/security/java.security` to list `com.ibm.crypto.provider.IBMJCE` (or `IBMJCEPlus` for newer SDKs) above the default JCE provider, OR
+  - Programmatic `Security.insertProviderAt(new com.ibm.crypto.provider.IBMJCE(), 1)`.
+- For Confluent-supported JDKs (OpenJDK 21 / Zulu / Oracle), use `BCFIPS` provider plus `update-crypto-policies --set FIPS:OSPP` for FIPS 140-3 mode; CEX8S offload still works via the OS crypto policy path.
 - Run sustained 1 GB/s producer load over mTLS for 30 minutes.
-- Monitor `lscrypt -v` queue depth on CEX8S; queue depth > 80% sustained means saturation — add a second adapter or reduce TLS handshakes via long-lived connections.
+- Monitor with `lszcrypt -VV` (note: command is `lszcrypt`, part of `s390-tools`; the older `-V`/`-VV`/`-VVV` flags control verbosity). The verbose output shows columns CARD.DOM, TYPE, MODE, STATUS, REQUESTS, **PENDING**, HWTYPE, **QDEPTH**, FUNCTIONS, DRIVER. Saturation as a single-read percentage is meaningless — sample over time and watch **PENDING / QDEPTH ratio**: sustained > 0.5 indicates contention. Mitigate by adding a CEX domain/adapter, or reduce TLS handshake frequency via long-lived connections (`connections.max.idle.ms` higher, keepalive on).
 
 ##### Container Density
 - On z/VM: 30 broker containers per LPAR (each broker capped at 4 vCPUs, 16 GiB).
@@ -155,7 +164,7 @@ SMC-D (Shared Memory Communications - Direct) is z/Linux's userspace shortcut fo
 - Validate that JVM `-XX:ActiveProcessorCount` is honored under cgroups; container should not see all 60+ cores of the LPAR.
 
 ##### Telum II Co-Residency
-Run a Flink job invoking the on-chip NNPA AI accelerator (zDNN) for inference on the same LPAR as a Kafka broker. Producer/consumer load must remain unaffected. The accelerator runs on dedicated silicon; the test confirms there is no shared-cache or memory-bandwidth interference.
+Run a Flink job invoking the on-chip NNPA AI accelerator (zDNN) for inference on the same LPAR as a Kafka broker. Producer/consumer load must remain unaffected. The accelerator runs on dedicated silicon and shares only the **cluster-level virtual L4 cache / interconnect** — not L1/L2 or memory bandwidth. (Telum II's "L4" is a virtual aggregation across the chip cluster, not a discrete cache array; isolation argument depends on this distinction.) The test confirms there is no shared-cache or memory-bandwidth interference for the broker workload.
 
 ### 6. Test Tooling
 
@@ -191,6 +200,10 @@ Historical reports feed a Grafana dashboard sourced from the `fsi.validation.res
 | s390x support GA December 2025 for CP for Apache Flink | confluent-docs versions-interoperability.html | Confirmed verbatim: "Linux s390x is supported starting in December 2025... Confluent does not provide support for any issues specific to this architecture. If the same issue occurs with a supported architecture in addition to the unsupported Linux s390x, Confluent provides support" |
 | Java 21 recommended for CP 8.2 (17 also supported) | confluent-docs versions-interoperability.html | Confirmed |
 | Producer defaults exercised in §5.2 (acks=all, idempotence=true, linger.ms=0/5) | confluent-docs producer-configs.html + context7 javadoc_io kafka-clients 4_2_0 | Confirmed all stated defaults |
+| KIP-858 (JBOD-on-KRaft) production-ready in Kafka 3.8 / CP 7.8+ | Apache Kafka KIP wiki + Confluent 3.8 release notes | Confirmed; replaces prior incorrect KIP-589/963 reference |
+| `kafka-storage.sh format` flag set | Apache Kafka KIP-785, KIP-900, kafka-tools docs | Confirmed: flags are `--config`, `--cluster-id`, `--add-scram`, `--ignore-formatted`, `--release-version`, plus dynamic-quorum flags; **no `--recover` flag exists** |
+| `confluent.tier.feature` (broker enable) vs `confluent.tier.enable` (per-topic) | confluent-docs tiered-storage.html | Confirmed two distinct properties; broker-level `feature=true` enables tier fetcher; per-topic `enable=true` opts the topic in |
+| `lszcrypt` is the s390-tools command (not `lscrypt`) | s390-tools manpage, IBM s390-tools repo | Confirmed: `lszcrypt -V`/`-VV`/`-VVV` for verbosity; columns include PENDING and QDEPTH for queue-depth analysis |
 
 ## Related
 
