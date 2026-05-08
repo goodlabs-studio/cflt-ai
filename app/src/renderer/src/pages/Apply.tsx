@@ -34,6 +34,26 @@ interface RunState {
 const ACTIVITY_PATH_RE = /wiki\/activity\/\d{4}-\d{2}\.md/;
 const INCIDENT_PATH_RE = /wiki\/incidents\/[A-Za-z0-9._-]+\.md/;
 
+// /dsp:apply Step 6 (and the break-glass two-step in Step 6) emit
+// AskUserQuestion as a tool_use. The user has already given consent via the
+// native ConfirmationModal; relay that decision back to the skill so its
+// AUQ resolves and `confirmation_status` records correctly.
+function answerForAskUserQuestion(
+  profile: ApplyProfile,
+  reason: string | undefined,
+  turn: number,
+): string | null {
+  if (profile === 'engineer') {
+    return turn === 0 ? 'CONFIRM APPLY' : null;
+  }
+  if (profile === 'break-glass') {
+    if (turn === 0) return reason ?? '';
+    if (turn === 1) return 'CONFIRM BREAK-GLASS';
+    return null;
+  }
+  return null;
+}
+
 export function ApplyPage(): React.JSX.Element {
   const [plans, setPlans] = useState<PlanMeta[]>([]);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
@@ -125,6 +145,7 @@ export function ApplyPage(): React.JSX.Element {
 
       let activityRef: string | undefined;
       let incidentRef: string | undefined;
+      let askTurn = 0;
 
       try {
         for await (const ev of handle.events) {
@@ -144,6 +165,14 @@ export function ApplyPage(): React.JSX.Element {
             setRun({ status: 'running', lines: [...lines], activityRef, incidentRef });
           } else if (ev.type === 'tool_use') {
             lines.push(`▸ tool_use ${ev.tool.name}`);
+            if (ev.tool.name === 'AskUserQuestion') {
+              const answer = answerForAskUserQuestion(profile, reason, askTurn);
+              askTurn += 1;
+              if (answer !== null) {
+                handle.respond(ev.tool.id, answer);
+                lines.push(`▸ auto-respond: ${answer}`);
+              }
+            }
             setRun({ status: 'running', lines: [...lines], activityRef, incidentRef });
           } else if (ev.type === 'error') {
             lines.push(`[error] ${ev.message}`);

@@ -290,6 +290,11 @@ function createRunHandle(req: SkillRequest): RunHandle {
     cancel: (): void => {
       sessionPromise.then((id) => ipcRenderer.invoke('skill:cancel', id));
     },
+    respond: (toolUseId: string, content: string): void => {
+      sessionPromise.then((id) =>
+        ipcRenderer.invoke('skill:respond', id, toolUseId, content),
+      );
+    },
     result: resultPromise,
   };
 }

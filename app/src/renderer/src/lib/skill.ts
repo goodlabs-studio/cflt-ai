@@ -14,6 +14,7 @@ export function runSkill(req: SkillRequest): RunHandle {
   return {
     sessionId: handle.sessionId,
     cancel: handle.cancel,
+    respond: handle.respond,
     result: handle.result,
     events: tap(handle.events),
   };

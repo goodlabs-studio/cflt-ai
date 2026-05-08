@@ -21,6 +21,12 @@ interface ActiveSession {
   cls: ReturnType<typeof classify>;
 }
 
+// One stream-json record per line on stdin/stdout.
+function writeStreamJson(child: ChildProcess, record: unknown): void {
+  if (!child.stdin || child.stdin.destroyed) return;
+  child.stdin.write(JSON.stringify(record) + '\n');
+}
+
 const sessions = new Map<string, ActiveSession>();
 
 const DEFAULT_MAX_TURNS_BY_KIND: Record<string, number> = {
@@ -95,15 +101,26 @@ function spawnAndWire(
   send: (ev: StreamEvent) => void,
 ): void {
   const repoRoot = getRepoRoot();
-  const cmd = buildClaudeCommand(req);
+  const { command: cmd, prompt } = buildClaudeCommand(req);
 
   // -i (login shell) so ~/.zshrc env propagates; -l ensures profile too.
+  // stdin is now PIPE so we can stream-json input the prompt + any
+  // mid-stream tool_result responses for AskUserQuestion.
   const child = spawn('zsh', ['-ilc', cmd], {
     cwd: repoRoot,
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: ['pipe', 'pipe', 'pipe'],
     env: { ...process.env },
   });
   session.child = child;
+
+  // Send initial user prompt as a stream-json record.
+  writeStreamJson(child, {
+    type: 'user',
+    message: {
+      role: 'user',
+      content: [{ type: 'text', text: prompt }],
+    },
+  });
 
   const parser = new LineParser();
 
@@ -178,6 +195,30 @@ export function disposeAll(): void {
   for (const [id] of sessions) cancel(id);
 }
 
+/**
+ * Send a tool_result for an AskUserQuestion (or other tool_use the skill
+ * is awaiting) over stdin. The skill receives this as the next user turn
+ * and continues. Returns true when the response was queued; false if the
+ * session is unknown or the subprocess has already closed stdin.
+ */
+export function respondToTool(
+  sessionId: string,
+  toolUseId: string,
+  content: string,
+): boolean {
+  const session = sessions.get(sessionId);
+  if (!session || !session.child || !session.child.stdin) return false;
+  if (session.child.stdin.destroyed) return false;
+  writeStreamJson(session.child, {
+    type: 'user',
+    message: {
+      role: 'user',
+      content: [{ type: 'tool_result', tool_use_id: toolUseId, content }],
+    },
+  });
+  return true;
+}
+
 function cleanup(sessionId: string): void {
   const session = sessions.get(sessionId);
   if (session && !session.released) {
@@ -188,84 +229,82 @@ function cleanup(sessionId: string): void {
 }
 
 /**
- * Build the `claude` CLI command string for a given skill request.
- * The string is passed to `zsh -ilc`, so we shell-quote user input.
+ * Build the `claude` CLI command string + the prompt to feed via stdin.
+ * The CLI runs in `--input-format stream-json` mode so we can answer
+ * mid-stream AskUserQuestion calls; the prompt is the first stdin record.
  */
-function buildClaudeCommand(req: SkillRequest): string {
+function buildClaudeCommand(req: SkillRequest): {
+  command: string;
+  prompt: string;
+} {
   const maxBudget = loadConfig().maxBudgetUsd;
   const maxTurns = DEFAULT_MAX_TURNS_BY_KIND[req.kind] ?? 20;
-  const base = [
+  const command = [
     'claude',
     '--print',
+    '--input-format',
+    'stream-json',
     '--output-format',
     'stream-json',
     '--verbose',
     `--max-turns ${maxTurns}`,
     `--max-budget-usd ${maxBudget}`,
-  ];
+  ].join(' ');
 
-  // Each skill request is invoked as a slash command. The user input is
-  // appended as the prompt argument; quoting handles spaces/quotes.
+  // Build the slash-command prompt sent via stdin; no shell quoting
+  // needed since it travels as a JSON string, not argv.
+  const prompt = buildPrompt(req);
+  return { command, prompt };
+}
+
+function buildPrompt(req: SkillRequest): string {
   switch (req.kind) {
     case 'ask': {
-      const args = [
+      const flags = [
         `--mode ${req.mode}`,
         req.forceRoute ? `--force-route ${req.forceRoute}` : '',
-        shellQuote(req.query),
       ]
         .filter(Boolean)
         .join(' ');
-      return `${base.join(' ')} ${shellQuote(`/ask ${args}`)}`;
+      return `/ask ${flags} ${req.query}`.trim();
     }
     case 'review': {
-      const args = [
+      const flags = [
         req.output ? `--output ${req.output}` : '',
-        req.overlay ? `--overlay ${shellQuote(req.overlay)}` : '',
-        req.docPaths.map(shellQuote).join(' '),
+        req.overlay ? `--overlay ${req.overlay}` : '',
       ]
         .filter(Boolean)
         .join(' ');
-      return `${base.join(' ')} ${shellQuote(`/review ${args}`)}`;
+      const paths = req.docPaths.join(' ');
+      return `/review ${flags} ${paths}`.trim();
     }
     case 'wiki:lint':
     case 'wiki:validate':
     case 'wiki:ingest':
     case 'wiki:evaluate':
-    case 'wiki:recommend': {
-      const cmd = req.kind.replace(':', ':');
-      const args = req.args ?? '';
-      return `${base.join(' ')} ${shellQuote(`/${cmd} ${args}`.trim())}`;
-    }
+    case 'wiki:recommend':
+      return `/${req.kind} ${req.args ?? ''}`.trim();
     case 'dsp:plan': {
-      const args = [
-        req.overlay ? `--overlay ${shellQuote(req.overlay)}` : '',
+      const flags = [
+        req.overlay ? `--overlay ${req.overlay}` : '',
         req.gateBypass?.length
           ? req.gateBypass.map((g) => `--gate-bypass ${g}`).join(' ')
           : '',
-        shellQuote(req.request),
       ]
         .filter(Boolean)
         .join(' ');
-      return `${base.join(' ')} ${shellQuote(`/dsp:plan ${args}`)}`;
+      return `/dsp:plan ${flags} ${req.request}`.trim();
     }
     case 'dsp:apply': {
-      const args = [
-        `--plan ${shellQuote(req.planPath)}`,
+      const flags = [
+        `--plan ${req.planPath}`,
         `--profile ${req.profile}`,
-        req.overlay ? `--overlay ${shellQuote(req.overlay)}` : '',
-        req.operator ? `--operator ${shellQuote(req.operator)}` : '',
+        req.overlay ? `--overlay ${req.overlay}` : '',
+        req.operator ? `--operator ${req.operator}` : '',
       ]
         .filter(Boolean)
         .join(' ');
-      return `${base.join(' ')} ${shellQuote(`/dsp:apply ${args}`)}`;
+      return `/dsp:apply ${flags}`;
     }
   }
-}
-
-/**
- * Single-quote the argument for zsh, escaping any embedded single quotes.
- * `foo 'bar'` becomes `'foo '\''bar'\'''`.
- */
-function shellQuote(s: string): string {
-  return `'${s.replace(/'/g, `'\\''`)}'`;
 }

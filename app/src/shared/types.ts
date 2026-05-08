@@ -200,6 +200,8 @@ export interface RunHandle {
   sessionId: string;
   events: AsyncIterable<StreamEvent>;
   cancel(): void;
+  /** Phase F.1: respond to an AskUserQuestion tool_use mid-stream. */
+  respond(toolUseId: string, content: string): void;
   result: Promise<SkillResult>;
 }
 

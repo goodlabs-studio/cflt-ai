@@ -4,7 +4,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { ipcMain } from 'electron';
 import { resolveInRepo } from '../repo.js';
-import { startRun, cancel, disposeAll } from '../claude/runner.js';
+import { startRun, cancel, respondToTool, disposeAll } from '../claude/runner.js';
 import type { Profile, SkillRequest } from '@shared/types';
 
 function listProfiles(): Profile[] {
@@ -43,6 +43,11 @@ export function registerSkillHandlers(): void {
   ipcMain.handle('skill:cancel', async (_e, sessionId: string) => {
     return cancel(sessionId);
   });
+  ipcMain.handle(
+    'skill:respond',
+    async (_e, sessionId: string, toolUseId: string, content: string) =>
+      respondToTool(sessionId, toolUseId, content),
+  );
   ipcMain.handle('skill:listProfiles', async () => listProfiles());
 }
 
