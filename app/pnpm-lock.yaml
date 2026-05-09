@@ -57,6 +57,9 @@ importers:
         specifier: ^5.0.3
         version: 5.0.13(@types/react@19.2.14)(react@19.2.6)
     devDependencies:
+      '@electron/notarize':
+        specifier: ^2.5.0
+        version: 2.5.0
       '@types/node':
         specifier: ^22.13.5
         version: 22.19.17
