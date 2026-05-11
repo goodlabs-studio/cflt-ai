@@ -11,6 +11,7 @@
 import { spawn } from 'node:child_process';
 import { ipcMain } from 'electron';
 import { getRepoRoot } from '../repo.js';
+import { loadConfig, mcpEnvFilePath } from './config.js';
 import type { McpServerStatus } from '@shared/types';
 
 const STATUS_RE =
@@ -38,10 +39,20 @@ export function probeMcpServers(): Promise<McpServerStatus[]> {
   return new Promise((resolve) => {
     const repoRoot = getRepoRoot();
     // Use login shell for env propagation (CONFLUENT_MCP_ENV_FILE etc).
+    const cfg = loadConfig();
+    const env: NodeJS.ProcessEnv = { ...process.env };
+    if (cfg.mcpEnvVars) {
+      for (const [k, v] of Object.entries(cfg.mcpEnvVars)) {
+        if (k.trim()) env[k.trim()] = v;
+      }
+    }
+    if (!env['CONFLUENT_MCP_ENV_FILE']) {
+      env['CONFLUENT_MCP_ENV_FILE'] = mcpEnvFilePath();
+    }
     const child = spawn('zsh', ['-ilc', 'claude mcp list'], {
       cwd: repoRoot,
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env },
+      env,
     });
     let stdout = '';
     child.stdout?.setEncoding('utf-8');

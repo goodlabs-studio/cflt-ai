@@ -8,8 +8,26 @@ import type { WebContents } from 'electron';
 import { getRepoRoot } from '../repo.js';
 import { LineParser } from './parser.js';
 import { acquire, classify, release } from '../concurrency.js';
-import { loadConfig } from '../ipc/config.js';
+import { loadConfig, mcpEnvFilePath } from '../ipc/config.js';
 import type { SkillRequest, StreamEvent, SkillResult } from '@shared/types';
+
+// Subprocess env = parent env + user-managed MCP vars + auto-set
+// CONFLUENT_MCP_ENV_FILE pointing at the managed file. Both surfaces
+// are populated so any consumer (mcp-confluent reads --env-file; some
+// tools read raw env) is covered.
+function skillEnv(): NodeJS.ProcessEnv {
+  const cfg = loadConfig();
+  const env: NodeJS.ProcessEnv = { ...process.env };
+  if (cfg.mcpEnvVars) {
+    for (const [k, v] of Object.entries(cfg.mcpEnvVars)) {
+      if (k.trim()) env[k.trim()] = v;
+    }
+  }
+  if (!env['CONFLUENT_MCP_ENV_FILE']) {
+    env['CONFLUENT_MCP_ENV_FILE'] = mcpEnvFilePath();
+  }
+  return env;
+}
 
 interface ActiveSession {
   sessionId: string;
@@ -106,7 +124,7 @@ function spawnAndWire(
   const child = spawn('zsh', ['-ilc', cmd], {
     cwd: repoRoot,
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env },
+    env: skillEnv(),
   });
   session.child = child;
 

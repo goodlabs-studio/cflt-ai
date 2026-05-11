@@ -395,6 +395,10 @@ export interface UserConfig {
   defaultAskMode: AskMode;
   defaultApplyProfile: ApplyProfile;
   defaultOverlay: string;
+  /** Arbitrary KEY=value pairs FRANZ injects into every subprocess env
+   * and writes to a managed file at {userData}/mcp.env. CONFLUENT_MCP_ENV_FILE
+   * is auto-set to that path so mcp-confluent picks them up. */
+  mcpEnvVars?: Record<string, string>;
 }
 
 export interface CfltConfigAPI {

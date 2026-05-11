@@ -14,18 +14,19 @@
       ]
     },
     "mcp-confluent": {
-      "command": "npx",
+      "command": "/opt/homebrew/opt/node@22/bin/npx",
       "args": [
         "-y", "@confluentinc/mcp-confluent",
         "--env-file", "${CONFLUENT_MCP_ENV_FILE}"
       ],
       "env": {
-        "CONFLUENT_MCP_ENV_FILE": "${CONFLUENT_MCP_ENV_FILE}"
+        "CONFLUENT_MCP_ENV_FILE": "${CONFLUENT_MCP_ENV_FILE}",
+        "PATH": "/opt/homebrew/opt/node@22/bin:/usr/bin:/bin:/usr/sbin:/sbin"
       }
     },
     "terraform": {
-      "command": "npx",
-      "args": ["-y", "@hashicorp/terraform-mcp-server"]
+      "command": "/usr/local/bin/terraform-mcp-server",
+      "args": []
     }
   }
 }

@@ -1,6 +1,7 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { Settings, RefreshCw } from 'lucide-react';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { useMcp } from '@/store/mcp';
 import {
   useConcurrency,
@@ -63,7 +64,7 @@ export function Titlebar({ onOpenSettings }: TitlebarProps = {}): React.JSX.Elem
     <header className="titlebar-drag relative flex h-10 items-center justify-between border-b border-border bg-cflt-ink/60 px-4 text-xs">
       <div className="flex items-center gap-3 pl-16 text-muted-foreground">
         <span className="font-mono font-semibold tracking-tight text-foreground">
-          cflt-ai
+          FRANZ
         </span>
         <Sep />
         <span>
@@ -79,23 +80,38 @@ export function Titlebar({ onOpenSettings }: TitlebarProps = {}): React.JSX.Elem
           }
         >
           MCP
-          <span className="flex items-center gap-0.5">
-            {dots.map((d) => (
-              <span
-                key={d.name}
-                title={`${d.name}: ${d.status}`}
-                className={
-                  d.status === 'connected'
-                    ? 'h-1.5 w-1.5 rounded-full bg-success'
-                    : d.status === 'failed'
-                      ? 'h-1.5 w-1.5 rounded-full bg-danger'
-                      : d.status === 'needs-auth'
-                        ? 'h-1.5 w-1.5 rounded-full bg-warning'
-                        : 'h-1.5 w-1.5 rounded-full bg-muted-foreground/40'
-                }
-              />
-            ))}
-          </span>
+          <Tooltip.Provider delayDuration={150}>
+            <span className="no-drag flex items-center gap-1">
+              {dots.map((d) => (
+                <Tooltip.Root key={d.name}>
+                  <Tooltip.Trigger asChild>
+                    <span
+                      className={
+                        'no-drag block h-2 w-2 rounded-full ' +
+                        (d.status === 'connected'
+                          ? 'bg-success'
+                          : d.status === 'failed'
+                            ? 'bg-danger'
+                            : d.status === 'needs-auth'
+                              ? 'bg-warning'
+                              : 'bg-muted-foreground/40')
+                      }
+                    />
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                      side="bottom"
+                      sideOffset={6}
+                      className="z-50 rounded border border-border bg-cflt-ink px-2 py-1 font-mono text-[11px] text-foreground shadow-md"
+                    >
+                      {d.name}: {d.status}
+                      <Tooltip.Arrow className="fill-border" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              ))}
+            </span>
+          </Tooltip.Provider>
         </span>
         <Sep />
         <span>

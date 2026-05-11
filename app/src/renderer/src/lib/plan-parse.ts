@@ -90,7 +90,10 @@ function parseGateTable(text: string): Map<GateName, GateInfo> {
       .split('|')
       .map((c) => c.trim());
     if (cells.length < 3) continue;
-    const [gateRaw, statusRaw, detail] = cells;
+    const [gateRawRaw, statusRaw, detail] = cells;
+    // Planner sometimes prefixes the gate name with a step number: "1. canon_compliance".
+    // Strip leading "N. " or "N) " before the set lookup.
+    const gateRaw = gateRawRaw.replace(/^\s*\d+\s*[.)]\s*/, '');
     if (!GATE_NAME_SET.has(gateRaw)) continue;
     const state = canonicalizeStatus(statusRaw);
     if (!state) continue;
@@ -164,12 +167,20 @@ function parseSelectedArtifact(text: string): SelectedArtifact | undefined {
   const block = ARTIFACT_BLOCK_RE.exec(text);
   if (!block) return undefined;
   const body = block[1];
-  const id = takeBoldField(body, 'ID') ?? takeBoldField(body, 'Id');
+  // Two forms in the wild:
+  //   (1) Bold field:  **ID:** module/topic
+  //   (2) 2-col table: | Artifact ID | `scenario/cc-gcp` |
+  const id =
+    takeBoldField(body, 'ID') ??
+    takeBoldField(body, 'Id') ??
+    takeTableField(body, /^artifact\s+id$/i);
   if (!id) return undefined;
   return {
     id,
-    path: takeBoldField(body, 'Path'),
-    description: takeBoldField(body, 'Description'),
+    path: takeBoldField(body, 'Path') ?? takeTableField(body, /^path$/i),
+    description:
+      takeBoldField(body, 'Description') ??
+      takeTableField(body, /^description$/i),
   };
 }
 
@@ -177,4 +188,23 @@ function takeBoldField(body: string, name: string): string | undefined {
   const re = new RegExp(`\\*\\*${name}:\\*\\*\\s*\`?([^\`\\n]+)\`?\\s*$`, 'mi');
   const m = re.exec(body);
   return m ? m[1].trim() : undefined;
+}
+
+// Pull a value from a 2-column markdown table whose first column matches
+// `keyRe`. Strips backtick wrappers from the value.
+function takeTableField(body: string, keyRe: RegExp): string | undefined {
+  for (const raw of body.split('\n')) {
+    const line = raw.trim();
+    if (!line.startsWith('|')) continue;
+    const cells = line
+      .replace(/^\|/, '')
+      .replace(/\|$/, '')
+      .split('|')
+      .map((c) => c.trim());
+    if (cells.length < 2) continue;
+    if (keyRe.test(cells[0])) {
+      return cells[1].replace(/^`/, '').replace(/`$/, '').trim() || undefined;
+    }
+  }
+  return undefined;
 }
