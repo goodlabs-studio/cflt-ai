@@ -122,6 +122,46 @@ Plans:
 - [x] 03C-02-PLAN.md — Extend apply_engine.py with tool classification check, customer overlay loading, two-step break-glass in dsp-apply.md (ACTG-01, ACTG-03, ACTG-04)
 - [x] 03C-03-PLAN.md — Per-profile negative-space test suite with full tool x profile parametrized matrix (ACTG-01, ACTG-02, ACTG-03, ACTG-04)
 
+## Backlog (999.x — parking lot)
+
+Forward-looking work captured during recent sessions. Not committed to a milestone; promoted into a real phase when scope and timing firm up.
+
+### 999.1: Phase G — Real execution backend for /dsp-apply (replace Step 7 stub)
+
+**Surface:** `tools/apply_engine.py`, `.claude/commands/dsp-apply.md` (Step 7)
+
+**Today:** Step 7 of /dsp-apply is a deliberate stub. Profile gating, gate re-validation, modal confirmation, activity log, and incident article all work; the actual infrastructure call returns `execution_result="deferred-to-mcp-runtime"` and `duration_seconds=0.0`. Audits are complete, but no Confluent Cloud resources are ever touched.
+
+**Goal:** Step 7 invokes `mcp-confluent` (or the relevant tool family per `tool_classification.json`) to actually apply the artifact's Terraform plan or scenario composition. `execution_result` becomes a real status — `"success"`, `"failure"`, `"partial"` — driven by the actual tool outcome. `duration_seconds` reflects real wall-clock.
+
+**Open design questions:**
+- Direct `terraform apply` from the apply engine, or open a PR against an `fsi-dsp-state` repo (GitOps pattern) and trigger CI? FSI canon strongly suggests the latter for any production overlay — direct apply is fine for dev/sandbox.
+- Which tools per artifact type? `module/topic` → `create-topics`; `module/flink` → `create-flink-statement`; `scenario/cc-*` → composite of many. Mapping table needed in `tool_classification.json` extension.
+- Failure semantics: partial apply on a scenario is the hard case. Likely need a transactional wrapper or an explicit rollback runbook per artifact.
+
+**Verification:** A real `franz-smoke-01`-style apply produces a green dot in Confluent Cloud Console; activity log records `execution_result="success"` and a non-zero duration; incident article references the resulting `lkc-XXXXX`.
+
+### 999.2: fsi-dsp PR — module/cc-cluster-basic artifact
+
+**Surface:** `fsi-dsp` repo (separate from cflt-ai), `MANIFEST.yaml` v1.2.0
+
+**Today:** MANIFEST v1.1.0 has no cluster-provisioning artifact. Requests like *"Create a Basic Kafka cluster named franz-smoke-01 on GCP us-east1"* match `scenario/cc-gcp` mechanically but trigger a coverage-gap note because `scenario/cc-gcp` *consumes* an existing cluster (it wires topics + SR + RBAC + DR on top of a known `kafka_cluster_id`). Per **ACT-06**, the planner refuses to generate inline `confluent_kafka_cluster` HCL; the operator has to provision out-of-band via `confluent kafka cluster create` or hand-rolled Terraform.
+
+**Goal:** Add `module/cc-cluster-basic` to fsi-dsp:
+- Type: `terraform-module`
+- Path: `modules/cc-cluster-basic`
+- Wraps `confluent_kafka_cluster` with the `basic { }` block plus a `confluent_environment` data source
+- Variable surface: `display_name`, `environment_id`, `cloud`, `region`, `availability` (defaulted to `SINGLE_ZONE` since Basic is single-zone only)
+- Outputs: `kafka_cluster_id`, `kafka_rest_endpoint`, `kafka_cluster_crn` — exactly the inputs `scenario/cc-gcp` expects in `clusters.auto.tfvars`
+- Register in `MANIFEST.yaml` per CNTR-04 with capability metadata for gate 2 to match
+
+**Follow-ups once landed:**
+- Mirror modules for `standard`, `enterprise`, `dedicated` tiers (separate artifacts, not flags — different canon implications around DR/mTLS/Cluster Linking)
+- Update both `engineer.json` and `break-glass.json` allowed_operations to include the new module IDs
+- `scenario/cc-*` plans could then chain: cluster create → topic+SR+RBAC+DR layer, all under one fsi-dsp apply
+
+**Dependency on 999.1:** Independent — adding the artifact only requires fsi-dsp PR work. Whether it actually *creates* a cluster on apply is gated by 999.1's Step 7 execution backend.
+
 ## Progress
 
 **Execution Order:**
