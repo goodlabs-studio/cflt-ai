@@ -98,6 +98,11 @@ function spawnAndWire(
   const cmd = buildClaudeCommand(req);
 
   // -i (login shell) so ~/.zshrc env propagates; -l ensures profile too.
+  // stdin is closed (text input mode) so claude auto-executes its own
+  // tools. F.1's stream-json input experiment was reverted — in that mode
+  // claude does NOT auto-execute tools (including MCP, Bash, Read), it
+  // expects the orchestrator to feed back tool_result for every tool_use,
+  // which our runner does not (and should not — that's claude's job).
   const child = spawn('zsh', ['-ilc', cmd], {
     cwd: repoRoot,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -188,8 +193,8 @@ function cleanup(sessionId: string): void {
 }
 
 /**
- * Build the `claude` CLI command string for a given skill request.
- * The string is passed to `zsh -ilc`, so we shell-quote user input.
+ * Build the full `claude` CLI command string for `zsh -ilc`. Text-input
+ * mode — the prompt is shell-quoted and appended as the final argv.
  */
 function buildClaudeCommand(req: SkillRequest): string {
   const maxBudget = loadConfig().maxBudgetUsd;
@@ -202,70 +207,73 @@ function buildClaudeCommand(req: SkillRequest): string {
     '--verbose',
     `--max-turns ${maxTurns}`,
     `--max-budget-usd ${maxBudget}`,
-  ];
+  ].join(' ');
+  return `${base} ${shellQuote(buildPrompt(req))}`;
+}
 
-  // Each skill request is invoked as a slash command. The user input is
-  // appended as the prompt argument; quoting handles spaces/quotes.
+// Single-quote arg for zsh; escapes embedded single quotes.
+function shellQuote(s: string): string {
+  return `'${s.replace(/'/g, `'\\''`)}'`;
+}
+
+function buildPrompt(req: SkillRequest): string {
   switch (req.kind) {
     case 'ask': {
-      const args = [
+      const flags = [
         `--mode ${req.mode}`,
         req.forceRoute ? `--force-route ${req.forceRoute}` : '',
-        shellQuote(req.query),
       ]
         .filter(Boolean)
         .join(' ');
-      return `${base.join(' ')} ${shellQuote(`/ask ${args}`)}`;
+      return `/ask ${flags} ${req.query}`.trim();
     }
     case 'review': {
-      const args = [
+      const flags = [
         req.output ? `--output ${req.output}` : '',
-        req.overlay ? `--overlay ${shellQuote(req.overlay)}` : '',
-        req.docPaths.map(shellQuote).join(' '),
+        req.overlay ? `--overlay ${req.overlay}` : '',
       ]
         .filter(Boolean)
         .join(' ');
-      return `${base.join(' ')} ${shellQuote(`/review ${args}`)}`;
+      const paths = req.docPaths.join(' ');
+      return `/review ${flags} ${paths}`.trim();
     }
     case 'wiki:lint':
     case 'wiki:validate':
     case 'wiki:ingest':
     case 'wiki:evaluate':
-    case 'wiki:recommend': {
-      const cmd = req.kind.replace(':', ':');
-      const args = req.args ?? '';
-      return `${base.join(' ')} ${shellQuote(`/${cmd} ${args}`.trim())}`;
-    }
+    case 'wiki:recommend':
+      return `/${req.kind} ${req.args ?? ''}`.trim();
     case 'dsp:plan': {
-      const args = [
-        req.overlay ? `--overlay ${shellQuote(req.overlay)}` : '',
+      // Slash command is `/dsp-plan` (from filename `commands/dsp-plan.md`).
+      // The kind keeps the colon for IPC-payload readability.
+      const flags = [
+        req.overlay ? `--overlay ${req.overlay}` : '',
         req.gateBypass?.length
           ? req.gateBypass.map((g) => `--gate-bypass ${g}`).join(' ')
           : '',
-        shellQuote(req.request),
       ]
         .filter(Boolean)
         .join(' ');
-      return `${base.join(' ')} ${shellQuote(`/dsp:plan ${args}`)}`;
+      return `/dsp-plan ${flags} ${req.request}`.trim();
     }
     case 'dsp:apply': {
-      const args = [
-        `--plan ${shellQuote(req.planPath)}`,
+      // --reason is the only flag whose value can contain spaces or quotes,
+      // so it gets its own escape. Everything else is bare tokens or paths.
+      const reasonArg = req.reason
+        ? `--reason "${req.reason.replace(/"/g, '\\"')}"`
+        : '';
+      const flags = [
+        `--plan ${req.planPath}`,
         `--profile ${req.profile}`,
-        req.overlay ? `--overlay ${shellQuote(req.overlay)}` : '',
-        req.operator ? `--operator ${shellQuote(req.operator)}` : '',
+        req.overlay ? `--overlay ${req.overlay}` : '',
+        req.operator ? `--operator ${req.operator}` : '',
+        req.preConfirmed ? '--pre-confirmed' : '',
+        reasonArg,
       ]
         .filter(Boolean)
         .join(' ');
-      return `${base.join(' ')} ${shellQuote(`/dsp:apply ${args}`)}`;
+      // Slash command is `/dsp-apply` (from filename `commands/dsp-apply.md`).
+      return `/dsp-apply ${flags}`;
     }
   }
-}
-
-/**
- * Single-quote the argument for zsh, escaping any embedded single quotes.
- * `foo 'bar'` becomes `'foo '\''bar'\'''`.
- */
-function shellQuote(s: string): string {
-  return `'${s.replace(/'/g, `'\\''`)}'`;
 }

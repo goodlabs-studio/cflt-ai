@@ -119,7 +119,9 @@ export function ApplyPage(): React.JSX.Element {
         kind: 'dsp:apply',
         planPath: planSummary.path,
         profile,
-        ...(reason ? { operator: 'spicy-flute' } : {}),
+        preConfirmed: true,
+        operator: 'franz',
+        ...(reason ? { reason } : {}),
       });
       cancelRef.current = handle.cancel;
 
