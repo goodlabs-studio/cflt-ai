@@ -194,6 +194,13 @@ export type SkillRequest =
       profile: 'read-only' | 'engineer' | 'break-glass';
       overlay?: string;
       operator?: string;
+      /** When true, FRANZ has already shown a native confirmation modal
+       * and captured the operator's decision. The skill's Step 6 skips its
+       * own AskUserQuestion and records `confirmation_source="pre-confirmed"`. */
+      preConfirmed?: boolean;
+      /** Required when preConfirmed is true AND profile is break-glass —
+       * the override reason captured by the modal. */
+      reason?: string;
     };
 
 export interface RunHandle {
