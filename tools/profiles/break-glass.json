@@ -1,5 +1,15 @@
 {
   "name": "break-glass",
   "description": "All operations including destructive (DR failover, cluster reconfig, deletion).",
-  "allowed_operations": ["module/topic", "module/flink", "role/cp_schema", "role/cp_rbac", "role/cp_connect", "script/fsi-dr", "scenario/cc-aws"]
+  "allowed_operations": [
+    "module/topic",
+    "module/flink",
+    "role/cp_schema",
+    "role/cp_rbac",
+    "role/cp_connect",
+    "script/fsi-dr",
+    "scenario/cc-aws",
+    "scenario/cc-azure",
+    "scenario/cc-gcp"
+  ]
 }

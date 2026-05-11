@@ -161,6 +161,7 @@ def emit_activity_log_apply(
     gate_results: List[Dict],
     operator: str,
     override_reason: Optional[str] = None,
+    confirmation_source: Optional[str] = None,
 ) -> None:
     """Append a /dsp:apply entry to the overlay-scoped activity log.
 
@@ -179,6 +180,10 @@ def emit_activity_log_apply(
         gate_results:        List of gate result dicts from run_gate_chain().
         operator:            Operator identifier (user/service account name).
         override_reason:     Break-glass override reason (ACTG-03); omit for non-break-glass.
+        confirmation_source: How confirmation was captured — "interactive" (in-chat
+                             AskUserQuestion) or "pre-confirmed" (orchestrator UI modal,
+                             e.g. FRANZ). Distinguishes UI-modal confirmations from
+                             chat-based ones in audits.
     """
     now = datetime.now(timezone.utc)
     timestamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -206,6 +211,11 @@ def emit_activity_log_apply(
         f"**Artifact:** {artifact_id}",
         f"**Plan:** {plan_path}",
         f"**Confirmation status:** {confirmation_status}",
+        *(
+            [f"**Confirmation source:** {confirmation_source}"]
+            if confirmation_source
+            else []
+        ),
         f"**Execution result:** {execution_result}",
         f"**Duration seconds:** {duration_seconds:.1f}",
         f"**Gates:** {gate_summary}",
