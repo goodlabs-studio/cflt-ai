@@ -126,20 +126,32 @@ Plans:
 
 Forward-looking work captured during recent sessions. Not committed to a milestone; promoted into a real phase when scope and timing firm up.
 
-### 999.1: Phase G — Real execution backend for /dsp-apply (replace Step 7 stub)
+### 999.1: Phase G.1 — Terraform-module executor for /dsp-apply Step 7 (DELIVERED)
 
-**Surface:** `tools/apply_engine.py`, `.claude/commands/dsp-apply.md` (Step 7)
+**Status:** Shipped on branch `feat/franz-phase-g1-topic-execution`.
 
-**Today:** Step 7 of /dsp-apply is a deliberate stub. Profile gating, gate re-validation, modal confirmation, activity log, and incident article all work; the actual infrastructure call returns `execution_result="deferred-to-mcp-runtime"` and `duration_seconds=0.0`. Audits are complete, but no Confluent Cloud resources are ever touched.
+**What landed:**
+- `tools/apply_engine.py` gains `ExecutionResult` dataclass + `execute_artifact()` dispatcher + `execute_terraform_module()` runner. Dispatches on `artifact.type`; `"terraform-module"` artifacts run real `terraform init` + `plan` + `apply` against the fsi-dsp module path. All other artifact types return `status="skipped"` (the new explicit form of the historical "deferred-to-mcp-runtime" stub).
+- Workspace layout: `outputs/runs/<plan_slug>/` — one Terraform workspace per plan-slug so re-applies converge idempotently rather than duplicating resources. Local backend; `.gitignored`.
+- Credentials: `CONFLUENT_CLOUD_API_KEY` / `_API_SECRET` (set by FRANZ from the managed `mcp.env`) are auto-shimmed into `TF_VAR_*` so the Confluent Terraform provider picks them up. Operator's user-mode TFE auth is not used in G.1.
+- `.claude/commands/dsp-apply.md` Step 7 rewritten to call the dispatcher and pass the structured result through to Step 8/9.
+- Test coverage: `tests/test_apply_executor.py` (12 tests — dispatcher, dry-run, full-apply, failure short-circuit, credentials passthrough, tfvars rendering with invalid-identifier filtering).
+- Existing test `test_engineer_denies_destructive` updated to reflect the F.1 profile change that added `scenario/cc-{aws,azure,gcp}` to engineer; on-prem `scenario/{cfk-openshift,cp-rhel,private-cloud}` are the new negative-space asserts.
 
-**Goal:** Step 7 invokes `mcp-confluent` (or the relevant tool family per `tool_classification.json`) to actually apply the artifact's Terraform plan or scenario composition. `execution_result` becomes a real status — `"success"`, `"failure"`, `"partial"` — driven by the actual tool outcome. `duration_seconds` reflects real wall-clock.
+**Verification target (manual, requires CC sandbox env):** click apply on a `module/topic` plan in FRANZ, see a real topic appear in Confluent Cloud Console, activity log records `execution_result="success"` with non-zero duration.
 
-**Open design questions:**
-- Direct `terraform apply` from the apply engine, or open a PR against an `fsi-dsp-state` repo (GitOps pattern) and trigger CI? FSI canon strongly suggests the latter for any production overlay — direct apply is fine for dev/sandbox.
-- Which tools per artifact type? `module/topic` → `create-topics`; `module/flink` → `create-flink-statement`; `scenario/cc-*` → composite of many. Mapping table needed in `tool_classification.json` extension.
-- Failure semantics: partial apply on a scenario is the hard case. Likely need a transactional wrapper or an explicit rollback runbook per artifact.
+### 999.3: Phase G.2 — Scenario/composite executor + GitOps mode
 
-**Verification:** A real `franz-smoke-01`-style apply produces a green dot in Confluent Cloud Console; activity log records `execution_result="success"` and a non-zero duration; incident article references the resulting `lkc-XXXXX`.
+**Surface:** `tools/apply_engine.py`, `.claude/commands/dsp-apply.md`, possibly `MANIFEST.yaml` (apply-sequence declaration).
+
+**Today (after G.1):** `terraform-module` artifacts execute; everything else returns `status="skipped"`. That covers `module/topic` and `module/flink`. Scenarios (`scenario/cc-*`, `scenario/cfk-openshift`, etc.) and ansible roles (`role/cp_*`) still no-op.
+
+**Goals:**
+- **Composite execution**: `scenario/cc-*` artifacts chain a sequence of modules (topic + schema + RBAC + cluster-link). Need an `apply_sequence` field in `MANIFEST.yaml` (fsi-dsp PR — coordinates with 999.2's `module/cc-cluster-basic` work), or an embedded recipe per scenario in apply_engine. Failure semantics: first-failure stops, partial state surfaced in the incident article.
+- **mcp-confluent tool-call executor**: for ad-hoc data-plane operations that DON'T need a full terraform module (e.g., a one-off `create-topics` call). Would dispatch by classification table.
+- **GitOps mode for FSI overlays**: instead of running `terraform apply` directly, render the tfvars patch and open a PR against an `fsi-dsp-state` repo + trigger CI. Service-account identity, not operator identity. Activated by overlay config flag (e.g. `apply_mode: "gitops"` on `industry/fsi`).
+- **Ansible-role executor**: `role/cp_*` artifacts target Confluent Platform (on-prem) rather than Cloud. Would invoke `ansible-playbook` against a target inventory. Out of scope unless an FSI engagement actually needs on-prem.
+- **Tool-classification name fix**: `tool_classification.json` currently uses pre-1.x mcp-confluent names (`confluent_kafka_topic_list`) that don't match the actual 1.2.x package (`list-topics`). Latent bug — only fires when something tries to call `check_tool_permitted()` against a real mcp-confluent tool. G.2's mcp-confluent executor is the first thing that would hit this.
 
 ### 999.2: fsi-dsp PR — module/cc-cluster-basic artifact
 

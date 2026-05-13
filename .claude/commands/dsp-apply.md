@@ -160,16 +160,25 @@ On CANCEL: log to activity log with `confirmation_status="rejected"`, `execution
 - Step 8 (activity log): pass override_reason to `emit_activity_log_apply()` as `override_reason=<override_reason>`
 - Step 9 (incident article): pass override_reason to `write_incident_article()` as `override_reason=<override_reason>`
 
-## Step 7: Execute (stub)
+## Step 7: Execute
 
-- Record start time (`start_time = time.time()`)
-- MCP tool classification is enforced via `check_tool_permitted()` from `tools/apply_engine.py`
-- The tool_classification.json table determines which MCP tools the active profile can invoke
-- For current stub: emit a structured stub result:
+- Record start time (`start_time = time.time()`).
+- Look up the artifact in `raw/repos/fsi-dsp/MANIFEST.yaml` to read its `type` field. Step 3 already extracted the artifact ID; here we resolve the type so the dispatcher knows which executor to call.
+- Build the `args` dict from the "Arguments" section of the plan (Step 3 already parsed this — a list of `{key, value}` pairs). Use the key/value pairs as-is; the executor will filter out keys that aren't valid Terraform identifiers (e.g. names with periods or hyphens).
+- Build the `plan_slug` from the plan file basename (without `.md` extension). This is the workspace key — re-applying the same plan reuses the same Terraform state directory, so updates idempotently converge instead of creating duplicate resources.
+- Dispatch via `execute_artifact()` from `tools/apply_engine.py`:
+  ```python
+  from tools.apply_engine import execute_artifact
+  result = execute_artifact(artifact, args, plan_slug, dry_run=<bool>)
   ```
-  execution_result = "deferred-to-mcp-runtime"
-  duration_seconds = 0.0
-  ```
+  - `dry_run` defaults to `False` for the standard apply flow. Set to `True` only when an overlay or profile explicitly demands plan-only mode (no overlay currently triggers this in v1.1.0).
+  - `result.status` is one of: `"success"`, `"failure"`, `"dry-run"`, `"skipped"`. Pass this to Step 8 as `execution_result`.
+  - `result.duration_seconds` is the wall-clock from before `terraform init` through the last terraform invocation. Pass to Step 8 as `duration_seconds`.
+- Supported artifact types in this version:
+  - `terraform-module` — executed via `terraform init` + `plan` + `apply` against the fsi-dsp module path. Covers `module/topic` and `module/flink`. Workspace is `outputs/runs/<plan_slug>/`.
+  - Any other type (`scenario/*`, `role/*`, `script/*`) returns `result.status = "skipped"` — Step 7 then continues to Step 8/9 with that label so the audit trail records the no-op honestly. Phase G.2+ will add executors for scenarios and ansible roles.
+- On `result.status == "failure"`, surface `result.stderr_tail` to the user along with the resource(s) that did apply (if any) — partial state must not be hidden, especially for FSI audit. Then proceed to Step 8/9; do not stop early — the activity log + incident article must still record the failed attempt.
+- MCP tool classification (`check_tool_permitted()`) is not enforced for terraform-module execution in this version; the Terraform provider's own credentials path is the trust boundary. Tool classification will gate scenario-execution mcp-confluent tool calls in Phase G.2.
 
 ## Step 8: Emit activity log
 
@@ -180,8 +189,8 @@ On CANCEL: log to activity log with `confirmation_status="rejected"`, `execution
   - `profile_name`: from `--profile`
   - `confirmation_status`: `"confirmed"`
   - `confirmation_source`: `"pre-confirmed"` if Step 6a applied (orchestrator modal), else `"interactive"` (in-chat AskUserQuestion)
-  - `execution_result`: from Step 7 (currently `"deferred-to-mcp-runtime"`)
-  - `duration_seconds`: from Step 7 timing (currently `0.0`)
+  - `execution_result`: `result.status` from Step 7 — one of `"success"`, `"failure"`, `"dry-run"`, `"skipped"`
+  - `duration_seconds`: `result.duration_seconds` from Step 7 — real wall-clock from terraform init through last invocation, or `0.0` for skipped artifacts
   - `gate_results`: from Step 4 re-run
   - `operator`: from `--operator` or `"unknown"`
   - `override_reason`: from Step 6 break-glass flow (if break-glass profile; omit otherwise)

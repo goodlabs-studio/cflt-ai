@@ -11,3 +11,8 @@ raw/repos/*
 !raw/repos/fsi-dsp
 outputs/charts/*.png
 outputs/slides/*.pdf
+
+# Terraform workspaces materialized by /dsp-apply Step 7 (Phase G.1).
+# State files, provider plugins, and rendered tfvars are local-only —
+# never committed. Recreated per-plan-slug on demand.
+outputs/runs/
