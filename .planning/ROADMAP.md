@@ -16,6 +16,9 @@ Six phases deliver a Confluent operational and knowledge agent for FSI engagemen
 - [x] **Phase 3a: Act Rail — Plan** - Four-gate validation chain, /dsp:plan read-only rail, structural-correctness harness, CI parity in both repos (completed 2026-04-29)
 - [x] **Phase 3b: Act Rail — Apply** - /dsp:apply with human-in-the-loop confirmation, three policy profiles, activity log, incident entries (completed 2026-04-29)
 - [x] **Phase 3c: Act Rail — Profile Gating** - Per-tool classification of all 50+ mcp-confluent tools, negative-space test suites, break-glass two-step, customer fork demo (completed 2026-04-29)
+- [x] **Phase F.1: FRANZ pre-confirmed apply** - Native modal flows through to skill as --pre-confirmed flag; activity log records confirmation_source (completed 2026-05-13)
+- [x] **Phase G.1: Terraform-module executor** - /dsp-apply Step 7 dispatches by artifact.type; terraform-module artifacts execute real terraform init/plan/apply with per-plan-slug state (completed 2026-05-14)
+- [ ] **Phase G.2: Composite + GitOps + tool-call execution** - Promoted from backlog 999.3; broken into G.2a–G.2e (see Phase Details)
 
 ## Phase Details
 
@@ -122,6 +125,40 @@ Plans:
 - [x] 03C-02-PLAN.md — Extend apply_engine.py with tool classification check, customer overlay loading, two-step break-glass in dsp-apply.md (ACTG-01, ACTG-03, ACTG-04)
 - [x] 03C-03-PLAN.md — Per-profile negative-space test suite with full tool x profile parametrized matrix (ACTG-01, ACTG-02, ACTG-03, ACTG-04)
 
+### Phase G.2: Composite + GitOps + tool-call execution
+
+**Goal:** Close the executor gap left by G.1. After G.2, `/dsp-apply` can execute every artifact type registered in MANIFEST: terraform-module (✅ G.1), scenarios (composite chains of modules), ansible-roles (on-prem CP via ansible-playbook), and ad-hoc mcp-confluent tool calls (data-plane ops that don't need a module). GitOps mode for FSI overlays replaces direct `terraform apply` with a tfvars-patch PR against `fsi-dsp-state` + service-account CI.
+
+**Depends on:** Phase G.1 (the dispatcher signature and `outputs/runs/<plan_slug>/` workspace convention are reused).
+
+**Requirements:** Carry forward ACTA-01..ACTA-06, ACTG-01..ACTG-04 from Phase 3b/3c; add new requirements per sub-phase plan when planning.
+
+**Sub-phases (each its own PLAN.md via `/gsd:plan-phase`):**
+
+- **G.2a: mcp-confluent tool-call executor** — Smallest, most isolated. Dispatch `artifact.type == "mcp-confluent-tool"` (new artifact type) to a tool-call sequence executor that invokes the configured mcp-confluent tools via stdio MCP from Python. Use `check_tool_permitted()` for profile gating. Forces the `tool_classification.json` name-mismatch fix (current entries use pre-1.x snake_case `confluent_kafka_topic_list`; the live 1.2.x package uses kebab-case `list-topics`). **Recommended starting sub-phase** — narrow scope, immediate value for one-off ops, fixes a latent bug.
+- **G.2b: Composite scenario executor** — Dispatch `artifact.type == "scenario"` to a chained executor that walks an `apply_sequence` field in MANIFEST (fsi-dsp PR required to add it). Sequence is a list of `{artifact_id, args_mapping}` entries; each entry resolves via the existing dispatcher (re-entrant). Failure semantics: first-failure stops; partial state surfaced in incident article with per-step status list. Most useful when the user wants `scenario/cc-gcp` to *actually* compose `module/cc-cluster-basic` → topic + SR + RBAC + DR end-to-end.
+- **G.2c: Tool-classification rename** — Standalone hygiene fix: align `tool_classification.json` keys with the actual mcp-confluent 1.2.x tool names. Can land independently of G.2a but G.2a will be the first thing that *needs* it. Pull from `/tmp/mcp-c/package/dist/confluent/tools/tool-name.js` for the canonical list.
+- **G.2d: GitOps apply mode** — Add `apply_mode: "direct" | "gitops"` to overlay config. When `gitops`, the executor renders the tfvars patch, opens a PR against an `fsi-dsp-state` repo, and a CI workflow runs `terraform apply` under service-account identity. Activity log records the PR URL; incident article cites the resulting commit SHA. This is the production-grade FSI path; `industry/fsi` overlay flips to `gitops` by default. Requires a new `fsi-dsp-state` repo (or directory in fsi-dsp) and a CI workflow there.
+- **G.2e: Ansible-role executor** — Dispatch `artifact.type == "ansible-role"` to `ansible-playbook` against a target inventory. Inventory location comes from overlay config. Out of scope unless an active FSI engagement actually targets on-prem CP/CFK; until then this stays planned-but-deferred.
+
+**Success Criteria:**
+1. Every artifact type in MANIFEST has at least one executor that returns a non-`skipped` ExecutionResult.
+2. `tool_classification.json` keys match the live mcp-confluent tool registry — a CI check fails the PR if a tool name diverges.
+3. `scenario/cc-gcp` end-to-end applies cluster + topics + SR + RBAC against a CC sandbox env with all steps recorded in one incident article.
+4. `industry/fsi` overlay can be flipped to `apply_mode: "gitops"` and the resulting apply opens a PR instead of touching CC directly.
+5. Partial-failure scenarios produce an incident article with per-step status — no silent data loss.
+
+**Plans:** 0/5 plans complete
+
+Plans:
+- [ ] G.2a-PLAN.md — mcp-confluent tool-call executor
+- [ ] G.2b-PLAN.md — Composite scenario executor (depends on fsi-dsp PR adding `apply_sequence`)
+- [ ] G.2c-PLAN.md — Tool-classification rename
+- [ ] G.2d-PLAN.md — GitOps apply mode (depends on `fsi-dsp-state` infrastructure)
+- [ ] G.2e-PLAN.md — Ansible-role executor (deferred until on-prem FSI engagement requires it)
+
+**Recommended execution order:** G.2c → G.2a → G.2b → G.2d → G.2e. G.2c is a 30-min hygiene fix that unblocks G.2a; G.2a is the smallest executor and proves the MCP-stdio-from-Python plumbing; G.2b consumes the executor pattern from G.2a + G.1; G.2d is the largest architectural change (CI repo, service accounts); G.2e waits for demand.
+
 ## Backlog (999.x — parking lot)
 
 Forward-looking work captured during recent sessions. Not committed to a milestone; promoted into a real phase when scope and timing firm up.
@@ -140,39 +177,28 @@ Forward-looking work captured during recent sessions. Not committed to a milesto
 
 **Verification target (manual, requires CC sandbox env):** click apply on a `module/topic` plan in FRANZ, see a real topic appear in Confluent Cloud Console, activity log records `execution_result="success"` with non-zero duration.
 
-### 999.3: Phase G.2 — Scenario/composite executor + GitOps mode
+### 999.3: PROMOTED → Phase G.2 (active)
 
-**Surface:** `tools/apply_engine.py`, `.claude/commands/dsp-apply.md`, possibly `MANIFEST.yaml` (apply-sequence declaration).
+See `## Phase Details > Phase G.2: Composite + GitOps + tool-call execution` below for the full sub-phase breakdown (G.2a–G.2e). Backlog entry retained as a redirect.
 
-**Today (after G.1):** `terraform-module` artifacts execute; everything else returns `status="skipped"`. That covers `module/topic` and `module/flink`. Scenarios (`scenario/cc-*`, `scenario/cfk-openshift`, etc.) and ansible roles (`role/cp_*`) still no-op.
+### 999.2: fsi-dsp PR — module/cc-cluster-basic artifact (DELIVERED, in review)
 
-**Goals:**
-- **Composite execution**: `scenario/cc-*` artifacts chain a sequence of modules (topic + schema + RBAC + cluster-link). Need an `apply_sequence` field in `MANIFEST.yaml` (fsi-dsp PR — coordinates with 999.2's `module/cc-cluster-basic` work), or an embedded recipe per scenario in apply_engine. Failure semantics: first-failure stops, partial state surfaced in the incident article.
-- **mcp-confluent tool-call executor**: for ad-hoc data-plane operations that DON'T need a full terraform module (e.g., a one-off `create-topics` call). Would dispatch by classification table.
-- **GitOps mode for FSI overlays**: instead of running `terraform apply` directly, render the tfvars patch and open a PR against an `fsi-dsp-state` repo + trigger CI. Service-account identity, not operator identity. Activated by overlay config flag (e.g. `apply_mode: "gitops"` on `industry/fsi`).
-- **Ansible-role executor**: `role/cp_*` artifacts target Confluent Platform (on-prem) rather than Cloud. Would invoke `ansible-playbook` against a target inventory. Out of scope unless an FSI engagement actually needs on-prem.
-- **Tool-classification name fix**: `tool_classification.json` currently uses pre-1.x mcp-confluent names (`confluent_kafka_topic_list`) that don't match the actual 1.2.x package (`list-topics`). Latent bug — only fires when something tries to call `check_tool_permitted()` against a real mcp-confluent tool. G.2's mcp-confluent executor is the first thing that would hit this.
+**Status:** PR opened against `goodlabs-studio/fsi-dsp` — https://github.com/goodlabs-studio/fsi-dsp/pull/2 — pending review. Once merged, cflt-ai's `raw/repos/fsi-dsp` submodule pointer should be bumped in a follow-up commit.
 
-### 999.2: fsi-dsp PR — module/cc-cluster-basic artifact
+**What landed in the PR:**
+- `modules/cc-cluster-basic/{main,variables,outputs}.tf` + `tests/validation.tftest.hcl` — Basic-tier CC cluster provisioner with regex-validated inputs, hardcoded SINGLE_ZONE availability, `prevent_destroy=true` guard.
+- Outputs (`kafka_cluster_id`, `kafka_rest_endpoint`, `kafka_cluster_crn`, `bootstrap_endpoint`, `environment_id`, `display_name`, `tier`) shaped for `scenario/cc-*.clusters.auto.tfvars` consumption.
+- `MANIFEST.yaml` version bump `1.1.0` → `1.2.0` (additive).
+- Documented limitations: Basic cannot satisfy FSI production canon (single-zone, no CL destination, no mTLS, no private networking, no BYOK, no SG Advanced).
 
-**Surface:** `fsi-dsp` repo (separate from cflt-ai), `MANIFEST.yaml` v1.2.0
+**Follow-up scope below:**
 
-**Today:** MANIFEST v1.1.0 has no cluster-provisioning artifact. Requests like *"Create a Basic Kafka cluster named franz-smoke-01 on GCP us-east1"* match `scenario/cc-gcp` mechanically but trigger a coverage-gap note because `scenario/cc-gcp` *consumes* an existing cluster (it wires topics + SR + RBAC + DR on top of a known `kafka_cluster_id`). Per **ACT-06**, the planner refuses to generate inline `confluent_kafka_cluster` HCL; the operator has to provision out-of-band via `confluent kafka cluster create` or hand-rolled Terraform.
 
-**Goal:** Add `module/cc-cluster-basic` to fsi-dsp:
-- Type: `terraform-module`
-- Path: `modules/cc-cluster-basic`
-- Wraps `confluent_kafka_cluster` with the `basic { }` block plus a `confluent_environment` data source
-- Variable surface: `display_name`, `environment_id`, `cloud`, `region`, `availability` (defaulted to `SINGLE_ZONE` since Basic is single-zone only)
-- Outputs: `kafka_cluster_id`, `kafka_rest_endpoint`, `kafka_cluster_crn` — exactly the inputs `scenario/cc-gcp` expects in `clusters.auto.tfvars`
-- Register in `MANIFEST.yaml` per CNTR-04 with capability metadata for gate 2 to match
 
-**Follow-ups once landed:**
-- Mirror modules for `standard`, `enterprise`, `dedicated` tiers (separate artifacts, not flags — different canon implications around DR/mTLS/Cluster Linking)
-- Update both `engineer.json` and `break-glass.json` allowed_operations to include the new module IDs
-- `scenario/cc-*` plans could then chain: cluster create → topic+SR+RBAC+DR layer, all under one fsi-dsp apply
-
-**Dependency on 999.1:** Independent — adding the artifact only requires fsi-dsp PR work. Whether it actually *creates* a cluster on apply is gated by 999.1's Step 7 execution backend.
+- Sibling tier modules (`module/cc-cluster-standard`, `module/cc-cluster-enterprise`, `module/cc-cluster-dedicated`) — separate artifacts (not flags), each has different canon implications around DR / mTLS / Cluster Linking. Track as 999.2a–c when prioritized.
+- Bump cflt-ai's `raw/repos/fsi-dsp` submodule pointer to the merge SHA after PR #2 lands.
+- Add `module/cc-cluster-basic` to `engineer.json` and `break-glass.json` allowed_operations once it's in MANIFEST main.
+- `scenario/cc-*` plans can then chain cluster create → topic + SR + RBAC + DR under one fsi-dsp apply — gated by Phase G.2b (composite scenario executor).
 
 ## Progress
 
@@ -187,3 +213,6 @@ Phases execute in sequence: 0 -> 1 -> 2 -> 3a -> 3b -> 3c
 | 3a. Act Rail — Plan | 0/3 | Complete    | 2026-04-29 |
 | 3b. Act Rail — Apply | 0/3 | Complete    | 2026-04-29 |
 | 3c. Act Rail — Profile Gating | 2/3 | Complete    | 2026-04-29 |
+| F.1. FRANZ pre-confirmed apply | 1/1 | Complete    | 2026-05-13 |
+| G.1. Terraform-module executor | 1/1 | Complete    | 2026-05-14 |
+| G.2. Composite + GitOps + tool-call execution | 0/5 | Planning needed | - |
