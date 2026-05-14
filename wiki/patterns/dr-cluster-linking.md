@@ -5,7 +5,7 @@ sources: [fsi-dsp://adr/005, fsi-dsp://script/mirror-failover]
 related: [patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster, concepts/sla-tiers, concepts/cluster-linking-topology, concepts/fsi-data-streaming-platform]
 confidence: high
 last_updated: 2026-04-11
-last_validated: 2026-04-28
+last_validated: 2026-05-14
 ---
 
 # DR — Cluster Linking

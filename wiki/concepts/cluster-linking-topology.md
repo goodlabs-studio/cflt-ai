@@ -3,9 +3,9 @@ title: Cluster Linking Topology
 tags: [kafka confluent-cloud cluster-linking dr cfk]
 sources: []
 related: [patterns/dr-cluster-linking, concepts/fsi-data-streaming-platform, concepts/sla-tiers]
-confidence: medium
-last_updated: 2026-04-11
-last_validated: 2026-04-28
+confidence: high
+last_updated: 2026-05-14
+last_validated: 2026-05-14
 ---
 
 # Cluster Linking Topology
@@ -35,7 +35,7 @@ Source-initiated links use `connection.mode` (OUTBOUND on source, INBOUND on des
 
 Bidirectional mode (CP 7.5+, CFK 3.2.0+) enables DR failback operations: `reverse-and-start`, `reverse-and-pause`, and `truncate-and-restore`. Data still flows in one direction per link -- "bidirectional" is a metadata mode that unlocks advanced lifecycle commands.
 
-On Confluent Cloud, bidirectional mode is not supported on Basic or Standard clusters.
+On Confluent Cloud, bidirectional mode is not supported on Basic or Standard clusters. Basic and Standard *can* be the source of a destination-initiated link (one-way egress to a Dedicated or Enterprise destination), but cannot be the source of a source-initiated or bidirectional link.
 
 ### Key Configuration
 
@@ -75,9 +75,9 @@ On Confluent Cloud, bidirectional mode is not supported on Basic or Standard clu
 
 | Dimension | Confluent Cloud | Confluent Platform |
 |-----------|----------------|-------------------|
-| Destination cluster | Dedicated or Enterprise only | Any Confluent Server 7.0.0+ |
-| Source cluster | Basic, Standard, Dedicated, Enterprise, or any Kafka 3.0+ | Any Confluent Server or Apache Kafka |
-| Bidirectional mode | Not on Basic/Standard | CP 7.5+ |
+| Destination cluster | Dedicated or Enterprise (also Freight on AWS with private networking). Dedicated *legacy* is not supported as a destination. | Any Confluent Server 7.0.0+ |
+| Source cluster | Basic, Standard, Dedicated, Enterprise; also Freight on AWS with private networking; also external Kafka 3.0+ / CP 7.0+ (or CP 7.1+ for source-initiated behind firewall) | Any Confluent Server or Apache Kafka |
+| Bidirectional / source-initiated | Not on Basic/Standard (they can only be the source of *destination-initiated* one-way links) | CP 7.5+ (bidirectional); CP 7.1+ (source-initiated) |
 | Management | CLI, Cloud Console, REST API v3 | kafka-cluster-links / kafka-mirrors scripts |
 
 ### Limitations

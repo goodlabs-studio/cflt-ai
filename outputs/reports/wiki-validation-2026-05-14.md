@@ -117,3 +117,74 @@ After this pass:
 The remaining 3 markers are well-scoped and properly hedged (Flink commit
 interval tunability, MQ connector EOS specifics, Freight cost ratio); they
 represent genuine gaps in public Confluent documentation, not wiki drift.
+
+## Follow-up drift-check on Cluster Linking articles (2026-05-14)
+
+Targeted second pass on the two articles the earlier section deferred,
+following the upstream correction that Basic CC clusters **can** be Cluster
+Linking sources (just not destinations, and not the source of
+source-initiated or bidirectional links).
+
+MCP source consulted: `cloud/current/multi-cloud/cluster-linking/index.html`
+(authoritative "Supported cluster types" matrix) — cross-checked against
+`cloud/current/clusters/cluster-types.html` for the per-tier capability
+table.
+
+### Authoritative finding (from CL overview's Supported cluster types matrix)
+
+- **Sources:** Dedicated (public/private), Enterprise (public/private),
+  Standard, Basic, Freight on AWS (private networking), external Apache
+  Kafka 3.0+ / CP 7.0+ (public IPs), Kafka 3.0+ without public endpoints
+  (with peering/VNet to Dedicated), CP 7.1+ behind firewall (source-initiated).
+- **Destinations:** Dedicated *or* Enterprise (with networking caveats);
+  also Freight on AWS with private networking. Dedicated *legacy* clusters
+  are not supported as destinations.
+- **Caveat:** "Basic and Standard clusters can be the source of
+  destination-initiated links, but cannot be used as the source of
+  source-initiated links." → bidirectional mode (which requires
+  source-initiated capability) therefore excludes Basic/Standard.
+
+### `wiki/concepts/cluster-linking-topology.md` — drift found and corrected → stays `confidence: high`
+
+| # | Original claim | MCP finding | Action |
+|---|---|---|---|
+| 1 | "On Confluent Cloud, bidirectional mode is not supported on Basic or Standard clusters." | True, but **incomplete**: docs explicitly say Basic/Standard *can* be the source of destination-initiated one-way links — just not source-initiated/bidirectional. | **Clarified** — added a follow-up sentence stating that Basic/Standard can be the source of a destination-initiated egress link to a Dedicated/Enterprise destination |
+| 2 | Cloud "Destination cluster: Dedicated or Enterprise only" | Mostly correct, but missed (a) Freight on AWS with private networking as a destination and (b) Dedicated *legacy* clusters not being supported as destinations | **Corrected** — both qualifiers added inline |
+| 3 | Cloud "Source cluster: Basic, Standard, Dedicated, Enterprise, or any Kafka 3.0+" | The Basic-as-source claim is **already correct** (this was the upstream correction). Row was missing Freight on AWS private-networking sources and the CP 7.0+/7.1+ split. | **Corrected** — Freight and CP version split added |
+| 4 | Cloud "Bidirectional mode: Not on Basic/Standard" | Confirmed but tied implicitly to source-initiated requirement — row renamed "Bidirectional / source-initiated" and source-initiated CP 7.1+ floor noted alongside bidirectional CP 7.5+ | **Corrected** — clarified the dependency |
+
+No earlier claim was *wrong*; the corrections are precision improvements
+to surface the destination-initiated-only carve-out for Basic/Standard and
+the Freight-on-AWS-with-private-networking surface. Frontmatter:
+`confidence: medium` → `confidence: high` (now matches its actual claim
+hygiene); `last_validated: 2026-04-28` → `2026-05-14`; `last_updated`
+bumped to `2026-05-14`.
+
+### `wiki/patterns/dr-cluster-linking.md` — no drift → stays `confidence: high`
+
+All verifiable CL claims pass:
+
+- East/West are implicitly Dedicated (or Enterprise) — pattern never
+  claims Basic/Standard support, so the upstream correction does not
+  affect this article.
+- Bidirectional CL for failback semantics (`truncate-and-restore`,
+  `reverse-and-start`) — confirmed.
+- `mirror failover` (no lag check, irreversible) vs. `mirror promote`
+  (zero-lag gate, planned migration) — confirmed.
+- "For RPO=0 requirements, use MRC on Confluent Platform instead" —
+  confirmed.
+- Failback's destructive truncate-and-restore caveat — confirmed.
+
+Frontmatter: `confidence: high` unchanged; `last_validated: 2026-04-28`
+→ `2026-05-14`; `last_updated` unchanged (no body changes).
+
+### Summary of this follow-up
+
+- 2 articles drift-checked.
+- 1 article patched inline (cluster-linking-topology.md) with 4 precision
+  corrections; promoted medium → high.
+- 1 article confirmed clean (dr-cluster-linking.md).
+- No ⚠️ markers introduced; no `_queue.md` entries needed.
+- The wiki's Cluster Linking tier story is now internally consistent
+  across `cc-cluster-tiers.md`, `network-connectivity-by-tier.md`,
+  `cluster-linking-topology.md`, and `dr-cluster-linking.md`.
