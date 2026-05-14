@@ -8,7 +8,11 @@ Requirements: ACTA-01 (apply gate chain), ACTA-02 (bypass prevention),
               ACTA-05 (incident articles)
 """
 import json
+import os
+import shutil
+import subprocess
 import time
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -144,6 +148,264 @@ def check_profile_permits(profile: Dict, artifact_id: str) -> bool:
         return True
 
     return artifact_id in allowed
+
+
+# ---------------------------------------------------------------------------
+# Execution (Phase G.1 — terraform-module executor)
+# ---------------------------------------------------------------------------
+#
+# Step 7 of /dsp-apply previously emitted a "deferred-to-mcp-runtime" stub.
+# Phase G.1 replaces that for `terraform-module` artifacts: render the args
+# as tfvars, run terraform plan + apply inside an isolated workspace, and
+# return a structured ExecutionResult. State persists per-plan-slug so
+# re-applies are idempotent updates rather than duplicate creations.
+#
+# Scope:
+#   - Supports artifact.type == "terraform-module" only.
+#     (module/topic, module/flink, and a future module/cc-cluster-basic.)
+#   - Other artifact types (scenario/*, role/*, script/*) still fall back
+#     to the stub. Composite-sequence + non-terraform execution is Phase G.2+.
+#   - Credentials: maps CONFLUENT_CLOUD_API_KEY / _API_SECRET (set by FRANZ
+#     from its managed mcp.env) into TF_VAR_* so the Confluent provider
+#     picks them up automatically. Operator's user-mode TFE auth is not
+#     used in G.1.
+#   - State: lives under outputs/runs/<plan-slug>/.terraform/, local backend.
+#     Remote backend for FSI overlays is Phase G.2.
+
+FSI_DSP_ROOT = PROJECT_ROOT / "raw" / "repos" / "fsi-dsp"
+
+# Credentials FRANZ injects from {userData}/mcp.env. The Confluent
+# Terraform provider auto-discovers cloud_api_key / cloud_api_secret from
+# variables of those names, so we shim via TF_VAR_*.
+_TF_VAR_PASSTHROUGH = {
+    "CONFLUENT_CLOUD_API_KEY": "TF_VAR_confluent_cloud_api_key",
+    "CONFLUENT_CLOUD_API_SECRET": "TF_VAR_confluent_cloud_api_secret",
+}
+
+
+@dataclass
+class ExecutionResult:
+    """Structured outcome of an artifact execution.
+
+    Single source of truth for what /dsp:apply Step 7 produces. Fields map
+    1:1 to the activity-log and incident-article schemas downstream.
+
+    `status` is the compact label embedded in activity log entries; treat
+    these as a closed set:
+      - "success"  — every phase completed; resources are in the desired state
+      - "failure"  — execution attempted and at least one phase errored;
+                     no rollback was attempted (see partial state in stdout)
+      - "dry-run"  — plan phase only (no apply); used when the operator's
+                     overlay or profile blocks state mutations
+      - "skipped"  — artifact type isn't supported by any executor in this
+                     version (e.g. scenario/* in G.1); equivalent to the
+                     historical "deferred-to-mcp-runtime" stub
+    """
+
+    status: str
+    duration_seconds: float
+    stdout_tail: str = ""
+    stderr_tail: str = ""
+    per_phase: List[Dict[str, str]] = field(default_factory=list)
+    outputs: Dict[str, str] = field(default_factory=dict)
+
+    def to_activity_log_string(self) -> str:
+        """Compact form for emit_activity_log_apply()'s execution_result field."""
+        return self.status
+
+
+def execute_artifact(
+    artifact: Dict,
+    args: Dict[str, str],
+    plan_slug: str,
+    dry_run: bool = False,
+) -> ExecutionResult:
+    """Dispatch on artifact.type and execute. Returns ExecutionResult.
+
+    For unsupported types, returns status="skipped" (G.1 backstop until
+    G.2 adds mcp-confluent tool-call sequences for scenario/* etc.).
+    """
+    artifact_type = artifact.get("type", "")
+    if artifact_type == "terraform-module":
+        return execute_terraform_module(artifact, args, plan_slug, dry_run=dry_run)
+    return ExecutionResult(
+        status="skipped",
+        duration_seconds=0.0,
+        stderr_tail=(
+            f"artifact.type='{artifact_type}' has no executor in this version; "
+            "Phase G.2 will add support."
+        ),
+    )
+
+
+def execute_terraform_module(
+    artifact: Dict,
+    args: Dict[str, str],
+    plan_slug: str,
+    dry_run: bool = False,
+) -> ExecutionResult:
+    """Run terraform plan + apply against a fsi-dsp terraform-module artifact.
+
+    Workspace layout:
+        outputs/runs/<plan_slug>/
+          main.tf            — wraps the fsi-dsp module by absolute path
+          franz.auto.tfvars  — rendered from `args`
+          .terraform/        — provider plugins (created by `terraform init`)
+          terraform.tfstate  — local state (lives next to main.tf)
+    """
+    started = time.monotonic()
+    per_phase: List[Dict[str, str]] = []
+
+    module_path = artifact.get("path", "")
+    if not module_path:
+        return ExecutionResult(
+            status="failure",
+            duration_seconds=0.0,
+            stderr_tail=f"artifact {artifact.get('id')!r} has no 'path'",
+        )
+    module_abs = (FSI_DSP_ROOT / module_path).resolve()
+    if not module_abs.is_dir():
+        return ExecutionResult(
+            status="failure",
+            duration_seconds=0.0,
+            stderr_tail=f"module path does not exist: {module_abs}",
+        )
+
+    workspace = PROJECT_ROOT / "outputs" / "runs" / plan_slug
+    workspace.mkdir(parents=True, exist_ok=True)
+    _render_root_module(workspace, module_abs, args)
+
+    env = os.environ.copy()
+    for src, dst in _TF_VAR_PASSTHROUGH.items():
+        if src in env and dst not in env:
+            env[dst] = env[src]
+
+    tf = shutil.which("terraform")
+    if not tf:
+        return ExecutionResult(
+            status="failure",
+            duration_seconds=time.monotonic() - started,
+            stderr_tail="`terraform` not on PATH — install Terraform >= 1.6",
+        )
+
+    stdout_chunks: List[str] = []
+    stderr_chunks: List[str] = []
+
+    def _run(phase: str, cmd: List[str]) -> int:
+        proc = subprocess.run(
+            cmd,
+            cwd=workspace,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=900,  # 15 min cap per phase — enough for slow provider init
+        )
+        stdout_chunks.append(f"=== {phase} stdout ===\n{proc.stdout}")
+        stderr_chunks.append(f"=== {phase} stderr ===\n{proc.stderr}")
+        per_phase.append({"phase": phase, "exit_code": str(proc.returncode)})
+        return proc.returncode
+
+    if _run("init", [tf, "init", "-input=false", "-no-color"]) != 0:
+        return _finalize("failure", started, stdout_chunks, stderr_chunks, per_phase)
+
+    if _run("plan", [tf, "plan", "-input=false", "-no-color", "-out=franz.tfplan"]) != 0:
+        return _finalize("failure", started, stdout_chunks, stderr_chunks, per_phase)
+
+    if dry_run:
+        return _finalize("dry-run", started, stdout_chunks, stderr_chunks, per_phase)
+
+    if _run("apply", [tf, "apply", "-input=false", "-no-color", "franz.tfplan"]) != 0:
+        return _finalize("failure", started, stdout_chunks, stderr_chunks, per_phase)
+
+    outputs: Dict[str, str] = {}
+    out_proc = subprocess.run(
+        [tf, "output", "-json"],
+        cwd=workspace,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    if out_proc.returncode == 0:
+        try:
+            for k, v in json.loads(out_proc.stdout).items():
+                # `value` is the unwrapped output; stringify for compactness.
+                outputs[k] = str(v.get("value", "")) if isinstance(v, dict) else str(v)
+        except json.JSONDecodeError:
+            pass
+
+    result = _finalize("success", started, stdout_chunks, stderr_chunks, per_phase)
+    result.outputs = outputs
+    return result
+
+
+def _render_root_module(
+    workspace: Path,
+    module_abs: Path,
+    args: Dict[str, str],
+) -> None:
+    """Write a tiny root module that sources `module_abs` and a tfvars file."""
+    root_tf = workspace / "main.tf"
+    root_tf.write_text(
+        "# Auto-generated by FRANZ /dsp-apply Step 7 — do not edit by hand.\n"
+        "# Source module is the fsi-dsp artifact referenced by the active plan.\n"
+        "\n"
+        "terraform {\n"
+        '  required_version = ">= 1.6"\n'
+        "}\n"
+        "\n"
+        'module "target" {\n'
+        f'  source = "{module_abs}"\n'
+        + "".join(f'  {k} = var.{k}\n' for k in args.keys() if _is_valid_tf_ident(k))
+        + "}\n"
+    )
+
+    variables_tf = workspace / "variables.tf"
+    variables_tf.write_text(
+        "\n".join(
+            f'variable "{k}" {{ type = string }}'
+            for k in args.keys() if _is_valid_tf_ident(k)
+        )
+        + "\n"
+    )
+
+    tfvars = workspace / "franz.auto.tfvars"
+    tfvars.write_text(
+        "\n".join(
+            f'{k} = "{_tf_escape(v)}"'
+            for k, v in args.items() if _is_valid_tf_ident(k)
+        )
+        + "\n"
+    )
+
+
+def _is_valid_tf_ident(name: str) -> bool:
+    """Terraform variable identifiers: letter, then letters/digits/underscores."""
+    if not name or not name[0].isalpha():
+        return False
+    return all(c.isalnum() or c == "_" for c in name)
+
+
+def _tf_escape(value: str) -> str:
+    """Minimal escape for HCL double-quoted strings — backslash + double-quote."""
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _finalize(
+    status: str,
+    started: float,
+    stdout_chunks: List[str],
+    stderr_chunks: List[str],
+    per_phase: List[Dict[str, str]],
+) -> ExecutionResult:
+    """Tail outputs to keep activity-log entries bounded."""
+    tail = lambda chunks, n: ("\n".join(chunks))[-n:]
+    return ExecutionResult(
+        status=status,
+        duration_seconds=round(time.monotonic() - started, 1),
+        stdout_tail=tail(stdout_chunks, 4096),
+        stderr_tail=tail(stderr_chunks, 4096),
+        per_phase=per_phase,
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -92,10 +92,19 @@ class TestProfileFiles:
         assert check_profile_permits(profile, "role/cp_connect")
 
     def test_engineer_denies_destructive(self):
-        """engineer profile denies destructive/non-standard operations."""
+        """engineer profile denies destructive/non-standard operations.
+
+        Note: scenario/cc-{aws,azure,gcp} were explicitly added to engineer
+        during Phase F.1 smoke testing (they're the Confluent Cloud starter
+        kits and FRANZ's primary apply target). Negative-space asserts now
+        target the on-prem CFK/CP scenarios and the DR script — those
+        remain destructive-adjacent and only break-glass should run them.
+        """
         profile = load_profile("engineer")
         assert not check_profile_permits(profile, "script/fsi-dr")
-        assert not check_profile_permits(profile, "scenario/cc-aws")
+        assert not check_profile_permits(profile, "scenario/cfk-openshift")
+        assert not check_profile_permits(profile, "scenario/cp-rhel")
+        assert not check_profile_permits(profile, "scenario/private-cloud")
 
     def test_break_glass_permits_explicit_operations(self):
         """break-glass permits explicit operations in its allowed_operations list (ACTG-01: wildcard replaced)."""
