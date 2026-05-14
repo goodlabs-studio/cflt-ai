@@ -1,6 +1,6 @@
 ---
 title: Ingest Queue
-last_updated: 2026-04-17
+last_updated: 2026-05-13
 ---
 
 # Ingest Queue
@@ -26,6 +26,32 @@ Run: `python tools/wiki-compile.py --delta` to process.
   notes: Detailed 4-phase triage/remediation plan for e2e latency on CC Dedicated + Azure AKS. Keep as report in outputs/reports/. Source for wiki stubs on azure-connection-management and latency-optimized-kafka-client.
 
 ## Processed
+
+- path: outputs/reports/confluent-best-practices-quickstart.md
+  added: 2026-05-13
+  notes: |
+    786-line FSI-flavored quickstart spanning producers, consumers, topics/clusters
+    (CC vs CP), Schema Registry, Connect, Flink, Tableflow, K8s/CFK, security,
+    networking, capacity planning, triage tree, and Top-20-gotchas appendix.
+    Validated via /review (outputs/reports/confluent-best-practices-quickstart-review-2026-05-12.md).
+    Split into 8 focused articles per ingest routing hints. Recency-sensitive
+    items (CC cluster/Freight specs, per-CKU limits, Tableflow GA surface,
+    KIP-848 client matrix, Custom Connector on PrivateLink) flagged inline
+    with ⚠️ unverified; confidence set to medium pending an MCP revalidation
+    pass via /wiki:validate.
+    fsi-dsp follow-up still pending: verify
+    reference/java-producer/FsiProducer.java and reference/java-consumer/FsiConsumer.java
+    exist in fsi-dsp; propose PRs if not.
+  compiled: 2026-05-13
+  wiki_articles:
+    - wiki/patterns/producer-config-fsi.md
+    - wiki/patterns/consumer-config-fsi.md
+    - wiki/concepts/cc-cluster-tiers.md
+    - wiki/concepts/schema-registry-best-practices.md
+    - wiki/patterns/connect-deployment-models.md
+    - wiki/patterns/flink-runtime-models.md
+    - wiki/concepts/network-connectivity-by-tier.md
+    - wiki/synthesis/confluent-gotchas-top-20.md
 
 - path: raw/repos/fsi-dsp/README.md
   source_url: https://github.com/goodlabs-studio/fsi-dsp

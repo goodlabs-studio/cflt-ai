@@ -1,6 +1,6 @@
 ---
 title: Concept Graph / Backlink Registry
-last_updated: 2026-04-17
+last_updated: 2026-05-13
 ---
 
 # Backlink Registry
@@ -139,3 +139,62 @@ patterns/low-latency-kafka-azure → concepts/consumer-group-rebalancing : coope
 patterns/low-latency-kafka-azure → concepts/producer-batching-config : latency-favored tuning (linger.ms=0, batch.size=16384, compression=none)
 patterns/low-latency-kafka-azure → patterns/aks-kafka-tuning : Azure-specific deployment patterns
 patterns/low-latency-kafka-azure → patterns/dr-cluster-linking : DR pattern compatible with this client profile
+
+patterns/producer-config-fsi → concepts/producer-batching-config : batching internals
+patterns/producer-config-fsi → concepts/exactly-once-semantics : idempotent + transactional producer mechanics
+patterns/producer-config-fsi → patterns/fsi-exactly-once : producer layer of five-layer EOS
+patterns/producer-config-fsi → patterns/low-latency-kafka-azure : sub-100ms overlay
+patterns/producer-config-fsi → concepts/schema-registry-best-practices : auto.register policy and CI
+patterns/producer-config-fsi → patterns/topic-naming : naming canon for keyed topics
+patterns/producer-config-fsi → synthesis/confluent-gotchas-top-20 : producer-specific gotchas
+
+patterns/consumer-config-fsi → concepts/consumer-group-rebalancing : eager/cooperative/KIP-848 protocols
+patterns/consumer-config-fsi → concepts/consumer-lag-monitoring : offset and time lag, CC Metrics API
+patterns/consumer-config-fsi → concepts/exactly-once-semantics : read_committed isolation
+patterns/consumer-config-fsi → patterns/producer-config-fsi : paired producer baseline
+patterns/consumer-config-fsi → patterns/low-latency-kafka-azure : fraud-tier overlay
+patterns/consumer-config-fsi → patterns/dead-letter-queue-design : poison-pill routing
+patterns/consumer-config-fsi → synthesis/confluent-gotchas-top-20 : consumer-specific gotchas
+
+concepts/cc-cluster-tiers → concepts/network-connectivity-by-tier : networking mapped to tier
+concepts/cc-cluster-tiers → patterns/dr-cluster-linking : tier requirements for CL source
+concepts/cc-cluster-tiers → concepts/fsi-data-streaming-platform : platform overview / six deployment models
+concepts/cc-cluster-tiers → concepts/sla-tiers : FSI SLA tiers vs CC cluster tiers (naming overlap)
+concepts/cc-cluster-tiers → synthesis/confluent-gotchas-top-20 : gotcha #7 (RF/min.insync/unclean fixed)
+
+concepts/schema-registry-best-practices → concepts/schema-evolution-strategies : tier-based compatibility policy
+concepts/schema-registry-best-practices → patterns/fsi-governance-automation : Terraform enforcement of compat
+concepts/schema-registry-best-practices → patterns/topic-naming : versioned-topic exception (ADR-007)
+concepts/schema-registry-best-practices → patterns/producer-config-fsi : auto.register.schemas=false enforcement
+concepts/schema-registry-best-practices → concepts/fsi-compliance : schema-change audit trail
+concepts/schema-registry-best-practices → synthesis/confluent-gotchas-top-20 : gotchas #8, #9, #10
+
+patterns/connect-deployment-models → patterns/dead-letter-queue-design : DLQ topic design
+patterns/connect-deployment-models → concepts/exactly-once-semantics : KIP-618 EOS source
+patterns/connect-deployment-models → patterns/fsi-governance-automation : Terraform connector deployment
+patterns/connect-deployment-models → patterns/fsi-exactly-once : outbox/upsert as consumer-side EOS
+patterns/connect-deployment-models → concepts/schema-registry-best-practices : converter/SR config
+patterns/connect-deployment-models → synthesis/confluent-gotchas-top-20 : gotchas #11, #12, #13
+
+patterns/flink-runtime-models → concepts/flink-checkpointing : checkpoint mechanics on CMF
+patterns/flink-runtime-models → patterns/linuxone-flink-validation-tuning : CMF on s390x
+patterns/flink-runtime-models → concepts/exactly-once-semantics : Flink two-phase commit
+patterns/flink-runtime-models → concepts/schema-registry-best-practices : Flink reads SR automatically
+patterns/flink-runtime-models → synthesis/confluent-gotchas-top-20 : gotchas #14, #15, #16
+
+concepts/network-connectivity-by-tier → concepts/cc-cluster-tiers : tier matrix extended on networking axis
+concepts/network-connectivity-by-tier → patterns/dr-cluster-linking : Consul endpoint flip, CC↔CC private
+concepts/network-connectivity-by-tier → patterns/low-latency-kafka-azure : ILB-aware, fetch-from-follower
+concepts/network-connectivity-by-tier → patterns/aks-kafka-tuning : advertised listeners on CFK
+concepts/network-connectivity-by-tier → synthesis/confluent-gotchas-top-20 : gotchas #18, #20
+
+synthesis/confluent-gotchas-top-20 → patterns/producer-config-fsi : producer gotchas resolution
+synthesis/confluent-gotchas-top-20 → patterns/consumer-config-fsi : consumer gotchas resolution
+synthesis/confluent-gotchas-top-20 → concepts/cc-cluster-tiers : tier-specific gotchas
+synthesis/confluent-gotchas-top-20 → concepts/schema-registry-best-practices : schema gotchas
+synthesis/confluent-gotchas-top-20 → concepts/schema-evolution-strategies : compatibility direction gotcha
+synthesis/confluent-gotchas-top-20 → patterns/connect-deployment-models : Connect gotchas
+synthesis/confluent-gotchas-top-20 → patterns/flink-runtime-models : Flink gotchas
+synthesis/confluent-gotchas-top-20 → concepts/network-connectivity-by-tier : networking gotchas
+synthesis/confluent-gotchas-top-20 → concepts/consumer-group-rebalancing : rebalance gotcha context
+synthesis/confluent-gotchas-top-20 → patterns/fsi-exactly-once : outbox/idempotent-consumer for EOS into a DB

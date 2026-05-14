@@ -48,3 +48,10 @@ The LLM reads this at session start and clears items when complete.
 <!--         Query: "<query>" | Date: YYYY-MM-DD | Mode: <mode> -->
 - [ ] <!-- auto-stub: oic-kafka-integration --> wiki/concepts/oic-kafka-integration.md — Auto-queued from /review
       Claim: "OIC adapter only supports GZIP; zstd not supported" | Date: 2026-04-29 | Source: oic_cc_acks_all_timeouts.md
+- [ ] <!-- auto-stub: confluent-cloud-cluster-sku-selection --> wiki/concepts/confluent-cloud-cluster-sku-selection.md — Auto-queued from /ask
+      Query: "Create a Confluent Cloud Basic Kafka cluster named franz-smoke-01 in env-9y7opm on GCP us-east1" | Date: 2026-05-11 | Mode: ephemeral
+- [x] confluent-cloud-cluster-types — addressed by wiki/concepts/cc-cluster-tiers.md (compiled 2026-05-13 from quickstart)
+- [ ] <!-- auto-stub: tableflow-iceberg-delta --> wiki/concepts/tableflow-iceberg-delta.md — Auto-queued from /review
+      Claim: "Tableflow materializes Kafka topics as Iceberg/Delta in object storage with auto schema mapping, table maintenance, and catalog integration (Glue/Snowflake Open Catalog/Unity/REST); Iceberg GA 2025, Delta added; near-real-time minutes" | Date: 2026-05-12 | Source: confluent-best-practices-quickstart.md
+- [ ] <!-- auto-stub: kafka-connect-deployment-models --> wiki/concepts/kafka-connect-deployment-models.md — Auto-queued from /review
+      Claim: "Three Connect deployment models — fully-managed connector on CC (FSI default), Custom Connector on CC (BYO plugin; size caps, historically not on PrivateLink), self-managed Connect Distributed" | Date: 2026-05-12 | Source: confluent-best-practices-quickstart.md

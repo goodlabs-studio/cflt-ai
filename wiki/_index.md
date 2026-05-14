@@ -1,6 +1,6 @@
 ---
 title: Wiki Index
-last_updated: 2026-05-07
+last_updated: 2026-05-13
 ---
 
 # cflt-ai Wiki Index
@@ -28,6 +28,9 @@ The LLM maintains this file. Do not edit manually.
 [Producer Batching Configuration](concepts/producer-batching-config.md) — RecordAccumulator internals, batch.size/linger.ms interaction, compression trade-offs, tuning profiles (latency/throughput/balanced), acks interaction, JMX monitoring metrics — #kafka #performance #producers
 [LinuxONE Kafka Integration](concepts/linuxone-kafka-integration.md) — IBM LinuxONE as preferred compute for z/OS Kafka offload via MQ Source Connector bridge pattern — #linuxone #ibm #mainframe #z/os #mq #kafka-connect #fips #dr
 [LinuxONE Platform Foundations](concepts/linuxone-platform-foundations.md) — L1-specific foundations spanning Kafka/Flink/data layer: STP time sync, CBU capacity-on-demand, SMC-R cross-frame transport, UKO key lifecycle, Telum II / Spyre two-tier inference, crun on s390x, IBM benchmark anchors — #linuxone #ibm #s390x #stp #ctn #cbu #smc-r #roce #uko #keys #telum #spyre #crun #fsi
+[Confluent Cloud Cluster Tiers](concepts/cc-cluster-tiers.md) — Five CC cluster types (Basic, Standard, Enterprise, Dedicated, Freight) — decision rule, fixed invariants, capacity-planning skeleton — #kafka #confluent-cloud #cluster-types #fsi
+[Schema Registry Best Practices](concepts/schema-registry-best-practices.md) — TopicNameStrategy, compatibility-per-subject, register-in-CI, schema IDs are not portable across envs, CSFLE — #schema-registry #avro #governance #fsi
+[Network Connectivity by Cluster Tier](concepts/network-connectivity-by-tier.md) — CC networking modes mapped to tier (public/PrivateLink/peering/TGW); CP advertised.listeners; cross-AZ cost surface — #networking #confluent-cloud #privatelink #fsi
 
 ## Patterns
 
@@ -45,6 +48,10 @@ The LLM maintains this file. Do not edit manually.
 [LinuxONE Kafka Tuning](patterns/linuxone-kafka-tuning.md) — Validated Kafka 4.2 / CP 8.2 tuning with FSI tier overlay; HiperSockets MTU, SMC-D, Crypto Express offload, NUMA pinning, KRaft-specific knobs — #kafka #linuxone #ibm #s390x #kraft #tuning #fips #fsi
 [LinuxONE Flink Validation, Tuning & Telum II Inference](patterns/linuxone-flink-validation-tuning.md) — CMF on s390x validation + tuning; sub-ms anomaly detection via on-chip Telum II NNPA invoked from Flink UDFs — #flink #linuxone #ibm #s390x #telum #nnpa #zdnn #validation #tuning #fsi
 [FSI Reference Architecture — LinuxONE + Off-Platform Analytics](patterns/fsi-l1-reference-architecture.md) — L1 operational plane (Mongo, Cockroach, Postgres, Redis, Neo4j, Confluent, Flink+Telum II) with off-platform analytics via Cluster Linking → CC Tableflow → Databricks — #fsi #linuxone #reference-architecture #confluent #mongodb #cockroachdb #postgres #redis #neo4j #databricks #telum
+[FSI Producer Configuration](patterns/producer-config-fsi.md) — Canonical FSI producer baseline (idempotence + acks=all + lz4 + batched) with transactional and latency-tier overlays — #kafka #fsi #producers #idempotence #transactions
+[FSI Consumer Configuration](patterns/consumer-config-fsi.md) — Canonical FSI consumer baseline (manual commit, CooperativeStickyAssignor explicit, static membership, fetch-from-follower) with lag triage — #kafka #fsi #consumers #rebalancing #lag
+[Kafka Connect Deployment Models](patterns/connect-deployment-models.md) — Three models (fully-managed CC, Custom Connector on CC, self-managed); decision matrix; performance tuning; EOS source — #kafka #connect #fsi #eos #dlq
+[Flink Runtime Models — CC Managed, CMF, and Self-Managed](patterns/flink-runtime-models.md) — Three Flink runtime options and the defaults that apply on all of them (bounded watermarks, state-ttl, upsert-kafka) — #flink #confluent-cloud #cmf #cfk #runtime
 
 ## Incidents
 
@@ -57,6 +64,7 @@ The LLM maintains this file. Do not edit manually.
 ## Synthesis
 
 [ADR Index](synthesis/adr-index.md) — Summary of 8 architecture decision records: Avro, compatibility tiers, Consul, Connect on-prem, CL over MRC, OAuth, naming, DR tiers — #adr #fsi #architecture
+[Top 20 Confluent Gotchas](synthesis/confluent-gotchas-top-20.md) — Fast scan-and-recognize triage index across producers, consumers, schemas, Connect, Flink, K8s, networking — #kafka #gotchas #troubleshooting #fsi #synthesis
 
 ## Activity
 
