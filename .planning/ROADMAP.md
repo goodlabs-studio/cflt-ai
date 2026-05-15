@@ -137,7 +137,7 @@ Plans:
 
 - **G.2a: mcp-confluent tool-call executor** — Smallest, most isolated. Dispatch `artifact.type == "mcp-confluent-tool"` (new artifact type) to a tool-call sequence executor that invokes the configured mcp-confluent tools via stdio MCP from Python. Use `check_tool_permitted()` for profile gating. Forces the `tool_classification.json` name-mismatch fix (current entries use pre-1.x snake_case `confluent_kafka_topic_list`; the live 1.2.x package uses kebab-case `list-topics`). **Recommended starting sub-phase** — narrow scope, immediate value for one-off ops, fixes a latent bug.
 - **G.2b: Composite scenario executor** — Dispatch `artifact.type == "scenario"` to a chained executor that walks an `apply_sequence` field in MANIFEST (fsi-dsp PR required to add it). Sequence is a list of `{artifact_id, args_mapping}` entries; each entry resolves via the existing dispatcher (re-entrant). Failure semantics: first-failure stops; partial state surfaced in incident article with per-step status list. Most useful when the user wants `scenario/cc-gcp` to *actually* compose `module/cc-cluster-basic` → topic + SR + RBAC + DR end-to-end.
-- **G.2c: Tool-classification rename** — Standalone hygiene fix: align `tool_classification.json` keys with the actual mcp-confluent 1.2.x tool names. Can land independently of G.2a but G.2a will be the first thing that *needs* it. Pull from `/tmp/mcp-c/package/dist/confluent/tools/tool-name.js` for the canonical list.
+- **G.2c: Tool-classification rename** — Standalone hygiene fix: align `tool_classification.json` keys with the actual mcp-confluent 1.3.0 tool names (50 kebab-case tools), delete the ~25 fictional snake_case entries inherited from training data, add CI drift gate. Generator script is the single source of truth; CI runs `--check` on PR and push-to-main.
 - **G.2d: GitOps apply mode** — Add `apply_mode: "direct" | "gitops"` to overlay config. When `gitops`, the executor renders the tfvars patch, opens a PR against an `fsi-dsp-state` repo, and a CI workflow runs `terraform apply` under service-account identity. Activity log records the PR URL; incident article cites the resulting commit SHA. This is the production-grade FSI path; `industry/fsi` overlay flips to `gitops` by default. Requires a new `fsi-dsp-state` repo (or directory in fsi-dsp) and a CI workflow there.
 - **G.2e: Ansible-role executor** — Dispatch `artifact.type == "ansible-role"` to `ansible-playbook` against a target inventory. Inventory location comes from overlay config. Out of scope unless an active FSI engagement actually targets on-prem CP/CFK; until then this stays planned-but-deferred.
 
@@ -148,16 +148,20 @@ Plans:
 4. `industry/fsi` overlay can be flipped to `apply_mode: "gitops"` and the resulting apply opens a PR instead of touching CC directly.
 5. Partial-failure scenarios produce an incident article with per-step status — no silent data loss.
 
-**Plans:** 0/5 plans complete
+**Plans:** 0/5 sub-phases complete; G.2c sub-phase has 3/3 plans authored
 
 Plans:
 - [ ] G.2a-PLAN.md — mcp-confluent tool-call executor
 - [ ] G.2b-PLAN.md — Composite scenario executor (depends on fsi-dsp PR adding `apply_sequence`)
-- [ ] G.2c-PLAN.md — Tool-classification rename
+- [ ] G.2c-01-PLAN.md — Build regenerate_tool_classification.py generator + checker (ACTG-01)
+- [ ] G.2c-02-PLAN.md — Regenerate tool_classification.json against mcp-confluent@1.3.0; rewrite hard-coded snake_case test refs (ACTG-01, ACTG-02, ACTG-03, ACTG-04)
+- [ ] G.2c-03-PLAN.md — Add tool-classification-drift CI workflow (ACTG-01)
 - [ ] G.2d-PLAN.md — GitOps apply mode (depends on `fsi-dsp-state` infrastructure)
 - [ ] G.2e-PLAN.md — Ansible-role executor (deferred until on-prem FSI engagement requires it)
 
-**Recommended execution order:** G.2c → G.2a → G.2b → G.2d → G.2e. G.2c is a 30-min hygiene fix that unblocks G.2a; G.2a is the smallest executor and proves the MCP-stdio-from-Python plumbing; G.2b consumes the executor pattern from G.2a + G.1; G.2d is the largest architectural change (CI repo, service accounts); G.2e waits for demand.
+**Recommended execution order:** G.2c → G.2a → G.2b → G.2d → G.2e. G.2c is a hygiene fix that unblocks G.2a (G.2a's executor must look up real kebab-case tool names in classification); G.2a is the smallest executor and proves the MCP-stdio-from-Python plumbing; G.2b consumes the executor pattern from G.2a + G.1; G.2d is the largest architectural change (CI repo, service accounts); G.2e waits for demand.
+
+**G.2c wave structure:** G.2c-01 (wave 1) authors the generator. G.2c-02 and G.2c-03 (both wave 2) can run in parallel — they share no files (02 modifies `tools/profiles/tool_classification.json` + `tests/test_apply_engine.py`; 03 modifies `.github/workflows/tool-classification-drift.yml`).
 
 ## Backlog (999.x — parking lot)
 
