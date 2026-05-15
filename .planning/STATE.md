@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed G.2c-01-PLAN.md
-last_updated: "2026-05-15T19:51:50.313Z"
+stopped_at: Completed G.2c-03-PLAN.md
+last_updated: "2026-05-15T19:55:40.717Z"
 last_activity: 2026-05-15
 progress:
   total_phases: 7
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 ## Current Position
 
 Phase: G.2c (Tool-classification rename) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-05-15
 
@@ -74,6 +74,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03C-act-rail-profile-gating P02 | 3 | 2 tasks | 3 files |
 | Phase 03C-act-rail-profile-gating P03 | 31438793 | 1 tasks | 1 files |
 | Phase G.2c P01 | 3 | 2 tasks | 3 files |
+| Phase G.2c-tool-classification-rename P03 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -143,6 +144,8 @@ Recent decisions affecting current work:
 - [Phase G.2c]: tier_rule stored as top-level JSON string field (JSON has no comments — workaround for D-05's 'comment block at the top' literal language; semantic intent preserved)
 - [Phase G.2c]: tool_classification.json deliberately unchanged in plan 01 — big-bang rewrite is G.2c-02's job; keeps the rewrite diff small and reviewable separately from generator review
 - [Phase G.2c]: Generator dry-run mode added under D-05 Claude's Discretion: uses static fixture under tests/fixtures/ instead of npm-installing — enables offline unit tests in under 0.1s without network or Node.js
+- [Phase G.2c-tool-classification-rename]: tool-classification-drift workflow uses Node 22 (matches .mcp.json runtime) + Python 3.12 (matches existing CI workflows) + path-scoped triggers + dual PR+push:main triggers per D-07
+- [Phase G.2c-tool-classification-rename]: Defensive 'npm --version' step in CI surfaces PATH issues as a clear error rather than a cryptic FileNotFoundError deep in the generator's subprocess.run stack
 
 ### Pending Todos
 
@@ -154,6 +157,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-15T19:51:31.885Z
-Stopped at: Completed G.2c-01-PLAN.md
+Last session: 2026-05-15T19:55:40.715Z
+Stopped at: Completed G.2c-03-PLAN.md
 Resume file: None
