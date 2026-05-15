@@ -62,6 +62,12 @@ BREAK_GLASS_PREFIXES = (
 OVERRIDES: Dict[str, str] = {
     "produce-message": "break-glass",   # data-plane write; production guard
     "consume-messages": "break-glass",  # data-plane read; FSI PII consideration
+    # `explain-disabled-tools` is an introspection tool surfaced in
+    # mcp-confluent 1.3.0 that returns metadata about which tools are
+    # currently disabled by the server's config. No state mutation, no
+    # data-plane exposure — semantically equivalent to a describe-/get- read.
+    # No verb-prefix match, so it requires an explicit override.
+    "explain-disabled-tools": "read-only",
 }
 
 # Stored in the JSON's `tier_rule` field so the rule is visible to anyone
@@ -177,6 +183,14 @@ def _install_and_read(version: str) -> str:
                     "--silent",
                     "--no-fund",
                     "--no-audit",
+                    # --ignore-scripts skips the native-build postinstall of the
+                    # transitive @confluentinc/kafka-javascript dep, which would
+                    # otherwise require Xcode CLT (macOS) or build-essential
+                    # (Linux). We only consume dist/confluent/tools/tool-name.js,
+                    # which is pre-built JS shipped in the package and doesn't
+                    # depend on the native binary. Keeps this generator portable
+                    # to clean CI runners without C toolchains.
+                    "--ignore-scripts",
                     f"@confluentinc/mcp-confluent@{version}",
                 ],
                 check=True,
