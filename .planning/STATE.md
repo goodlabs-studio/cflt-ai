@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed G.2c-03-PLAN.md
-last_updated: "2026-05-15T19:55:40.717Z"
+status: verifying
+stopped_at: Completed G.2c-02-PLAN.md
+last_updated: "2026-05-15T19:59:04.083Z"
 last_activity: 2026-05-15
 progress:
   total_phases: 7
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-28)
 
 Phase: G.2c (Tool-classification rename) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-05-15
 
 Progress: [░░░░░░░░░░] 0%
@@ -75,6 +75,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03C-act-rail-profile-gating P03 | 31438793 | 1 tasks | 1 files |
 | Phase G.2c P01 | 3 | 2 tasks | 3 files |
 | Phase G.2c-tool-classification-rename P03 | 1 | 1 tasks | 1 files |
+| Phase G.2c P02 | 4 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -146,6 +147,10 @@ Recent decisions affecting current work:
 - [Phase G.2c]: Generator dry-run mode added under D-05 Claude's Discretion: uses static fixture under tests/fixtures/ instead of npm-installing — enables offline unit tests in under 0.1s without network or Node.js
 - [Phase G.2c-tool-classification-rename]: tool-classification-drift workflow uses Node 22 (matches .mcp.json runtime) + Python 3.12 (matches existing CI workflows) + path-scoped triggers + dual PR+push:main triggers per D-07
 - [Phase G.2c-tool-classification-rename]: Defensive 'npm --version' step in CI surfaces PATH issues as a clear error rather than a cryptic FileNotFoundError deep in the generator's subprocess.run stack
+- [Phase G.2c]: Live mcp-confluent 1.3.0 registry has 54 tools (4 beyond CONTEXT.md's anticipated 50); proceeded with 54 as canonical — matches-the-live-registry truth outranks the snapshot count
+- [Phase G.2c]: explain-disabled-tools classified as read-only via OVERRIDES — no verb-prefix match in D-05; semantically a describe/get metadata tool with no state mutation or data-plane exposure
+- [Phase G.2c]: regenerate_tool_classification.py uses npm --ignore-scripts — postinstall native build of @confluentinc/kafka-javascript was the only failure mode; the tool-name.js file we parse is plain pre-built JS unaffected by the binary; keeps generator portable to clean CI runners
+- [Phase G.2c]: Test Replacements D/E use delete-schema (not delete-topics) to preserve the original test's cross-resource-family semantic — break-glass-tier delete on a non-topics resource, per the plan's explicit rationale
 
 ### Pending Todos
 
@@ -157,6 +162,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-15T19:55:40.715Z
-Stopped at: Completed G.2c-03-PLAN.md
+Last session: 2026-05-15T19:58:52.962Z
+Stopped at: Completed G.2c-02-PLAN.md
 Resume file: None
