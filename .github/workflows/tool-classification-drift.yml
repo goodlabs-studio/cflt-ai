@@ -1,0 +1,55 @@
+name: Tool Classification Drift
+
+# Bidirectional check (D-07, D-08): fails the workflow when the committed
+# tool_classification.json diverges from the live @confluentinc/mcp-confluent
+# registry pinned by the JSON's `mcp_confluent_version` field.
+#
+# Triggers scoped to changes that could affect alignment:
+#   - tool_classification.json itself (hand-edits, version bumps)
+#   - the generator script (changes to the regex, classifier, or CLI)
+#   - this workflow file
+on:
+  pull_request:
+    paths:
+      - 'tools/profiles/tool_classification.json'
+      - 'tools/regenerate_tool_classification.py'
+      - '.github/workflows/tool-classification-drift.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'tools/profiles/tool_classification.json'
+      - 'tools/regenerate_tool_classification.py'
+      - '.github/workflows/tool-classification-drift.yml'
+
+jobs:
+  check-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        # Generator npm-installs @confluentinc/mcp-confluent into a temp prefix;
+        # Node 22 matches the .mcp.json runtime so we test against the same toolchain.
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify npm is on PATH
+        # Fail fast with a clear message if the Node.js setup did not export npm,
+        # rather than letting the generator's subprocess.run raise a cryptic
+        # FileNotFoundError deep in the stack.
+        run: npm --version
+
+      - name: Check tool_classification.json against live mcp-confluent registry
+        # Exit 0 = no drift; exit 1 = drift detected, blocks PR / fails main push.
+        # Drift means: (a) live registry has a tool not in committed JSON, or
+        # (b) committed JSON has a key the live registry doesn't, or
+        # (c) the parser extracted zero tools (regex broke).
+        # All three are bugs that need a human PR to fix.
+        run: python tools/regenerate_tool_classification.py --check
