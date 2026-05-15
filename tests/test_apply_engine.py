@@ -438,23 +438,23 @@ class TestToolClassification:
 
     def test_read_only_profile_permits_read_only_tool(self):
         """read-only profile permits a read-only classified tool."""
-        assert check_tool_permitted("read-only", "confluent_kafka_topic_list") is True
+        assert check_tool_permitted("read-only", "list-topics") is True
 
     def test_read_only_profile_denies_engineer_tool(self):
         """read-only profile denies an engineer-tier tool."""
-        assert check_tool_permitted("read-only", "confluent_kafka_topic_create") is False
+        assert check_tool_permitted("read-only", "create-topics") is False
 
     def test_engineer_profile_permits_engineer_tool(self):
         """engineer profile permits an engineer-tier tool."""
-        assert check_tool_permitted("engineer", "confluent_kafka_topic_create") is True
+        assert check_tool_permitted("engineer", "create-topics") is True
 
     def test_engineer_profile_denies_break_glass_tool(self):
         """engineer profile denies a break-glass-tier tool."""
-        assert check_tool_permitted("engineer", "confluent_kafka_cluster_delete") is False
+        assert check_tool_permitted("engineer", "delete-schema") is False
 
     def test_break_glass_profile_permits_break_glass_tool(self):
         """break-glass profile permits a break-glass-tier tool."""
-        assert check_tool_permitted("break-glass", "confluent_kafka_cluster_delete") is True
+        assert check_tool_permitted("break-glass", "delete-schema") is True
 
     def test_unclassified_tool_denied_fail_closed(self):
         """Unclassified tool is denied (fail-closed) regardless of profile."""
