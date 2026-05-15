@@ -153,7 +153,7 @@ Plans:
 Plans:
 - [ ] G.2a-PLAN.md — mcp-confluent tool-call executor
 - [ ] G.2b-PLAN.md — Composite scenario executor (depends on fsi-dsp PR adding `apply_sequence`)
-- [ ] G.2c-01-PLAN.md — Build regenerate_tool_classification.py generator + checker (ACTG-01)
+- [x] G.2c-01-PLAN.md — Build regenerate_tool_classification.py generator + checker (ACTG-01)
 - [ ] G.2c-02-PLAN.md — Regenerate tool_classification.json against mcp-confluent@1.3.0; rewrite hard-coded snake_case test refs (ACTG-01, ACTG-02, ACTG-03, ACTG-04)
 - [ ] G.2c-03-PLAN.md — Add tool-classification-drift CI workflow (ACTG-01)
 - [ ] G.2d-PLAN.md — GitOps apply mode (depends on `fsi-dsp-state` infrastructure)

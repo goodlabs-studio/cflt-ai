@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Phase G.2c context gathered
-last_updated: "2026-05-15T18:20:12.105Z"
-last_activity: 2026-04-29
+status: executing
+stopped_at: Completed G.2c-01-PLAN.md
+last_updated: "2026-05-15T19:51:50.313Z"
+last_activity: 2026-05-15
 progress:
   total_phases: 7
   completed_phases: 6
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase 03C — act-rail-profile-gating
+**Current focus:** Phase G.2c — Tool-classification rename
 
 ## Current Position
 
-Phase: 3c
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-29
+Phase: G.2c (Tool-classification rename) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-05-15
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -73,6 +73,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03C-act-rail-profile-gating P01 | 8 | 2 tasks | 5 files |
 | Phase 03C-act-rail-profile-gating P02 | 3 | 2 tasks | 3 files |
 | Phase 03C-act-rail-profile-gating P03 | 31438793 | 1 tasks | 1 files |
+| Phase G.2c P01 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -137,6 +138,11 @@ Recent decisions affecting current work:
 - [Phase 03C-act-rail-profile-gating]: customer param on load_profile() is keyword-only per RESEARCH.md Pitfall 2 — existing positional callers unaffected
 - [Phase 03C-act-rail-profile-gating]: override_reason Optional[str]=None — backward compatible; None means omit the field from log/frontmatter
 - [Phase 03C-act-rail-profile-gating]: Tool lists loaded from classification JSON at module level so parametrize lists are self-updating when classification table grows
+- [Phase G.2c]: regenerate_tool_classification.py is the single source of truth for tool_classification.json — JSON is downstream artifact of Python, never hand-edited
+- [Phase G.2c]: D-05 verb-prefix rule encoded as Python tables (READ_ONLY_PREFIXES/ENGINEER_PREFIXES/BREAK_GLASS_PREFIXES) + OVERRIDES dict; classify_tier() raises ValueError on unknown shapes per D-06 so CI blocks bump PRs until human classifies new tools
+- [Phase G.2c]: tier_rule stored as top-level JSON string field (JSON has no comments — workaround for D-05's 'comment block at the top' literal language; semantic intent preserved)
+- [Phase G.2c]: tool_classification.json deliberately unchanged in plan 01 — big-bang rewrite is G.2c-02's job; keeps the rewrite diff small and reviewable separately from generator review
+- [Phase G.2c]: Generator dry-run mode added under D-05 Claude's Discretion: uses static fixture under tests/fixtures/ instead of npm-installing — enables offline unit tests in under 0.1s without network or Node.js
 
 ### Pending Todos
 
@@ -148,6 +154,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-15T18:20:12.101Z
-Stopped at: Phase G.2c context gathered
-Resume file: .planning/phases/G.2c-tool-classification-rename/G.2c-CONTEXT.md
+Last session: 2026-05-15T19:51:31.885Z
+Stopped at: Completed G.2c-01-PLAN.md
+Resume file: None
