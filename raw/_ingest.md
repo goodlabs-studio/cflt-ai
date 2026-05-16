@@ -27,113 +27,6 @@ Run: `python tools/wiki-compile.py --delta` to process.
 
 # === Phase H.1: confluent-agent-skills@91d1871e ingest queue ===
 
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/topology-patterns.md
-  added: 2026-05-16
-  notes: |
-    Parent article #1 of 10 (H.1). Target: wiki/patterns/kafka-streams-topology-patterns.md (pattern template).
-    Frontmatter: extend with `source: confluent-agent-skills@91d1871ef8c320be92bca955c8e42492a2778cb4`
-    and `upstream_path: skills/kafka-streams-programming/references/topology-patterns.md`.
-    Provenance footer per CONTEXT.md D-03 shape.
-    Confidence: high via source attestation (D-07) — skip the full MCP re-validation gate; upstream evals
-    gate at 90%+ before merge so source attestation suffices. /wiki:ingest Step 3d remains for cross-link
-    accuracy but does not block confidence: high.
-    related: cross-link to existing wiki articles where natural (e.g., concepts/exactly-once-semantics,
-    patterns/dr-cluster-linking) plus the trip-wires this article seeds (#4, #5, #6).
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/debugging.md
-  added: 2026-05-16
-  notes: |
-    Parent article #2. Target: wiki/concepts/kafka-streams-debugging.md (concept template).
-    Extend frontmatter with source/upstream_path. confidence: high via source attestation (D-07).
-    Seeds trip-wires #4 (uncaught-exception-handler-import), #5 (avro-schema-source-directory),
-    #6 (schema-aware-console-producer). related: cross-link to those trip-wire articles via `related:`.
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/production-hardening.md
-  added: 2026-05-16
-  notes: |
-    Parent article #3. Target: wiki/concepts/kafka-streams-production-hardening.md (concept).
-    Extend frontmatter with source/upstream_path. confidence: high via source attestation.
-    related: cross-link to concepts/exactly-once-semantics, patterns/producer-config-fsi,
-    patterns/consumer-config-fsi.
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/schema-patterns.md
-  added: 2026-05-16
-  notes: |
-    Parent article #4. Target: wiki/concepts/kafka-streams-schema-patterns.md (concept).
-    Extend frontmatter. confidence: high via source attestation.
-    related: concepts/schema-registry-best-practices, concepts/schema-evolution-strategies,
-    patterns/schema-registry-shared-types.
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/config-baseline.md
-  added: 2026-05-16
-  notes: |
-    Parent article #5. Target: wiki/concepts/kafka-streams-config-baseline.md (concept).
-    Extend frontmatter. confidence: high via source attestation.
-    related: patterns/producer-config-fsi, patterns/consumer-config-fsi.
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/architecture.md
-  added: 2026-05-16
-  notes: |
-    Parent article #6. Target: wiki/concepts/kafka-streams-architecture.md (concept).
-    Extend frontmatter. confidence: high via source attestation.
-    related: concepts/fsi-data-streaming-platform, concepts/exactly-once-semantics,
-    patterns/flink-runtime-models.
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/references/flink-sql-patterns.md
-  added: 2026-05-16
-  notes: |
-    Parent article #7. Target: wiki/patterns/cdc-to-tableflow-flink-decode.md (pattern).
-    Extend frontmatter (upstream_path: skills/confluent-cloud-cdc-tableflow/references/flink-sql-patterns.md).
-    confidence: high via source attestation.
-    Seeds trip-wires #1 (tableflow-changelog-mode-immutability), #2 (cdc-tableflow-flink-decode-required).
-    related: concepts/exactly-once-semantics, concepts/flink-checkpointing,
-    concepts/flink-confluent-cloud-setup, and the two trip-wire descendants.
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/references/connector-configs.md
-  source_url: |
-    Also merges:
-      raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/references/database-prerequisites.md
-      raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/references/troubleshooting.md
-  added: 2026-05-16
-  notes: |
-    Parent article #8 — THREE-WAY MERGE into a single wiki/concepts/cdc-source-connector-setup.md.
-    Section ordering (Claude's Discretion per CONTEXT.md): (1) Database prerequisites first, (2) Connector
-    config recipes second, (3) Troubleshooting last as a triage table — mirrors operational reading order
-    (pre-deploy → deploy → debug). Cite all three upstream_paths in frontmatter as a yaml list:
-      upstream_path:
-        - skills/confluent-cloud-cdc-tableflow/references/connector-configs.md
-        - skills/confluent-cloud-cdc-tableflow/references/database-prerequisites.md
-        - skills/confluent-cloud-cdc-tableflow/references/troubleshooting.md
-    Provenance footer should list all three files. Seeds trip-wire #3 (oracle-xstream-source-limitations).
-    confidence: high via source attestation. related: patterns/cdc-to-tableflow-flink-decode,
-    patterns/connect-deployment-models.
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/detection-patterns.md
-  source_url: |
-    Also merges:
-      raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/code-migration.md
-  added: 2026-05-16
-  notes: |
-    Parent article #9 — TWO-WAY MERGE into wiki/patterns/schema-registry-adoption-playbook.md (pattern).
-    Section ordering: (1) Detection patterns first (scan existing Kafka usage), (2) Code migration second
-    (Terraform generation + producer/consumer migration). upstream_path is a yaml list of both files.
-    Provenance footer lists both. confidence: high via source attestation.
-    related: concepts/schema-registry-best-practices, concepts/schema-evolution-strategies,
-    patterns/fsi-governance-automation.
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/schema-inference.md
-  source_url: |
-    Also merges:
-      raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/categorization.md
-  added: 2026-05-16
-  notes: |
-    Parent article #10 — TWO-WAY MERGE into wiki/concepts/schema-inference-and-pii-categorization.md (concept).
-    Section ordering: (1) Schema inference (deriving Avro from data samples), (2) Categorization (PII
-    tagging on inferred schemas). upstream_path lists both. Provenance footer lists both.
-    confidence: high via source attestation.
-    related: concepts/schema-registry-best-practices, concepts/fsi-compliance,
-    patterns/schema-registry-shared-types.
-
 - path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/SKILL.md
   added: 2026-05-16
   notes: |
@@ -398,3 +291,140 @@ Run: `python tools/wiki-compile.py --delta` to process.
   compiled: 2026-04-11
   wiki_articles:
     - wiki/synthesis/adr-index.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/topology-patterns.md
+  added: 2026-05-16
+  notes: |
+    Parent article #1 of 10 (H.1). Target: wiki/patterns/kafka-streams-topology-patterns.md (pattern template).
+    Frontmatter: extend with `source: confluent-agent-skills@91d1871ef8c320be92bca955c8e42492a2778cb4`
+    and `upstream_path: skills/kafka-streams-programming/references/topology-patterns.md`.
+    Provenance footer per CONTEXT.md D-03 shape.
+    Confidence: high via source attestation (D-07) — skip the full MCP re-validation gate; upstream evals
+    gate at 90%+ before merge so source attestation suffices. /wiki:ingest Step 3d remains for cross-link
+    accuracy but does not block confidence: high.
+    related: cross-link to existing wiki articles where natural (e.g., concepts/exactly-once-semantics,
+    patterns/dr-cluster-linking) plus the trip-wires this article seeds (#4, #5, #6).
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/patterns/kafka-streams-topology-patterns.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/debugging.md
+  added: 2026-05-16
+  notes: |
+    Parent article #2. Target: wiki/concepts/kafka-streams-debugging.md (concept template).
+    Extend frontmatter with source/upstream_path. confidence: high via source attestation (D-07).
+    Seeds trip-wires #4 (uncaught-exception-handler-import), #5 (avro-schema-source-directory),
+    #6 (schema-aware-console-producer). related: cross-link to those trip-wire articles via `related:`.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/kafka-streams-debugging.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/production-hardening.md
+  added: 2026-05-16
+  notes: |
+    Parent article #3. Target: wiki/concepts/kafka-streams-production-hardening.md (concept).
+    Extend frontmatter with source/upstream_path. confidence: high via source attestation.
+    related: cross-link to concepts/exactly-once-semantics, patterns/producer-config-fsi,
+    patterns/consumer-config-fsi.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/kafka-streams-production-hardening.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/schema-patterns.md
+  added: 2026-05-16
+  notes: |
+    Parent article #4. Target: wiki/concepts/kafka-streams-schema-patterns.md (concept).
+    Extend frontmatter. confidence: high via source attestation.
+    related: concepts/schema-registry-best-practices, concepts/schema-evolution-strategies,
+    patterns/schema-registry-shared-types.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/kafka-streams-schema-patterns.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/config-baseline.md
+  added: 2026-05-16
+  notes: |
+    Parent article #5. Target: wiki/concepts/kafka-streams-config-baseline.md (concept).
+    Extend frontmatter. confidence: high via source attestation.
+    related: patterns/producer-config-fsi, patterns/consumer-config-fsi.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/kafka-streams-config-baseline.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/architecture.md
+  added: 2026-05-16
+  notes: |
+    Parent article #6. Target: wiki/concepts/kafka-streams-architecture.md (concept).
+    Extend frontmatter. confidence: high via source attestation.
+    related: concepts/fsi-data-streaming-platform, concepts/exactly-once-semantics,
+    patterns/flink-runtime-models.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/kafka-streams-architecture.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/references/flink-sql-patterns.md
+  added: 2026-05-16
+  notes: |
+    Parent article #7. Target: wiki/patterns/cdc-to-tableflow-flink-decode.md (pattern).
+    Extend frontmatter (upstream_path: skills/confluent-cloud-cdc-tableflow/references/flink-sql-patterns.md).
+    confidence: high via source attestation.
+    Seeds trip-wires #1 (tableflow-changelog-mode-immutability), #2 (cdc-tableflow-flink-decode-required).
+    related: concepts/exactly-once-semantics, concepts/flink-checkpointing,
+    concepts/flink-confluent-cloud-setup, and the two trip-wire descendants.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/patterns/cdc-to-tableflow-flink-decode.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/references/connector-configs.md
+  source_url: |
+    Also merges:
+      raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/references/database-prerequisites.md
+      raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/references/troubleshooting.md
+  added: 2026-05-16
+  notes: |
+    Parent article #8 — THREE-WAY MERGE into a single wiki/concepts/cdc-source-connector-setup.md.
+    Section ordering (Claude's Discretion per CONTEXT.md): (1) Database prerequisites first, (2) Connector
+    config recipes second, (3) Troubleshooting last as a triage table — mirrors operational reading order
+    (pre-deploy → deploy → debug). Cite all three upstream_paths in frontmatter as a yaml list:
+      upstream_path:
+        - skills/confluent-cloud-cdc-tableflow/references/connector-configs.md
+        - skills/confluent-cloud-cdc-tableflow/references/database-prerequisites.md
+        - skills/confluent-cloud-cdc-tableflow/references/troubleshooting.md
+    Provenance footer should list all three files. Seeds trip-wire #3 (oracle-xstream-source-limitations).
+    confidence: high via source attestation. related: patterns/cdc-to-tableflow-flink-decode,
+    patterns/connect-deployment-models.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/cdc-source-connector-setup.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/detection-patterns.md
+  source_url: |
+    Also merges:
+      raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/code-migration.md
+  added: 2026-05-16
+  notes: |
+    Parent article #9 — TWO-WAY MERGE into wiki/patterns/schema-registry-adoption-playbook.md (pattern).
+    Section ordering: (1) Detection patterns first (scan existing Kafka usage), (2) Code migration second
+    (Terraform generation + producer/consumer migration). upstream_path is a yaml list of both files.
+    Provenance footer lists both. confidence: high via source attestation.
+    related: concepts/schema-registry-best-practices, concepts/schema-evolution-strategies,
+    patterns/fsi-governance-automation.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/patterns/schema-registry-adoption-playbook.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/schema-inference.md
+  source_url: |
+    Also merges:
+      raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/categorization.md
+  added: 2026-05-16
+  notes: |
+    Parent article #10 — TWO-WAY MERGE into wiki/concepts/schema-inference-and-pii-categorization.md (concept).
+    Section ordering: (1) Schema inference (deriving Avro from data samples), (2) Categorization (PII
+    tagging on inferred schemas). upstream_path lists both. Provenance footer lists both.
+    confidence: high via source attestation.
+    related: concepts/schema-registry-best-practices, concepts/fsi-compliance,
+    patterns/schema-registry-shared-types.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/schema-inference-and-pii-categorization.md
