@@ -309,3 +309,51 @@ concepts/kafka-streams-config-baseline → concepts/exactly-once-semantics : EOS
 concepts/kafka-streams-architecture → patterns/kafka-streams-topology-patterns : runtime model that informs topology choices
 concepts/kafka-streams-debugging → patterns/kafka-streams-topology-patterns : debugging counterpart for topology patterns
 concepts/kafka-streams-production-hardening → patterns/kafka-streams-topology-patterns : production posture for EOS topology decisions
+
+# Trip-wires — outbound (close forward-references from H.1-02 parents)
+# Trip-wire #1: tableflow-changelog-mode-immutability
+concepts/tableflow-changelog-mode-immutability → patterns/cdc-to-tableflow-flink-decode : parent ingest article (back-link per D-06)
+concepts/tableflow-changelog-mode-immutability → patterns/cdc-tableflow-flink-decode-required : sibling trip-wire (Tableflow + CDC)
+concepts/tableflow-changelog-mode-immutability → concepts/oracle-xstream-source-limitations : sibling trip-wire (CDC-Tableflow cluster)
+
+# Trip-wire #2: cdc-tableflow-flink-decode-required
+patterns/cdc-tableflow-flink-decode-required → patterns/cdc-to-tableflow-flink-decode : parent ingest article (back-link per D-06)
+patterns/cdc-tableflow-flink-decode-required → concepts/tableflow-changelog-mode-immutability : sibling trip-wire
+patterns/cdc-tableflow-flink-decode-required → concepts/cdc-source-connector-setup : parent for CDC connector configs
+
+# Trip-wire #3: oracle-xstream-source-limitations
+concepts/oracle-xstream-source-limitations → concepts/cdc-source-connector-setup : parent ingest article (back-link per D-06)
+concepts/oracle-xstream-source-limitations → concepts/tableflow-changelog-mode-immutability : sibling trip-wire (CDC-Tableflow cluster)
+concepts/oracle-xstream-source-limitations → patterns/cdc-tableflow-flink-decode-required : sibling trip-wire (decode pattern obviates after.state.only shortcuts)
+
+# Trip-wire #4: kafka-streams-4x-uncaught-exception-handler-import
+concepts/kafka-streams-4x-uncaught-exception-handler-import → concepts/kafka-streams-debugging : parent ingest article (back-link per D-06)
+concepts/kafka-streams-4x-uncaught-exception-handler-import → concepts/kafka-streams-production-hardening : closely-related parent (Layer 4 error handling)
+concepts/kafka-streams-4x-uncaught-exception-handler-import → concepts/avro-schema-source-directory : sibling KS-programming trip-wire
+concepts/kafka-streams-4x-uncaught-exception-handler-import → concepts/schema-aware-console-producer-required : sibling KS-programming trip-wire
+
+# Trip-wire #5: avro-schema-source-directory
+concepts/avro-schema-source-directory → concepts/kafka-streams-debugging : parent ingest article (back-link per D-06)
+concepts/avro-schema-source-directory → concepts/kafka-streams-schema-patterns : parent for schema-patterns context
+concepts/avro-schema-source-directory → concepts/kafka-streams-4x-uncaught-exception-handler-import : sibling KS-programming trip-wire
+
+# Trip-wire #6: schema-aware-console-producer-required
+concepts/schema-aware-console-producer-required → concepts/schema-registry-best-practices : SR operational surface
+concepts/schema-aware-console-producer-required → concepts/kafka-streams-debugging : parent ingest article (back-link per D-06)
+concepts/schema-aware-console-producer-required → concepts/kafka-streams-4x-uncaught-exception-handler-import : sibling KS-programming trip-wire
+
+# Trip-wire #7: warpstream-schema-registry-format-constraint
+concepts/warpstream-schema-registry-format-constraint → concepts/schema-registry-best-practices : SR operational surface
+concepts/warpstream-schema-registry-format-constraint → concepts/warpstream-config-overrides : sibling WarpStream trip-wire
+concepts/warpstream-schema-registry-format-constraint → concepts/exactly-once-v2-warpstream-throughput-cost : sibling WarpStream trip-wire
+
+# Trip-wire #8: warpstream-config-overrides
+concepts/warpstream-config-overrides → concepts/kafka-streams-config-baseline : parent ingest article (back-link per D-06)
+concepts/warpstream-config-overrides → concepts/warpstream-schema-registry-format-constraint : sibling WarpStream trip-wire
+concepts/warpstream-config-overrides → concepts/exactly-once-v2-warpstream-throughput-cost : sibling WarpStream trip-wire
+
+# Trip-wire #9: exactly-once-v2-warpstream-throughput-cost
+concepts/exactly-once-v2-warpstream-throughput-cost → concepts/exactly-once-semantics : EOS foundation
+concepts/exactly-once-v2-warpstream-throughput-cost → concepts/kafka-streams-production-hardening : parent ingest article (back-link per D-06)
+concepts/exactly-once-v2-warpstream-throughput-cost → concepts/warpstream-config-overrides : sibling WarpStream trip-wire
+concepts/exactly-once-v2-warpstream-throughput-cost → concepts/warpstream-schema-registry-format-constraint : sibling WarpStream trip-wire

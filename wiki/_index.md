@@ -40,6 +40,14 @@ The LLM maintains this file. Do not edit manually.
 [Kafka Streams Schema Patterns](concepts/kafka-streams-schema-patterns.md) — Correct Avro/Protobuf/JSON Schema patterns: source-directory convention, logical-type nesting, Java type mapping (Instant for timestamp-millis), Protobuf gradle plugin, JSON Schema json.value.type — #kafka-streams #schema-registry #avro #confluent-agent-skills
 [CDC Source Connector Setup](concepts/cdc-source-connector-setup.md) — Database prerequisites + connector configs + troubleshooting for PostgreSQL, MySQL, SQL Server, Oracle XStream, DynamoDB CDC V2 on Confluent Cloud — #cdc #connect #confluent-cloud #confluent-agent-skills
 [Schema Inference and PII Categorization](concepts/schema-inference-and-pii-categorization.md) — Deriving schemas from code/data/inline structures across 5 languages + tagging fields with confluent:tags (PII/PRIVATE/SENSITIVE/PHI) for CSFLE — #schema-registry #pii #csfle #fsi #confluent-agent-skills
+[Avro Schema Source Directory](concepts/avro-schema-source-directory.md) — Trip-wire: Avro schemas live in src/main/avro/ NOT src/main/resources/avro/; code generation breaks silently if misplaced — #trip-wire #avro #confluent-agent-skills
+[exactly_once_v2 on WarpStream — Throughput Cost](concepts/exactly-once-v2-warpstream-throughput-cost.md) — Trip-wire: EOS v2 enables idempotent producer throttling; meaningful throughput hit on WarpStream's S3-backed tier — #trip-wire #warpstream #competitive-context #exactly-once #confluent-agent-skills
+[Kafka Streams 4.x Uncaught Exception Handler Import](concepts/kafka-streams-4x-uncaught-exception-handler-import.md) — Trip-wire: StreamsUncaughtExceptionHandler is in org.apache.kafka.streams.errors in KS 4.x, no longer a nested class under KafkaStreams — #trip-wire #kafka-streams #confluent-agent-skills
+[Oracle XStream Source Limitations](concepts/oracle-xstream-source-limitations.md) — Trip-wire: OracleXStreamSource doesn't support after.state.only; workaround via Flink transform — #trip-wire #cdc #oracle #confluent-agent-skills
+[Schema-Aware Console Producer Required](concepts/schema-aware-console-producer-required.md) — Trip-wire: kafka-console-producer doesn't speak Schema Registry; use kafka-avro-console-producer for SR-governed topics — #trip-wire #schema-registry #cli #confluent-agent-skills
+[Tableflow Changelog Mode Immutability](concepts/tableflow-changelog-mode-immutability.md) — Trip-wire: Tableflow CHANGELOG mode is immutable after first materialization; cannot switch to APPEND without recreate — #trip-wire #tableflow #confluent-cloud #confluent-agent-skills
+[WarpStream Config Overrides](concepts/warpstream-config-overrides.md) — Trip-wire: WarpStream silently ignores fetch.min.bytes; replication.factor is cosmetic (always 3-way internally) — #trip-wire #warpstream #competitive-context #configuration #confluent-agent-skills
+[WarpStream Schema Registry Format Constraint](concepts/warpstream-schema-registry-format-constraint.md) — Trip-wire: WarpStream built-in SR only supports Avro and Protobuf; no JSON Schema — #trip-wire #warpstream #competitive-context #schema-registry #confluent-agent-skills
 
 ## Patterns
 
@@ -65,6 +73,7 @@ The LLM maintains this file. Do not edit manually.
 [Kafka Streams Topology Patterns](patterns/kafka-streams-topology-patterns.md) — Canonical KS topology shapes — stateless transforms, enrichment joins, aggregations, windowing decision tree, suppression, deduplication, splitting, Processor API, exactly-once decision — #kafka-streams #topology #dsl #confluent-agent-skills
 [CDC to Tableflow — Flink Decode Pattern](patterns/cdc-to-tableflow-flink-decode.md) — Debezium → Kafka raw → Flink decode → clean topic (changelog.mode=upsert) → Tableflow → Iceberg/Delta; never enable Tableflow on raw CDC (tombstones break APPEND) — #tableflow #cdc #flink #confluent-cloud #confluent-agent-skills
 [Schema Registry Adoption Playbook](patterns/schema-registry-adoption-playbook.md) — Detection patterns (build files, producers, consumers, custom serializers, risk flags) + code migration recipes (Avro/Protobuf/JSON Schema) across 5 languages with category-based rollout order — #schema-registry #adoption #migration #terraform #confluent-agent-skills
+[CDC-Tableflow — Flink Decode Required](patterns/cdc-tableflow-flink-decode-required.md) — Trip-wire pattern: Don't enable Tableflow on CDC source topics; tombstones break APPEND mode; decode through Flink to a clean topic first — #trip-wire #pattern #tableflow #cdc #flink #confluent-cloud #confluent-agent-skills
 
 ## Incidents
 

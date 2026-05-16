@@ -1,6 +1,6 @@
 ---
 title: Ingest Queue
-last_updated: 2026-05-15
+last_updated: 2026-05-16
 ---
 
 # Ingest Queue
@@ -26,130 +26,8 @@ Run: `python tools/wiki-compile.py --delta` to process.
   notes: Detailed 4-phase triage/remediation plan for e2e latency on CC Dedicated + Azure AKS. Keep as report in outputs/reports/. Source for wiki stubs on azure-connection-management and latency-optimized-kafka-client.
 
 # === Phase H.1: confluent-agent-skills@91d1871e ingest queue ===
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/SKILL.md
-  added: 2026-05-16
-  notes: |
-    Trip-wire #1 (H.1). Target: wiki/concepts/tableflow-changelog-mode-immutability.md (concept, ≤500 words).
-    Single-fact-focused: "Tableflow changelog mode is immutable after first materialization."
-    FULL MCP-validation gate (D-07): query confluent-docs for Tableflow materialization semantics,
-    especially `changelog` mode behavior on schema/topic changes. Set confidence: high only after the
-    MCP gate passes. Extend frontmatter with source/upstream_path. related: patterns/cdc-to-tableflow-flink-decode
-    (parent #7), patterns/cdc-tableflow-flink-decode-required (sibling trip-wire #2),
-    concepts/oracle-xstream-source-limitations (sibling #3).
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/SKILL.md
-  added: 2026-05-16
-  notes: |
-    Trip-wire #2 (H.1). Target: wiki/patterns/cdc-tableflow-flink-decode-required.md (pattern, ≤500 words).
-    Single-fact-focused: "Don't enable Tableflow on a CDC source topic — tombstones break APPEND mode;
-    decode via Flink first, sink to a clean topic, then enable Tableflow on the clean topic."
-    FULL MCP-validation gate (D-07): confluent-docs for Tableflow APPEND vs CHANGELOG mode tombstone
-    handling. Frontmatter source/upstream_path. related: patterns/cdc-to-tableflow-flink-decode (parent #7),
-    concepts/tableflow-changelog-mode-immutability (sibling #1).
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/SKILL.md
-  added: 2026-05-16
-  notes: |
-    Trip-wire #3 (H.1). Target: wiki/concepts/oracle-xstream-source-limitations.md (concept, ≤500 words).
-    Single-fact-focused: "OracleXStreamSource doesn't support `after.state.only` — workaround is a
-    Flink transform on the source topic before sinking to the target topic."
-    FULL MCP-validation gate (D-07): confluent-docs for OracleXStreamSource connector config.
-    Frontmatter source/upstream_path. related: wiki/concepts/cdc-source-connector-setup (parent #8 — where
-    connector configs live).
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/SKILL.md
-  source_url: also-cite. raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/evals/evals.json
-  added: 2026-05-16
-  notes: |
-    Trip-wire #4 (H.1). Target: wiki/concepts/kafka-streams-4x-uncaught-exception-handler-import.md
-    (concept, ≤500 words). Single-fact-focused: "In Kafka Streams 4.x, StreamsUncaughtExceptionHandler
-    lives in `org.apache.kafka.streams.errors`, NOT as a nested class under `KafkaStreams`. Import path
-    changed in the 4.x refactor."
-    FULL MCP-validation gate (D-07): confluent-docs for KS 4.x package structure; context7 fallback for
-    KIP references if applicable. Include a 3-line code snippet showing the correct import statement
-    (Java). NOTE: the evals/evals.json file referenced in source_url is intentionally NOT vendored
-    (excluded in Task 1 per D-02 — see also D-02/D-05 tension note above); cite its existence in the
-    wiki body as upstream proof of the trip-wire's importance, but the citation path is the SKILL.md,
-    not the evals.json. Frontmatter source/upstream_path.
-    related: wiki/concepts/kafka-streams-debugging (parent #2),
-    wiki/concepts/kafka-streams-production-hardening (parent #3).
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/SKILL.md
-  source_url: also-cite. raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/evals/evals.json
-  added: 2026-05-16
-  notes: |
-    Trip-wire #5 (H.1). Target: wiki/concepts/avro-schema-source-directory.md (concept, ≤500 words).
-    Single-fact-focused: "Avro schemas live in `src/main/avro/` (the Avro Maven plugin convention),
-    NOT `src/main/resources/avro/`. Code generation breaks silently if put in resources/."
-    FULL MCP-validation gate (D-07): context7 for Avro Maven Plugin canonical layout; confluent-docs
-    fallback for Confluent Schema Registry Maven Plugin layout. Include a 4-line `pom.xml` snippet
-    showing the plugin's expected source directory. Frontmatter source/upstream_path. evals.json source
-    cited by path in body prose only (file not vendored per D-02 — see D-02/D-05 tension note above).
-    related: wiki/concepts/kafka-streams-debugging (parent #2),
-    wiki/concepts/kafka-streams-schema-patterns (parent #4).
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/SKILL.md
-  source_url: also-cite. raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/evals/evals.json
-  added: 2026-05-16
-  notes: |
-    Trip-wire #6 (H.1). Target: wiki/concepts/schema-aware-console-producer-required.md (concept, ≤500 words).
-    Single-fact-focused: "`kafka-console-producer` doesn't speak Schema Registry — using it against a
-    SR-governed topic ships records WITHOUT the magic-byte+schema-id prefix and breaks all SR-aware
-    consumers. Use `kafka-avro-console-producer` (or `kafka-protobuf-console-producer` / `kafka-json-schema-console-producer`)
-    for verification on SR-governed topics."
-    FULL MCP-validation gate (D-07): confluent-docs for `kafka-avro-console-producer` CLI usage and the
-    wire format magic-byte. Include a 2-line CLI invocation example. Frontmatter source/upstream_path.
-    evals.json source cited by path in body prose only (file not vendored per D-02 — see D-02/D-05
-    tension note above).
-    related: wiki/concepts/schema-registry-best-practices, wiki/concepts/kafka-streams-debugging (parent #2).
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/developing-kafka-python-client/SKILL.md
-  source_url: also-cite. raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/warpstream-optimization.md
-  added: 2026-05-16
-  notes: |
-    Trip-wire #7 (H.1). Target: wiki/concepts/warpstream-schema-registry-format-constraint.md (concept, ≤500 words).
-    Single-fact-focused: "WarpStream's built-in Schema Registry only supports Avro and Protobuf;
-    `GET /schemas/types` returns `[\"AVRO\",\"PROTOBUF\"]` — no JSON Schema support."
-    FULL MCP-validation gate (D-07): cannot validate via confluent-docs (WarpStream is not Confluent);
-    rely on context7 search of WarpStream's docs OR mark verifiable claims with ⚠️ unverified inline
-    and downgrade confidence to medium IF the majority of claims are unverifiable; otherwise keep high.
-    MANDATORY: include the verbatim "FSI context" paragraph from CONTEXT.md <specifics> immediately
-    after the trip-wire claim — this is non-negotiable per the vendor-backing rule (feedback memory).
-    Frontmatter source/upstream_path (upstream_path is the SKILL.md path).
-    related: wiki/concepts/schema-registry-best-practices,
-    wiki/concepts/warpstream-config-overrides (sibling #8),
-    wiki/concepts/exactly-once-v2-warpstream-throughput-cost (sibling #9).
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/warpstream-optimization.md
-  added: 2026-05-16
-  notes: |
-    Trip-wire #8 (H.1). Target: wiki/concepts/warpstream-config-overrides.md (concept, ≤500 words).
-    Single-fact-focused: "WarpStream does not honor `fetch.min.bytes` (silently ignored), and
-    `replication.factor` is cosmetic (the WarpStream tier always replicates 3-way internally regardless
-    of the value set on topic creation)."
-    FULL MCP-validation gate (D-07): same caveat as #7 — context7 fallback, inline ⚠️ unverified where
-    WarpStream docs are silent.
-    MANDATORY: include the verbatim "FSI context" paragraph from CONTEXT.md <specifics>.
-    Frontmatter source/upstream_path. related: wiki/concepts/warpstream-schema-registry-format-constraint
-    (sibling #7), wiki/concepts/exactly-once-v2-warpstream-throughput-cost (sibling #9),
-    wiki/concepts/kafka-streams-config-baseline (parent #5).
-
-- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/warpstream-optimization.md
-  added: 2026-05-16
-  notes: |
-    Trip-wire #9 (H.1). Target: wiki/concepts/exactly-once-v2-warpstream-throughput-cost.md (concept, ≤500 words).
-    Single-fact-focused: "Enabling `processing.guarantee=exactly_once_v2` in Kafka Streams turns on
-    idempotent producers internally, which throttles in-flight request concurrency. On WarpStream's
-    S3-backed storage tier this translates to a meaningful throughput hit; on classic Kafka the cost is
-    present but smaller. Quantify before turning on for high-throughput WarpStream pipelines."
-    FULL MCP-validation gate (D-07): confluent-docs for `processing.guarantee=exactly_once_v2`
-    semantics and idempotent producer constraints (max.in.flight.requests.per.connection ≤5).
-    context7 fallback for WarpStream-specific impact.
-    MANDATORY: include the verbatim "FSI context" paragraph from CONTEXT.md <specifics>.
-    Frontmatter source/upstream_path. related: wiki/concepts/exactly-once-semantics,
-    wiki/concepts/warpstream-config-overrides (sibling #8),
-    wiki/concepts/kafka-streams-production-hardening (parent #3).
+# All 19 H.1 entries processed (10 parents in H.1-02 + 9 trip-wires in H.1-03);
+# entries moved to ## Processed below. Only the 2 pre-H.1 April-2026 entries remain in Pending.
 
 ## Processed
 
@@ -428,3 +306,115 @@ Run: `python tools/wiki-compile.py --delta` to process.
   compiled: 2026-05-16
   wiki_articles:
     - wiki/concepts/schema-inference-and-pii-categorization.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/SKILL.md
+  added: 2026-05-16
+  notes: |
+    Trip-wire #1 (H.1). Authored via full MCP-validation gate (D-07): confluent-docs query on Tableflow
+    materialization semantics confirmed the immutability behavior (mode cached on first materialize;
+    S3 table_path keyed by Kafka topic name; recreate requires deleting both Tableflow and Kafka topics).
+    Single-fact-focused, ≤500 words, confidence: high.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/tableflow-changelog-mode-immutability.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/SKILL.md
+  added: 2026-05-16
+  notes: |
+    Trip-wire #2 (H.1). Pattern template. Authored via full MCP-validation gate (D-07): confluent-docs
+    query on Tableflow APPEND vs CHANGELOG mode tombstone handling confirmed Debezium emits null-value
+    records on DELETE and Tableflow APPEND suspends on the first null. Canonical Flink decode pattern
+    is the load-bearing remediation. Single-fact-focused, ≤500 words, confidence: high.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/patterns/cdc-tableflow-flink-decode-required.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/SKILL.md
+  added: 2026-05-16
+  notes: |
+    Trip-wire #3 (H.1). Authored via full MCP-validation gate (D-07): confluent-docs query on
+    OracleXStreamSource connector config confirmed `after.state.only` is not supported. Workaround is
+    a Flink projection on the source topic (covered by the canonical decode pattern).
+    Single-fact-focused, ≤500 words, confidence: high.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/oracle-xstream-source-limitations.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/SKILL.md
+  source_url: also-cite. raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/evals/evals.json
+  added: 2026-05-16
+  notes: |
+    Trip-wire #4 (H.1). Authored via full MCP-validation gate (D-07): confluent-docs query on KS 4.x
+    package structure confirmed StreamsUncaughtExceptionHandler lives at org.apache.kafka.streams.errors
+    (not nested under KafkaStreams as in 2.8-3.x). evals.json file is NOT vendored per D-02 — cited
+    in body prose as upstream-eval evidence; upstream_path frontmatter cites the SKILL.md sibling.
+    Single-fact-focused, ≤500 words, confidence: high.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/kafka-streams-4x-uncaught-exception-handler-import.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/SKILL.md
+  source_url: also-cite. raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/evals/evals.json
+  added: 2026-05-16
+  notes: |
+    Trip-wire #5 (H.1). Authored via full MCP-validation gate (D-07): context7 query on Avro Maven
+    Plugin canonical layout confirmed src/main/avro/ as the default sourceDirectory; confluent-docs
+    fallback confirmed parity with the Confluent Schema Registry Maven plugin and Gradle Avro plugin.
+    evals.json file is NOT vendored per D-02 — cited in body prose; upstream_path is the SKILL.md sibling.
+    Single-fact-focused, ≤500 words, confidence: high.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/avro-schema-source-directory.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/SKILL.md
+  source_url: also-cite. raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/evals/evals.json
+  added: 2026-05-16
+  notes: |
+    Trip-wire #6 (H.1). Authored via full MCP-validation gate (D-07): confluent-docs query on
+    kafka-avro-console-producer CLI usage and the Schema Registry wire format confirmed the 5-byte
+    prefix (magic byte + 4-byte schema ID) is required and kafka-console-producer doesn't write it.
+    evals.json file is NOT vendored per D-02 — cited in body prose; upstream_path is the SKILL.md.
+    Single-fact-focused, ≤500 words, confidence: high.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/schema-aware-console-producer-required.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/developing-kafka-python-client/SKILL.md
+  source_url: also-cite. raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/warpstream-optimization.md
+  added: 2026-05-16
+  notes: |
+    Trip-wire #7 (H.1). WarpStream content — context7 fallback (WarpStream is not in confluent-docs per
+    vendor-backing rule). MANDATORY verbatim FSI-context paragraph included per CONTEXT.md <specifics>.
+    Frontmatter `sources:` lists BOTH vendored paths (python-client SKILL.md + warpstream-optimization.md)
+    per Issue 6 fix. Inline ⚠️ unverified marker on the `GET /schemas/types` endpoint claim because
+    context7 has limited published coverage of WarpStream's SR endpoint shape; majority of claims
+    sourced from upstream confluent-maintained competitive guidance, confidence: high retained.
+    Single-fact-focused, ≤500 words.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/warpstream-schema-registry-format-constraint.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/warpstream-optimization.md
+  added: 2026-05-16
+  notes: |
+    Trip-wire #8 (H.1). WarpStream content — context7 fallback. MANDATORY verbatim FSI-context paragraph
+    included per CONTEXT.md <specifics>. Inline ⚠️ unverified marker on the internal-replication
+    mechanics claim because context7 has limited published coverage of WarpStream's S3-tier internals.
+    competitive-context tag set. Single-fact-focused, ≤500 words, confidence: high.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/warpstream-config-overrides.md
+
+- path: raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/warpstream-optimization.md
+  added: 2026-05-16
+  notes: |
+    Trip-wire #9 (H.1). Split-coverage validation per D-07: confluent-docs confirmed classic-Kafka
+    EOS half (processing.guarantee=exactly_once_v2 enables idempotent producer; max.in.flight.requests.
+    per.connection ≤5 constraint); context7 + upstream WarpStream optimization reference (Confluent-
+    maintained) confirmed the WarpStream-specific throughput-cost half. Inline ⚠️ unverified marker on
+    the exact 20-40% throughput delta because context7 has limited published coverage of the precise
+    numbers. MANDATORY verbatim FSI-context paragraph included. competitive-context tag set.
+    Single-fact-focused, ≤500 words, confidence: high.
+  compiled: 2026-05-16
+  wiki_articles:
+    - wiki/concepts/exactly-once-v2-warpstream-throughput-cost.md
