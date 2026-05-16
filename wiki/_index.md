@@ -1,6 +1,6 @@
 ---
 title: Wiki Index
-last_updated: 2026-05-13
+last_updated: 2026-05-16
 ---
 
 # cflt-ai Wiki Index
@@ -31,6 +31,15 @@ The LLM maintains this file. Do not edit manually.
 [Confluent Cloud Cluster Tiers](concepts/cc-cluster-tiers.md) — Five CC cluster types (Basic, Standard, Enterprise, Dedicated, Freight) — decision rule, fixed invariants, capacity-planning skeleton — #kafka #confluent-cloud #cluster-types #fsi
 [Schema Registry Best Practices](concepts/schema-registry-best-practices.md) — TopicNameStrategy, compatibility-per-subject, register-in-CI, schema IDs are not portable across envs, CSFLE — #schema-registry #avro #governance #fsi
 [Network Connectivity by Cluster Tier](concepts/network-connectivity-by-tier.md) — CC networking modes mapped to tier (public/PrivateLink/peering/TGW); CP advertised.listeners; cross-AZ cost surface — #networking #confluent-cloud #privatelink #fsi
+[Private Networking — PrivateLink Gateway, PNI, Peering, TGW](concepts/private-networking.md) — PLATT→Gateway transition (AWS 2026-02-12, Azure/GCP 2026-05-04), three-resource model, Flink-to-Kafka internal routing, egress PrivateLink, Azure ILB bypass — #networking #confluent-cloud #privatelink #private-service-connect #pni #fsi
+[Flink on Confluent Cloud — Setup, RBAC, Lifecycle, and Statement Evolution](concepts/flink-confluent-cloud-setup.md) — Compute pools (CFUs, region-scoped), catalog/database/table auto-mapping, dual control-plane + data-plane RBAC, statement lifecycle (immutability, state limits), Autopilot scaling, watermarks/alignment defaults, materialized tables vs carry-over-offsets evolution — #flink #confluent-cloud #compute-pools #rbac #autopilot #watermarks #statement-evolution
+[Kafka Streams Architecture](concepts/kafka-streams-architecture.md) — Threading model (StreamThread, Task, Subtopology, GlobalStreamThread), partition-to-task mapping, state stores, commit/flush cycle, changelog and repartition topics, canonical RocksDB memory formula — #kafka-streams #architecture #topology #confluent-agent-skills
+[Kafka Streams Config Baseline](concepts/kafka-streams-config-baseline.md) — Canonical config baseline for new KS apps: core properties, security patterns (SASL_SSL/SCRAM/mTLS/OAUTHBEARER), per-environment specifics (AK/CP/CC/WarpStream), default-serde selection, EOS configuration — #kafka-streams #configuration #tuning #confluent-agent-skills
+[Kafka Streams Debugging](concepts/kafka-streams-debugging.md) — Symptom-organized diagnostics: startup failures, processing stalls, rebalance storms, deserialization errors, state-store pathology, thread failures, memory issues, EOS/transaction cascades — #kafka-streams #debugging #troubleshooting #confluent-agent-skills
+[Kafka Streams Production Hardening](concepts/kafka-streams-production-hardening.md) — Four-tier error handling (deserialization, processing, production, uncaught), structured JSON logging, separate liveness/readiness probes, Dockerfile, deployment sizing with PVCs, KIP-1034 DLQ — #kafka-streams #production #fsi #confluent-agent-skills
+[Kafka Streams Schema Patterns](concepts/kafka-streams-schema-patterns.md) — Correct Avro/Protobuf/JSON Schema patterns: source-directory convention, logical-type nesting, Java type mapping (Instant for timestamp-millis), Protobuf gradle plugin, JSON Schema json.value.type — #kafka-streams #schema-registry #avro #confluent-agent-skills
+[CDC Source Connector Setup](concepts/cdc-source-connector-setup.md) — Database prerequisites + connector configs + troubleshooting for PostgreSQL, MySQL, SQL Server, Oracle XStream, DynamoDB CDC V2 on Confluent Cloud — #cdc #connect #confluent-cloud #confluent-agent-skills
+[Schema Inference and PII Categorization](concepts/schema-inference-and-pii-categorization.md) — Deriving schemas from code/data/inline structures across 5 languages + tagging fields with confluent:tags (PII/PRIVATE/SENSITIVE/PHI) for CSFLE — #schema-registry #pii #csfle #fsi #confluent-agent-skills
 
 ## Patterns
 
@@ -52,6 +61,10 @@ The LLM maintains this file. Do not edit manually.
 [FSI Consumer Configuration](patterns/consumer-config-fsi.md) — Canonical FSI consumer baseline (manual commit, CooperativeStickyAssignor explicit, static membership, fetch-from-follower) with lag triage — #kafka #fsi #consumers #rebalancing #lag
 [Kafka Connect Deployment Models](patterns/connect-deployment-models.md) — Three models (fully-managed CC, Custom Connector on CC, self-managed); decision matrix; performance tuning; EOS source — #kafka #connect #fsi #eos #dlq
 [Flink Runtime Models — CC Managed, CMF, and Self-Managed](patterns/flink-runtime-models.md) — Three Flink runtime options and the defaults that apply on all of them (bounded watermarks, state-ttl, upsert-kafka) — #flink #confluent-cloud #cmf #cfk #runtime
+[Schema Registry Shared-Types Library](patterns/schema-registry-shared-types.md) — Versioned shared types (Money, MemberId, UsAddress) under a reserved namespace with FULL_TRANSITIVE compat; domain subjects pull them in via pinned schema references — #schema-registry #avro #references #governance #fsi #shared-types
+[Kafka Streams Topology Patterns](patterns/kafka-streams-topology-patterns.md) — Canonical KS topology shapes — stateless transforms, enrichment joins, aggregations, windowing decision tree, suppression, deduplication, splitting, Processor API, exactly-once decision — #kafka-streams #topology #dsl #confluent-agent-skills
+[CDC to Tableflow — Flink Decode Pattern](patterns/cdc-to-tableflow-flink-decode.md) — Debezium → Kafka raw → Flink decode → clean topic (changelog.mode=upsert) → Tableflow → Iceberg/Delta; never enable Tableflow on raw CDC (tombstones break APPEND) — #tableflow #cdc #flink #confluent-cloud #confluent-agent-skills
+[Schema Registry Adoption Playbook](patterns/schema-registry-adoption-playbook.md) — Detection patterns (build files, producers, consumers, custom serializers, risk flags) + code migration recipes (Avro/Protobuf/JSON Schema) across 5 languages with category-based rollout order — #schema-registry #adoption #migration #terraform #confluent-agent-skills
 
 ## Incidents
 
