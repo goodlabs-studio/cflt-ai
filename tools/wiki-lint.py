@@ -4,6 +4,7 @@ wiki-lint.py — health check for the cflt-ai wiki.
 Usage: python tools/wiki-lint.py [--full] [--fix]
 """
 import argparse
+import json
 import os
 import re
 import sys
@@ -70,6 +71,62 @@ def apply_decay_fix(content: str) -> tuple:
     return (True, new_front + body)
 
 
+def load_vendor_pins(repo_root: Path):
+    """Return parsed tools/vendor-sources.json or None if missing/malformed.
+
+    Missing file is a soft condition per D-09 (passive drift detection): warn to
+    stderr, return None, callers skip the drift check. Exit code stays 0.
+    """
+    pin_path = repo_root / "tools" / "vendor-sources.json"
+    if not pin_path.exists():
+        print(
+            f"WARNING: MISSING vendor-sources.json at {pin_path} — drift check skipped",
+            file=sys.stderr,
+        )
+        return None
+    try:
+        return json.loads(pin_path.read_text())
+    except json.JSONDecodeError as exc:
+        print(
+            f"WARNING: MALFORMED vendor-sources.json: {exc} — drift check skipped",
+            file=sys.stderr,
+        )
+        return None
+
+
+def check_vendor_drift(article_path: Path, fm: dict, vendor_pins) -> list:
+    """Return list of drift findings for one article. Empty list = clean.
+
+    D-09 passive drift detection:
+    - No source: field → skip (non-vendored article)
+    - source: without @ separator → MALFORMED finding
+    - Unknown vendor → UNKNOWN VENDOR finding
+    - SHA mismatch with pin → DRIFT finding
+    - SHA matches pin → no finding (clean)
+    """
+    if vendor_pins is None:
+        return []
+    source = fm.get("source")
+    if not source:
+        return []
+    if "@" not in str(source):
+        return [
+            f"MALFORMED source field in {article_path}: {source!r} (expected '<vendor>@<sha>')"
+        ]
+    vendor, sha = str(source).split("@", 1)
+    pin_entry = vendor_pins.get(vendor)
+    if pin_entry is None:
+        return [
+            f"UNKNOWN VENDOR in {article_path}: {vendor!r} not in vendor-sources.json"
+        ]
+    pinned_sha = str(pin_entry.get("commit", ""))
+    if sha != pinned_sha:
+        return [
+            f"DRIFT: {article_path}: source={sha[:12]}..., pin={pinned_sha[:12]}..."
+        ]
+    return []
+
+
 def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
     wiki = root / "wiki"
     findings = {
@@ -80,7 +137,11 @@ def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
         "low_confidence": [],
         "unverified": [],
         "decayed": [],
+        "drift": [],
+        "malformed_source": [],
+        "unknown_vendor": [],
     }
+    vendor_pins = load_vendor_pins(root)
 
     all_md = {str(p.relative_to(root)) for p in wiki.rglob("*.md")}
     stale_cutoff = datetime.now() - timedelta(days=90)
@@ -127,6 +188,15 @@ def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
             if link not in all_md:
                 findings["broken_links"].append(f"{rel} → {link}")
 
+        # D-09: vendor-source drift detection (passive — surfaces but doesn't fail)
+        for drift_msg in check_vendor_drift(Path(rel), fm, vendor_pins):
+            if drift_msg.startswith("DRIFT:"):
+                findings["drift"].append(drift_msg)
+            elif drift_msg.startswith("MALFORMED"):
+                findings["malformed_source"].append(drift_msg)
+            elif drift_msg.startswith("UNKNOWN VENDOR"):
+                findings["unknown_vendor"].append(drift_msg)
+
     # Orphans: articles not referenced in _index.md
     # _index.md uses paths relative to the wiki dir (e.g. "concepts/foo.md"),
     # so compare against wiki-relative paths, not project-root-relative ones.
@@ -170,6 +240,9 @@ def main():
         "low_confidence": "Low confidence articles",
         "unverified": "Unverified inline claims",
         "decayed": "Decayed articles (confidence demoted)",
+        "drift": "Vendor-source DRIFT (article SHA doesn't match tools/vendor-sources.json pin)",
+        "malformed_source": "MALFORMED source field (vendor@<sha> shape required)",
+        "unknown_vendor": "UNKNOWN VENDOR (source: references a vendor not pinned in vendor-sources.json)",
     }
     for key, items in findings.items():
         if items:
