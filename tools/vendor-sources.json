@@ -1,0 +1,10 @@
+{
+  "confluent-agent-skills": {
+    "upstream": "https://github.com/confluentinc/agent-skills",
+    "commit": "91d1871ef8c320be92bca955c8e42492a2778cb4",
+    "ingested_at": "2026-05-16",
+    "vendor_path": "raw/vendor/confluent-agent-skills/91d1871e/",
+    "license": "Apache-2.0",
+    "kind": "wiki-source"
+  }
+}
