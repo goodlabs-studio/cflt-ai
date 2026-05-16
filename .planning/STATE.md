@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
-status: not_started
-stopped_at: Phase H.1 context gathered
-last_updated: "2026-05-16T14:04:54.748Z"
-last_activity: 2026-05-16 (v1.0 archived, ACTG-04 audit gap closed at v1.0 milestone closure)
+status: Ready to execute
+stopped_at: Completed H.1-01-PLAN.md (vendor + pin registry + queue setup)
+last_updated: "2026-05-16T15:46:28.711Z"
+last_activity: 2026-05-16
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 24
-  completed_plans: 24
+  total_plans: 27
+  completed_plans: 25
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-16)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** v2.0 — Developer Persona + Quality Gates; recommended start: H.1 (wiki ingest from confluent-agent-skills references)
+**Current focus:** Phase H.1 — Wiki ingest from confluent-agent-skills references
 
 ## Current Position
 
 Milestone: v2.0
-Phase: H.1 (not started — recommended first)
-Plan: Not started
-Last activity: 2026-05-16 (v1.0 archived, ACTG-04 audit gap closed at v1.0 milestone closure)
+Phase: H.1 (Wiki ingest from confluent-agent-skills references) — EXECUTING
+Plan: 2 of 3
+Last activity: 2026-05-16
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -82,6 +82,7 @@ Tag: `v1.0`
 | Phase G.2c P01 | 3 | 2 tasks | 3 files |
 | Phase G.2c-tool-classification-rename P03 | 1 | 1 tasks | 1 files |
 | Phase G.2c P02 | 4 | 2 tasks | 3 files |
+| Phase H.1-wiki-ingest-agent-skills P01 | 4 | 3 tasks | 39 files |
 
 ## Accumulated Context
 
@@ -157,6 +158,9 @@ Recent decisions affecting current work:
 - [Phase G.2c]: explain-disabled-tools classified as read-only via OVERRIDES — no verb-prefix match in D-05; semantically a describe/get metadata tool with no state mutation or data-plane exposure
 - [Phase G.2c]: regenerate_tool_classification.py uses npm --ignore-scripts — postinstall native build of @confluentinc/kafka-javascript was the only failure mode; the tool-name.js file we parse is plain pre-built JS unaffected by the binary; keeps generator portable to clean CI runners
 - [Phase G.2c]: Test Replacements D/E use delete-schema (not delete-topics) to preserve the original test's cross-resource-family semantic — break-glass-tier delete on a non-topics resource, per the plan's explicit rationale
+- [Phase H.1]: Trip-wire entries citing evals.json use source_url: also-cite. (period) to keep YAML well-formed; evals.json is not vendored per D-02, so path field is SKILL.md sibling
+- [Phase H.1]: Extra non-scaffold reference files (rest-api.md, multi-event-guide.md, python source files, sample schemas) preserved in vendor tree — plan's anti-references list only named 7 scaffolds; unlisted extras stayed for H.1-02/H.1-03 to evaluate
+- [Phase H.1]: tools/vendor-sources.json kind field is free-form string (not enum) so future vendor kinds (claude-plugin in H.3b, terraform-module, etc.) slot in without schema migration
 
 ### Pending Todos
 
@@ -168,6 +172,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-16T14:04:54.743Z
-Stopped at: Phase H.1 context gathered
-Resume file: .planning/phases/H.1-wiki-ingest-agent-skills/H.1-CONTEXT.md
+Last session: 2026-05-16T15:46:28.709Z
+Stopped at: Completed H.1-01-PLAN.md (vendor + pin registry + queue setup)
+Resume file: None

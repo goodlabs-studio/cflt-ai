@@ -59,7 +59,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped with
   4. `wiki/_index.md` and `wiki/_graph.md` are updated to reflect new articles
   5. Source provenance footers in each article reference the upstream `confluentinc/agent-skills@<commit-sha>` so re-ingest after upstream updates is mechanical
 **Plans:** 0/3 plans
-- [ ] H.1-01-PLAN.md — Vendor agent-skills@91d1871e, author tools/vendor-sources.json, populate raw/_ingest.md with 19 pending entries
+- [x] H.1-01-PLAN.md — Vendor agent-skills@91d1871e, author tools/vendor-sources.json, populate raw/_ingest.md with 19 pending entries
 - [ ] H.1-02-PLAN.md — Ingest 10 parent articles (concepts + patterns) with source attestation per D-07; update _index.md and _graph.md
 - [ ] H.1-03-PLAN.md — Author 9 trip-wires with full MCP-validation gate (verbatim FSI-context paragraph for WarpStream); extend tools/wiki-lint.py with drift detection per D-09
 
