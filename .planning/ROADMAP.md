@@ -26,7 +26,7 @@ Full details: [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
 
 ### 🚧 v2.0 — Developer Persona + Quality Gates
 
-- [ ] **Phase H.1: Wiki ingest from confluent-agent-skills references** — Compile ~10 peer-reviewed Confluent reference articles into wiki; lift trip-wire facts as high-confidence wiki articles
+- [x] **Phase H.1: Wiki ingest from confluent-agent-skills references** — Compile ~10 peer-reviewed Confluent reference articles into wiki; lift trip-wire facts as high-confidence wiki articles (completed 2026-05-16)
 - [ ] **Phase H.2: Eval harness extension to all skills** — Port confluentinc/agent-skills evals.json pattern (prompt + grep-checkable expectations[] at 90% threshold blocks merge) to /review, /wiki:*, /dsp:plan, /dsp:apply
 - [ ] **Phase H.3: Confluent skill plugin install + FSI canon overlay + /dsp:scaffold** — Install streaming-skills-plugin (version-pinned with CI drift gate); author wiki overlay article documenting FSI overrides on top of upstream skills; build /dsp:scaffold wrapper that materializes scaffolded output as canon-compliant fsi-dsp artifacts
 - [ ] **Phase H.4: Developer-sandbox profile family + bifurcated FSI canon** — Introduce orthogonal "developer" profile family alongside operator; apply_engine branches on family; FSI canon bifurcates into prod vs dev overlays; acme-bank developer overlay demonstrates customer fork differential gating
@@ -58,7 +58,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped with
   3. `/wiki:validate` against MCP sources passes on every ingested article (zero drift findings)
   4. `wiki/_index.md` and `wiki/_graph.md` are updated to reflect new articles
   5. Source provenance footers in each article reference the upstream `confluentinc/agent-skills@<commit-sha>` so re-ingest after upstream updates is mechanical
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 - [x] H.1-01-PLAN.md — Vendor agent-skills@91d1871e, author tools/vendor-sources.json, populate raw/_ingest.md with 19 pending entries
 - [x] H.1-02-PLAN.md — Ingest 10 parent articles (concepts + patterns) with source attestation per D-07; update _index.md and _graph.md
 - [x] H.1-03-PLAN.md — Author 9 trip-wires with full MCP-validation gate (verbatim FSI-context paragraph for WarpStream); extend tools/wiki-lint.py with drift detection per D-09
@@ -143,7 +143,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward into v2.0 backlog (se
 | F.1. FRANZ pre-confirmed apply | v1.0 | 1/1 | Complete | 2026-05-13 |
 | G.1. Terraform-module executor | v1.0 | 1/1 | Complete | 2026-05-14 |
 | G.2c. Tool-classification rename | v1.0 | 3/3 | Complete | 2026-05-15 |
-| H.1. Wiki ingest from agent-skills refs | v2.0 | 2/3 | In Progress|  |
+| H.1. Wiki ingest from agent-skills refs | v2.0 | 2/3 | Complete    | 2026-05-16 |
 | H.2. Eval harness extension | v2.0 | 0/4 | Not started | - |
 | H.3. confluent-agent-skills install + overlay + /dsp:scaffold | v2.0 | 0/3 | Not started | - |
 | H.4. Developer-sandbox profile family + bifurcated FSI canon | v2.0 | 0/3 | Not started | - |
