@@ -31,7 +31,7 @@ NOTE: Gate bypass is not available at apply time. Apply-time gate re-run is unco
 
 ## Step 2: Load profile -- FAIL CLOSED
 
-- Call `load_profile(profile_name)` from `tools/apply_engine.py`
+- Call `load_profile(profile_name, customer=overlay)` from `tools/apply_engine.py` (passes the `--overlay <name>` value extracted in Step 1 so customer-specific profile overlays activate at runtime — ACTG-04)
 - Read the `allowed_operations` list from the loaded profile
 - If profile is `read-only` (i.e., `allowed_operations` is an empty list `[]`):
   - Immediately return: `"Profile 'read-only' does not permit apply operations. Use --profile engineer or --profile break-glass."`

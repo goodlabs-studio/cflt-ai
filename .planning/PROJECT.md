@@ -24,36 +24,25 @@ The canon overlay stack works — customers can fork and override safely. Base (
 - ✓ GitHub Actions CI for wiki linting — existing
 - ✓ Setup script (bin/setup) for first-run initialization — existing
 
-### Active
+### Validated (v1.0 — shipped 2026-05-16)
 
-- [ ] Phase 0: Fix known bugs (wiki-stats.py, wiki-lint.py, evaluate.md)
-- [ ] Phase 0: Flox manifest committed and works on clean clone (both repos)
-- [ ] Phase 0: MANIFEST.yaml v1 with capabilities blocks for all fsi-dsp assets
-- [ ] Phase 0: Wiki citations migrated to ID form
-- [ ] Phase 0: CI parity checks green in both repos
-- [ ] Phase 0: Canon overlay stack scaffolding present
-- [ ] Phase 0: LinuxONE wiki articles ingested from fsi-dsp
-- [ ] Phase 0: Activity log directory live and emitting
-- [ ] Phase 1: Unified /ask + /wiki:recommend with --mode flag
-- [ ] Phase 1: Golden test harness (tests/golden/ask/) with 30+ cases
-- [ ] Phase 1: Triage classifier (wiki-only / wiki+MCP / deep reasoning)
-- [ ] Phase 1: last_validated decay rule + auto-stub on coverage gaps
-- ✓ Phase 2: Claim extraction reproducibility >= 95% — Validated in Phase 02: review-skill
-- ✓ Phase 2: Premise-challenge step in /review — Validated in Phase 02: review-skill
-- ✓ Phase 2: .docx output with full provenance footer — Validated in Phase 02: review-skill
-- ✓ Phase 2: Multi-document review support — Validated in Phase 02: review-skill
-- ✓ Phase 2: Customer overlay validated end-to-end — Validated in Phase 02: review-skill
-- ✓ Phase 3a: Four-gate validation chain (individually testable, dev-bypassable) — Validated in Phase 3a: act-rail-plan
-- ✓ Phase 3a: /dsp:plan read-only act rail — Validated in Phase 3a: act-rail-plan
-- ✓ Phase 3a: Structural correctness >= 95% (right artifact, right args) — Validated in Phase 3a: act-rail-plan
-- ✓ Phase 3a: Canon <-> fsi-dsp parity CI in both repos — Validated in Phase 3a: act-rail-plan
-- ✓ Phase 3b: /dsp:apply with human-in-the-loop confirmation — Validated in Phase 3b: act-rail-apply
-- ✓ Phase 3b: Three policy profiles (read-only, engineer, break-glass) — Validated in Phase 3b: act-rail-apply
-- ✓ Phase 3b: Activity log captures every plan/apply with provenance — Validated in Phase 3b: act-rail-apply
-- ✓ Phase 3c: Every mcp-confluent tool classified by profile (by name, not regex) — Validated in Phase 3c: act-rail-profile-gating
-- ✓ Phase 3c: Per-profile negative-space test suites — Validated in Phase 3c: act-rail-profile-gating
-- ✓ Phase 3c: Break-glass two-step confirmation with override logging — Validated in Phase 3c: act-rail-profile-gating
-- ✓ Phase 3c: Customer fork with differential profile gating — Validated in Phase 3c: act-rail-profile-gating
+- ✓ Phase 0: All hygiene, contract, canon stack, and wiki bootstrap items — v1.0
+- ✓ Phase 1: Unified /ask with --mode flag, triage classifier, decay rules, golden harness — v1.0
+- ✓ Phase 2: Reproducible claim extraction, premise-challenge, .docx output, multi-doc, customer overlay — v1.0
+- ✓ Phase 3a: Four-gate plan rail with structural correctness ≥95% and bidirectional canon ↔ fsi-dsp parity — v1.0
+- ✓ Phase 3b: Human-gated /dsp:apply with three policy profiles, activity log, incident articles — v1.0
+- ✓ Phase 3c: 54-tool mcp-confluent classification, per-profile negative-space tests, break-glass two-step, acme-bank customer fork — v1.0
+- ✓ Phase F.1: FRANZ native modal pre-confirmed apply flow — v1.0
+- ✓ Phase G.1: Terraform-module executor for /dsp-apply Step 7 — v1.0
+- ✓ Phase G.2c: Tool-classification rename to live mcp-confluent 1.3.0 registry + bidirectional CI drift gate — v1.0
+
+### Active (v2.0 — Developer Persona + Quality Gates)
+
+- [ ] Phase H.1: Wiki ingest from confluent-agent-skills references (10+ articles + trip-wire facts)
+- [ ] Phase H.2: Eval harness extension across /review, /wiki:*, /dsp:plan, /dsp:apply at 90% CI threshold
+- [ ] Phase H.3: streaming-skills-plugin install + version pin + FSI canon overlay article + /dsp:scaffold wrapper
+- [ ] Phase H.4: Developer-sandbox profile family + bifurcated FSI canon (prod vs dev) + acme-bank customer overlay
+- [ ] Carry-forward: G.2a (mcp-confluent tool-call executor), G.2b (composite scenario executor), G.2d (GitOps apply mode), G.2e (ansible-role executor)
 
 ### Out of Scope
 
@@ -84,11 +73,14 @@ The canon overlay stack works — customers can fork and override safely. Base (
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Canon overlay stack (composition, not inheritance) | Customers need to override defaults without forking the whole system; ADR-backed overrides are auditable | — Pending |
-| Claude Code as runtime (no custom server) | FSI engagement model runs through practitioner laptops; Claude Code is the right host through Phase 3 | — Pending |
-| fsi-dsp as submodule, not vendored | Separate repo lifecycle; CI parity enforced across both repos; MANIFEST.yaml is the contract | — Pending |
-| Customer extensibility as core value | Trust compounds through the overlay stack; everything else (answers, act rail) depends on customers being able to fork safely | — Pending |
-| Phase exits on threshold, not dates | Quality gates prevent shipping broken skills; golden harness is the source of truth | — Pending |
+| Canon overlay stack (composition, not inheritance) | Customers need to override defaults without forking the whole system; ADR-backed overrides are auditable | ✓ Good — acme-bank customer fork demonstrated differential gating across /review, /dsp:plan, /dsp:apply in v1.0 |
+| Claude Code as runtime (no custom server) | FSI engagement model runs through practitioner laptops; Claude Code is the right host through Phase 3 | ✓ Good — held through v1.0; FRANZ wrapper (F.1) added native-modal integration without changing runtime |
+| fsi-dsp as submodule, not vendored | Separate repo lifecycle; CI parity enforced across both repos; MANIFEST.yaml is the contract | ✓ Good — held through v1.0; G.1 terraform-module executor consumes the submodule contract |
+| Customer extensibility as core value | Trust compounds through the overlay stack; everything else (answers, act rail) depends on customers being able to fork safely | ✓ Good — ACTG-04 customer fork demonstrated in v1.0; v2.0 H.4 extends overlay model to developer-sandbox profile family |
+| Phase exits on threshold, not dates | Quality gates prevent shipping broken skills; golden harness is the source of truth | ⚠️ Revisit — structural harness shipped (KNOW-04, KNOW-05, REVW-01, ACT-07) but LIVE-model evaluation was deferred from v1.0; v2.0 H.2 closes this gap |
+| Pin upstream tooling at exact version with CI drift gate (G.2c pattern) | mcp-confluent 1.3.0 rename established the pattern: install pinned version, parse upstream, CI fails bidirectional drift; same approach scales to v2.0 H.3b (streaming-skills-plugin) and beyond | ✓ Good — G.2c shipped 54-tool kebab-case classification with bidirectional drift CI gate; pattern reusable |
+| Big-bang rewrite over bilingual compatibility (G.2c pattern) | When fictional/stale upstream entries can be cleanly purged with zero prod callers, single PR + regenerated tests beats deprecation layer | ✓ Good — G.2c purged ~25 fictional snake_case entries cleanly; 214 tests passing post-rewrite |
+| Two profile families, not one tier hierarchy (v2.0 architectural decision) | Operator (read-only/engineer/break-glass) and developer (sandbox/etc.) are orthogonal personas — different blast radius, different tooling, different canon overlay; one-tier-hierarchy creates categorical confusion | — Pending v2.0 H.4 |
 
 ## Evolution
 
@@ -108,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-29 after Phase 3c (act-rail-profile-gating) completion*
+*Last updated: 2026-05-16 after v1.0 milestone shipped — Foundation through Act Rail + post-roadmap F.1/G.1/G.2c. v2.0 (Developer Persona + Quality Gates) active.*

@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: verifying
-stopped_at: Completed G.2c-02-PLAN.md
-last_updated: "2026-05-15T20:04:08.610Z"
-last_activity: 2026-05-15
+milestone: v2.0
+milestone_name: Developer Persona + Quality Gates
+status: not_started
+stopped_at: v1.0 shipped 2026-05-16; v2.0 ready for planning
+last_updated: "2026-05-16T14:00:00.000Z"
+last_activity: 2026-05-16
 progress:
-  total_phases: 7
-  completed_phases: 6
-  total_plans: 21
-  completed_plans: 21
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 13
+  completed_plans: 0
   percent: 0
 ---
 
@@ -18,19 +18,25 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-28)
+See: .planning/PROJECT.md (updated 2026-05-16)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase G.2c — Tool-classification rename
+**Current focus:** v2.0 — Developer Persona + Quality Gates; recommended start: H.1 (wiki ingest from confluent-agent-skills references)
 
 ## Current Position
 
-Phase: G.2c
+Milestone: v2.0
+Phase: H.1 (not started — recommended first)
 Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-05-15
+Last activity: 2026-05-16 (v1.0 archived, ACTG-04 audit gap closed at v1.0 milestone closure)
 
 Progress: [░░░░░░░░░░] 0%
+
+## v1.0 Reference
+
+Shipped: 2026-05-16 — 9 phases, 26 plans, 44/44 requirements validated.
+Archive: `.planning/milestones/v1.0-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`
+Tag: `v1.0`
 
 ## Performance Metrics
 
