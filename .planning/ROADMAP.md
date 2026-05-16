@@ -61,7 +61,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped with
 **Plans:** 2/3 plans executed
 - [x] H.1-01-PLAN.md — Vendor agent-skills@91d1871e, author tools/vendor-sources.json, populate raw/_ingest.md with 19 pending entries
 - [x] H.1-02-PLAN.md — Ingest 10 parent articles (concepts + patterns) with source attestation per D-07; update _index.md and _graph.md
-- [ ] H.1-03-PLAN.md — Author 9 trip-wires with full MCP-validation gate (verbatim FSI-context paragraph for WarpStream); extend tools/wiki-lint.py with drift detection per D-09
+- [x] H.1-03-PLAN.md — Author 9 trip-wires with full MCP-validation gate (verbatim FSI-context paragraph for WarpStream); extend tools/wiki-lint.py with drift detection per D-09
 
 ### Phase H.2: Eval harness extension to all cflt-ai skills
 **Goal:** Every cflt-ai skill has an `evals/evals.json` file scoring prompts against grep-checkable `expectations[]` assertions, with CI failing PRs that drop below 90% pass rate. Closes the silent-drift gap where `/review`, `/wiki:*`, `/dsp:plan`, and `/dsp:apply` have no behavioral regression guard today. Ports the `confluentinc/agent-skills` evals.json schema verbatim so future cross-pollination is straightforward.

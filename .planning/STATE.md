@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
-status: Ready to execute
-stopped_at: Completed H.1-02-PLAN.md (10 parent articles ingested via source attestation)
-last_updated: "2026-05-16T16:07:46.389Z"
+status: Phase complete — ready for verification
+stopped_at: Completed H.1-03-PLAN.md (9 trip-wires + drift detection)
+last_updated: "2026-05-16T16:23:45.236Z"
 last_activity: 2026-05-16
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 27
-  completed_plans: 26
+  completed_plans: 27
   percent: 0
 ---
 
@@ -84,6 +84,7 @@ Tag: `v1.0`
 | Phase G.2c P02 | 4 | 2 tasks | 3 files |
 | Phase H.1-wiki-ingest-agent-skills P01 | 4 | 3 tasks | 39 files |
 | Phase H.1 P02 | 17 | 4 tasks | 13 files |
+| Phase H.1 P03 | 10 | 4 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -165,6 +166,10 @@ Recent decisions affecting current work:
 - [Phase H.1]: Three-way merge for cdc-source-connector-setup ordered as pre-deploy → deploy → debug (database-prerequisites → connector-configs → troubleshooting); mirrors operational reading order
 - [Phase H.1]: All wiki YAML tag arrays use comma-separated flow sequence (tags: [a, b, c]) per the schema-registry-best-practices.md convention; verified via yaml.safe_load on every new article
 - [Phase H.1]: Added 3 inbound graph edges for patterns/kafka-streams-topology-patterns to satisfy the ≥1-inbound rule (the plan's specified _graph block left it with 0 inbound)
+- [Phase H.1]: [Phase H.1] tools/wiki-lint.py extended with passive vendor-source drift detection per D-09 (check_vendor_drift reads source: from frontmatter, compares against tools/vendor-sources.json pin; emits DRIFT/MALFORMED/UNKNOWN-VENDOR findings without failing the lint run)
+- [Phase H.1]: [Phase H.1] WarpStream trip-wires (#7/#8/#9) retain confidence: high because majority of claims are sourced from upstream confluent-maintained competitive guidance; ⚠️ unverified inline markers cover the minority (endpoint shapes, exact throughput-delta percentages) where context7 has limited published coverage
+- [Phase H.1]: [Phase H.1] Trip-wire #5 (Avro src dir) generalized from upstream's Gradle-plugin language to cover BOTH Gradle Avro plugin AND Apache Maven Avro plugin — both default sourceDirectory to src/main/avro/
+- [Phase H.1]: [Phase H.1] wiki-lint drift findings stay non-fatal (exit 0) per D-09 passive posture; surface for routine /wiki:validate review, do not block CI
 
 ### Pending Todos
 
@@ -176,6 +181,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-16T16:07:46.387Z
-Stopped at: Completed H.1-02-PLAN.md (10 parent articles ingested via source attestation)
+Last session: 2026-05-16T16:23:45.234Z
+Stopped at: Completed H.1-03-PLAN.md (9 trip-wires + drift detection)
 Resume file: None
