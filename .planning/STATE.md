@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
 status: Ready to execute
-stopped_at: Completed H.1-01-PLAN.md (vendor + pin registry + queue setup)
-last_updated: "2026-05-16T15:46:28.711Z"
+stopped_at: Completed H.1-02-PLAN.md (10 parent articles ingested via source attestation)
+last_updated: "2026-05-16T16:07:46.389Z"
 last_activity: 2026-05-16
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 27
-  completed_plans: 25
+  completed_plans: 26
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-16)
 
 Milestone: v2.0
 Phase: H.1 (Wiki ingest from confluent-agent-skills references) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Last activity: 2026-05-16
 
 Progress: [░░░░░░░░░░] 0%
@@ -83,6 +83,7 @@ Tag: `v1.0`
 | Phase G.2c-tool-classification-rename P03 | 1 | 1 tasks | 1 files |
 | Phase G.2c P02 | 4 | 2 tasks | 3 files |
 | Phase H.1-wiki-ingest-agent-skills P01 | 4 | 3 tasks | 39 files |
+| Phase H.1 P02 | 17 | 4 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -161,6 +162,9 @@ Recent decisions affecting current work:
 - [Phase H.1]: Trip-wire entries citing evals.json use source_url: also-cite. (period) to keep YAML well-formed; evals.json is not vendored per D-02, so path field is SKILL.md sibling
 - [Phase H.1]: Extra non-scaffold reference files (rest-api.md, multi-event-guide.md, python source files, sample schemas) preserved in vendor tree — plan's anti-references list only named 7 scaffolds; unlisted extras stayed for H.1-02/H.1-03 to evaluate
 - [Phase H.1]: tools/vendor-sources.json kind field is free-form string (not enum) so future vendor kinds (claude-plugin in H.3b, terraform-module, etc.) slot in without schema migration
+- [Phase H.1]: Three-way merge for cdc-source-connector-setup ordered as pre-deploy → deploy → debug (database-prerequisites → connector-configs → troubleshooting); mirrors operational reading order
+- [Phase H.1]: All wiki YAML tag arrays use comma-separated flow sequence (tags: [a, b, c]) per the schema-registry-best-practices.md convention; verified via yaml.safe_load on every new article
+- [Phase H.1]: Added 3 inbound graph edges for patterns/kafka-streams-topology-patterns to satisfy the ≥1-inbound rule (the plan's specified _graph block left it with 0 inbound)
 
 ### Pending Todos
 
@@ -172,6 +176,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-16T15:46:28.709Z
-Stopped at: Completed H.1-01-PLAN.md (vendor + pin registry + queue setup)
+Last session: 2026-05-16T16:07:46.387Z
+Stopped at: Completed H.1-02-PLAN.md (10 parent articles ingested via source attestation)
 Resume file: None

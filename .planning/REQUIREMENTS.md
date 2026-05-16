@@ -73,7 +73,7 @@ v1.0 traceability archived to [`milestones/v1.0-REQUIREMENTS.md`](milestones/v1.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| WIKI-06 | Phase H.1 | Planned |
+| WIKI-06 | Phase H.1 | Complete (H.1-02) |
 | WIKI-07 | Phase H.1 | Planned |
 | WIKI-08 | Phase H.1 | Planned |
 | EVAL-01 | Phase H.2 | Planned |
