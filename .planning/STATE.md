@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
-status: Milestone complete
-stopped_at: Completed H.1-03-PLAN.md (9 trip-wires + drift detection)
-last_updated: "2026-05-16T16:29:22.897Z"
-last_activity: 2026-05-16
+status: Ready to execute
+stopped_at: Completed H.2-01-PLAN.md
+last_updated: "2026-05-17T15:54:44.295Z"
+last_activity: 2026-05-17
 progress:
-  total_phases: 8
+  total_phases: 9
   completed_phases: 8
-  total_plans: 27
-  completed_plans: 27
+  total_plans: 31
+  completed_plans: 28
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-16)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase H.1 — Wiki ingest from confluent-agent-skills references
+**Current focus:** Phase H.2 — Eval harness extension
 
 ## Current Position
 
 Milestone: v2.0
-Phase: H.1
-Plan: Not started
-Last activity: 2026-05-16
+Phase: H.2 (Eval harness extension) — EXECUTING
+Plan: 2 of 4
+Last activity: 2026-05-17
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -85,6 +85,7 @@ Tag: `v1.0`
 | Phase H.1-wiki-ingest-agent-skills P01 | 4 | 3 tasks | 39 files |
 | Phase H.1 P02 | 17 | 4 tasks | 13 files |
 | Phase H.1 P03 | 10 | 4 tasks | 13 files |
+| Phase H.2 P01 | 6 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -170,6 +171,10 @@ Recent decisions affecting current work:
 - [Phase H.1]: [Phase H.1] WarpStream trip-wires (#7/#8/#9) retain confidence: high because majority of claims are sourced from upstream confluent-maintained competitive guidance; ⚠️ unverified inline markers cover the minority (endpoint shapes, exact throughput-delta percentages) where context7 has limited published coverage
 - [Phase H.1]: [Phase H.1] Trip-wire #5 (Avro src dir) generalized from upstream's Gradle-plugin language to cover BOTH Gradle Avro plugin AND Apache Maven Avro plugin — both default sourceDirectory to src/main/avro/
 - [Phase H.1]: [Phase H.1] wiki-lint drift findings stay non-fatal (exit 0) per D-09 passive posture; surface for routine /wiki:validate review, do not block CI
+- [Phase H.2]: Combined required_claims + required_report_sections into expectations[] positive; combined forbidden_claims + forbidden_content into NOT-prefixed expectations[] negative — single _collect_expectations() helper covers all three MD harness shapes (/ask, /review, /act)
+- [Phase H.2]: Positional EvalCase construction in adapters — avoids model= substring collision with floor_model= kwarg in the D-04 lock grep; field-order discipline asserted by test_eval_case_namedtuple_fields as a public contract
+- [Phase H.2]: Fixture named sample_evals.json (NOT evals.json) to stay off the runner's tests/evals/*/evals.json glob; test_real_runner_does_not_pick_up_fixture asserts this isolation belt-and-suspenders
+- [Phase H.2]: test_all_seven_new_skills_discovered intentionally fails RED in Plan 01 — closure trigger for Plans 02 and 03 (goes GREEN automatically when those plans author the 7 evals.json files)
 
 ### Pending Todos
 
@@ -181,6 +186,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-16T16:23:45.234Z
-Stopped at: Completed H.1-03-PLAN.md (9 trip-wires + drift detection)
+Last session: 2026-05-17T15:54:11.014Z
+Stopped at: Completed H.2-01-PLAN.md
 Resume file: None
