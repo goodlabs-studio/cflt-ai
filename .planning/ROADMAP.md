@@ -73,7 +73,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped with
   3. A pytest-based runner at `tests/evals/run_skill_evals.py` parametrizes over every skill × case and reports pass rate per skill
   4. A new CI workflow `.github/workflows/skill-evals.yml` runs the harness on PR; merges blocked when any skill drops below 90% pass rate (matches the `confluentinc/agent-skills` threshold)
   5. At least 5 trip-wire facts from H.1 are encoded as `expectations[]` lines so wiki + skills stay in sync (e.g., "asks about target environment before generating producer code", "uses kafka-avro-console-producer not kafka-console-producer")
-**Plans:** 1/4 plans executed
+**Plans:** 4/4 plans complete
 - [x] H.2-01-PLAN.md — Pytest runner + MD/JSON adapters + 90% per-skill threshold gate + adapter unit tests
 - [x] H.2-02-PLAN.md — Author 4 new wiki-skill evals.json (40 cases incl. 2 D-08 trip-wires in /wiki:ingest)
 - [x] H.2-03-PLAN.md — Author 3 thin-wrapper evals.json for /review, /dsp:plan, /dsp:apply (55 cases incl. 7 D-08 trip-wires)
@@ -148,7 +148,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward into v2.0 backlog (se
 | G.1. Terraform-module executor | v1.0 | 1/1 | Complete | 2026-05-14 |
 | G.2c. Tool-classification rename | v1.0 | 3/3 | Complete | 2026-05-15 |
 | H.1. Wiki ingest from agent-skills refs | v2.0 | 2/3 | Complete    | 2026-05-16 |
-| H.2. Eval harness extension | v2.0 | 4/4 | Complete | 2026-05-17 |
+| H.2. Eval harness extension | v2.0 | 4/4 | Complete    | 2026-05-17 |
 | H.3. confluent-agent-skills install + overlay + /dsp:scaffold | v2.0 | 0/3 | Not started | - |
 | H.4. Developer-sandbox profile family + bifurcated FSI canon | v2.0 | 0/3 | Not started | - |
 | G.2a. mcp-confluent tool-call executor | v2.0 carry | 0/1 | Not started | - |
