@@ -67,29 +67,59 @@ def load_tool_classification() -> Dict:
 
 
 def check_tool_permitted(profile_name: str, tool_name: str, customer: Optional[str] = None) -> bool:
-    """Check whether profile_name permits invoking tool_name via classification table.
+    """Check whether profile_name permits invoking tool_name.
 
-    Returns False (fail-closed) if tool_name is not in classification table.
-    Uses tier hierarchy: read-only < engineer < break-glass.
+    Branches on profile family (H.4a):
+      - operator family: uses tier hierarchy (read-only < engineer < break-glass) +
+        tool_classification.json tier map. Identical to v1.0 Phase 3c behavior.
+      - developer family: reads `tool_overrides` map from the profile JSON.
+        Tool is permitted if present in the map; denied otherwise (fail-closed).
+
+    Returns False (fail-closed) when:
+      - tool_name is not in classification table (operator branch)
+      - tool_name is not in tool_overrides map (developer branch)
+      - profile_name is not in VALID_PROFILES (caller error — raises via load_profile)
 
     Args:
         profile_name: One of VALID_PROFILES.
         tool_name:    Exact mcp-confluent tool name.
-        customer:     Optional customer name (reserved for future overlay use).
+        customer:     Optional customer overlay name (keyword-only — see load_profile).
 
     Returns:
         True if permitted; False otherwise (fail-closed).
+
+    Raises:
+        ValueError: If profile family is unknown (defensive — load_profile validates first).
     """
-    classification = load_tool_classification()
-    tools = classification.get("tools", {})
+    profile = load_profile(profile_name, customer=customer)
+    family = profile["family"]  # always present after H.4a load (defaulted or explicit)
 
-    if tool_name not in tools:
-        return False
+    if family == "operator":
+        # v1.0 Phase 3c branch — byte-identical to pre-H.4a behavior.
+        classification = load_tool_classification()
+        tools = classification.get("tools", {})
 
-    required_tier = tools[tool_name]
-    profile_idx = PROFILE_TIER_ORDER.index(profile_name)
-    required_idx = PROFILE_TIER_ORDER.index(required_tier)
-    return profile_idx >= required_idx
+        if tool_name not in tools:
+            return False
+
+        required_tier = tools[tool_name]
+        profile_idx = PROFILE_TIER_ORDER.index(profile_name)
+        required_idx = PROFILE_TIER_ORDER.index(required_tier)
+        return profile_idx >= required_idx
+
+    elif family == "developer":
+        # H.4a developer-branch — per-profile tool_overrides dispatch.
+        # Tools listed in the map are permitted; anything else is denied (fail-closed).
+        # The map's value-strings (developer-sandbox, developer-restricted, etc.) are
+        # informational at H.4a; H.4b's developer-sandbox profile pins the value set.
+        overrides = profile.get("tool_overrides", {})
+        return tool_name in overrides
+
+    else:
+        # Defensive — load_profile validates family before we get here, but if a
+        # third party calls load_profile with a malformed profile and the validation
+        # is bypassed, raise rather than silently permit.
+        raise ValueError(f"Unknown profile family {family!r} for profile {profile_name!r}")
 
 
 # ---------------------------------------------------------------------------
