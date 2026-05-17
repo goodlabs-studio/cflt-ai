@@ -1,0 +1,53 @@
+name: Streaming Skills Plugin Drift
+
+# Bidirectional check (H.3b CONTEXT D-04): fails the workflow when the
+# streaming-skills-plugin commit pinned in tools/vendor-sources.json drifts
+# from the upstream HEAD at https://github.com/confluentinc/agent-skills.
+#
+# Triggers scoped to changes that could affect alignment:
+#   - vendor-sources.json itself (hand-edits, pin bumps)
+#   - the drift-check script (CLI changes, regex changes, exit-code changes)
+#   - this workflow file
+#
+# Mirrors .github/workflows/tool-classification-drift.yml (Phase G.2c) structure
+# except no Node.js toolchain setup — this check uses `git ls-remote` only.
+
+on:
+  pull_request:
+    paths:
+      - 'tools/vendor-sources.json'
+      - 'tools/check_streaming_skills_drift.py'
+      - '.github/workflows/streaming-skills-drift.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'tools/vendor-sources.json'
+      - 'tools/check_streaming_skills_drift.py'
+      - '.github/workflows/streaming-skills-drift.yml'
+
+jobs:
+  check-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        # Python 3.12 matches the other FSI CI workflows
+        # (tool-classification-drift.yml, canon-parity.yml, wiki-lint.yml).
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify git is on PATH
+        # Fail fast with a clear message if git is missing — the check script
+        # uses `git ls-remote` to fetch upstream HEAD. ubuntu-latest always has
+        # git, but the defensive verb-step makes failures legible.
+        run: git --version
+
+      - name: Check streaming-skills-plugin pin against upstream HEAD
+        # Exit codes:
+        #   0 = no drift; 1 = drift (PR fails); 2 = config error; 3 = transient/git error.
+        # All non-zero outcomes are CI failures because they all indicate the pin
+        # cannot be safely trusted as the authoritative reference.
+        run: python tools/check_streaming_skills_drift.py --check
