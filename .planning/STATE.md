@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
 status: Ready to execute
-stopped_at: Completed H.2-02-PLAN.md (parallel wave 2, alongside H.2-03)
-last_updated: "2026-05-17T16:01:08.965Z"
+stopped_at: Completed H.2-03-PLAN.md
+last_updated: "2026-05-17T16:02:09.119Z"
 last_activity: 2026-05-17
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 31
-  completed_plans: 29
+  completed_plans: 30
   percent: 0
 ---
 
@@ -87,6 +87,7 @@ Tag: `v1.0`
 | Phase H.1 P03 | 10 | 4 tasks | 13 files |
 | Phase H.2 P01 | 6 | 2 tasks | 4 files |
 | Phase H.2 P02 | 3 | 2 tasks | 4 files |
+| Phase H.2 P03 | 3min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -178,6 +179,9 @@ Recent decisions affecting current work:
 - [Phase H.2]: test_all_seven_new_skills_discovered intentionally fails RED in Plan 01 — closure trigger for Plans 02 and 03 (goes GREEN automatically when those plans author the 7 evals.json files)
 - [Phase H.2-eval-harness-extension]: [H.2-02] Trip-wire strings (D-08 #5 avro and #8 warpstream) copied verbatim into /wiki:ingest evals.json at ids 2 and 3; backticks preserved unescaped (JSON permits)
 - [Phase H.2-eval-harness-extension]: [H.2-02] 40 wiki-skill cases drawn from real signals (raw/_ingest.md Processed entries, wiki/_queue.md Stubs, tools/wiki-lint.py logic, Phase 01/02 STATE decisions) — zero synthetic fixtures
+- [Phase H.2]: H.2-03: Boilerplate prompt+expectations across case_ref wrapper cases — discriminating power comes from the referenced MD case, not the JSON wrapper
+- [Phase H.2]: H.2-03: 7 H.1 trip-wire strings encoded bytewise-verbatim (em-dashes U+2014 preserved) — runner uses these as grep targets per D-04 structural-only
+- [Phase H.2]: H.2-03: Combined with H.2-02, test_all_seven_new_skills_discovered transitioned RED→GREEN — all 7 named skills now have evals.json coverage at the 10-case floor (EVAL-02 satisfied)
 
 ### Pending Todos
 
@@ -189,6 +193,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-17T16:01:08.963Z
-Stopped at: Completed H.2-02-PLAN.md (parallel wave 2, alongside H.2-03)
+Last session: 2026-05-17T16:02:09.116Z
+Stopped at: Completed H.2-03-PLAN.md
 Resume file: None

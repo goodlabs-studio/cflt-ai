@@ -77,8 +77,8 @@ v1.0 traceability archived to [`milestones/v1.0-REQUIREMENTS.md`](milestones/v1.
 | WIKI-07 | Phase H.1 | Complete (H.1-03) |
 | WIKI-08 | Phase H.1 | Complete (H.1-03) |
 | EVAL-01 | Phase H.2 | Complete (H.2-01) |
-| EVAL-02 | Phase H.2 | Planned |
-| EVAL-03 | Phase H.2 | Planned |
+| EVAL-02 | Phase H.2 | Complete (H.2-02 + H.2-03) |
+| EVAL-03 | Phase H.2 | Partial (H.2-02 + H.2-03 encode 9/9 trip-wires; CI gate workflow lands in H.2-04) |
 | INST-01 | Phase H.3 | Planned |
 | CAN-OVR-01 | Phase H.3 | Planned |
 | SCAF-01 | Phase H.3 | Planned |

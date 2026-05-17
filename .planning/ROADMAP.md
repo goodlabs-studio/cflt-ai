@@ -76,7 +76,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped with
 **Plans:** 1/4 plans executed
 - [x] H.2-01-PLAN.md — Pytest runner + MD/JSON adapters + 90% per-skill threshold gate + adapter unit tests
 - [x] H.2-02-PLAN.md — Author 4 new wiki-skill evals.json (40 cases incl. 2 D-08 trip-wires in /wiki:ingest)
-- [ ] H.2-03-PLAN.md — Author 3 thin-wrapper evals.json for /review, /dsp:plan, /dsp:apply (55 cases incl. 7 D-08 trip-wires)
+- [x] H.2-03-PLAN.md — Author 3 thin-wrapper evals.json for /review, /dsp:plan, /dsp:apply (55 cases incl. 7 D-08 trip-wires)
 - [ ] H.2-04-PLAN.md — CI workflow .github/workflows/skill-evals.yml + final phase-exit regression gate
 
 ### Phase H.3: confluent-agent-skills install + FSI canon overlay + /dsp:scaffold
