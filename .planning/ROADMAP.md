@@ -27,7 +27,7 @@ Full details: [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
 ### 🚧 v2.0 — Developer Persona + Quality Gates
 
 - [x] **Phase H.1: Wiki ingest from confluent-agent-skills references** — Compile ~10 peer-reviewed Confluent reference articles into wiki; lift trip-wire facts as high-confidence wiki articles (completed 2026-05-16)
-- [ ] **Phase H.2: Eval harness extension to all skills** — Port confluentinc/agent-skills evals.json pattern (prompt + grep-checkable expectations[] at 90% threshold blocks merge) to /review, /wiki:*, /dsp:plan, /dsp:apply
+- [x] **Phase H.2: Eval harness extension to all skills** — Port confluentinc/agent-skills evals.json pattern (prompt + grep-checkable expectations[] at 90% threshold blocks merge) to /review, /wiki:*, /dsp:plan, /dsp:apply
 - [ ] **Phase H.3: Confluent skill plugin install + FSI canon overlay + /dsp:scaffold** — Install streaming-skills-plugin (version-pinned with CI drift gate); author wiki overlay article documenting FSI overrides on top of upstream skills; build /dsp:scaffold wrapper that materializes scaffolded output as canon-compliant fsi-dsp artifacts
 - [ ] **Phase H.4: Developer-sandbox profile family + bifurcated FSI canon** — Introduce orthogonal "developer" profile family alongside operator; apply_engine branches on family; FSI canon bifurcates into prod vs dev overlays; acme-bank developer overlay demonstrates customer fork differential gating
 
@@ -77,7 +77,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped with
 - [x] H.2-01-PLAN.md — Pytest runner + MD/JSON adapters + 90% per-skill threshold gate + adapter unit tests
 - [x] H.2-02-PLAN.md — Author 4 new wiki-skill evals.json (40 cases incl. 2 D-08 trip-wires in /wiki:ingest)
 - [x] H.2-03-PLAN.md — Author 3 thin-wrapper evals.json for /review, /dsp:plan, /dsp:apply (55 cases incl. 7 D-08 trip-wires)
-- [ ] H.2-04-PLAN.md — CI workflow .github/workflows/skill-evals.yml + final phase-exit regression gate
+- [x] H.2-04-PLAN.md — CI workflow .github/workflows/skill-evals.yml + final phase-exit regression gate
 
 ### Phase H.3: confluent-agent-skills install + FSI canon overlay + /dsp:scaffold
 **Goal:** Install `streaming-skills-plugin` so the four upstream Confluent skills become available inside Claude Code sessions; pin its version with a CI drift check that mirrors G.2c's pattern; author wiki overlay articles that document the FSI-specific overrides on top of upstream skill defaults (mTLS, exactly_once_v2, schema format, etc.); build a new `/dsp:scaffold <artifact-type> <name>` skill that wraps the upstream scaffolders so their output materializes as a canon-compliant fsi-dsp artifact (registered in MANIFEST.yaml, activity-logged, profile-gated, ready for downstream `/dsp:apply`).
@@ -148,7 +148,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward into v2.0 backlog (se
 | G.1. Terraform-module executor | v1.0 | 1/1 | Complete | 2026-05-14 |
 | G.2c. Tool-classification rename | v1.0 | 3/3 | Complete | 2026-05-15 |
 | H.1. Wiki ingest from agent-skills refs | v2.0 | 2/3 | Complete    | 2026-05-16 |
-| H.2. Eval harness extension | v2.0 | 1/4 | In Progress|  |
+| H.2. Eval harness extension | v2.0 | 4/4 | Complete | 2026-05-17 |
 | H.3. confluent-agent-skills install + overlay + /dsp:scaffold | v2.0 | 0/3 | Not started | - |
 | H.4. Developer-sandbox profile family + bifurcated FSI canon | v2.0 | 0/3 | Not started | - |
 | G.2a. mcp-confluent tool-call executor | v2.0 carry | 0/1 | Not started | - |
