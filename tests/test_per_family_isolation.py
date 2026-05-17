@@ -182,3 +182,75 @@ class TestDeveloperSandboxPermitsSnapshot:
                 f"developer/sandbox permit drift: tool={tool!r} "
                 f"snapshot={expected_permit} live={actual}"
             )
+
+
+# ---------------------------------------------------------------------------
+# H.4c — acme-bank developer overlay tests (customer-fork differential gating)
+# ---------------------------------------------------------------------------
+
+class TestAcmeBankDeveloperOverlay:
+    """H.4c — acme-bank customer overlay for developer/sandbox produces >=1 differential gating decision.
+
+    Mirrors v1.0 ACTG-04's customer-fork proof for the engineer family, one family over.
+    """
+
+    def test_acme_bank_developer_overlay_loads(self):
+        """load_profile with customer='acme-bank' returns the overlay file, not the base."""
+        p = load_profile("developer/sandbox", customer="acme-bank")
+        assert p["family"] == "developer"
+        assert "customer_overrides" in p, (
+            "Overlay file must include customer_overrides field — proves load_profile picked "
+            "the overlay path, not the base profile"
+        )
+        assert p["customer_overrides"]["adr_ref"] == "canon/customer/acme-bank/adrs/adr-004.md"
+        # The base profile does NOT have customer_overrides
+        base = load_profile("developer/sandbox")
+        assert "customer_overrides" not in base, (
+            "Base profile must not have customer_overrides — H.4c overlay sets the field, not the base"
+        )
+
+    def test_acme_bank_dev_overlay_produces_differential_gating(self):
+        """At least one tool-permit decision differs with vs without customer='acme-bank'.
+
+        Specifically: base permits delete-topics + alter-topic-config in sandbox; acme removes both.
+        This is the customer-fork differential gating proof for the developer family.
+        """
+        # Differential #1: delete-topics
+        base_decision = check_tool_permitted("developer/sandbox", "delete-topics")
+        acme_decision = check_tool_permitted("developer/sandbox", "delete-topics", customer="acme-bank")
+        assert base_decision is True, "Base FSI dev sandbox permits delete-topics"
+        assert acme_decision is False, "acme overlay must deny delete-topics — differential gating"
+        assert base_decision != acme_decision, "delete-topics must show differential gating"
+
+        # Differential #2: alter-topic-config
+        base_decision_2 = check_tool_permitted("developer/sandbox", "alter-topic-config")
+        acme_decision_2 = check_tool_permitted("developer/sandbox", "alter-topic-config", customer="acme-bank")
+        assert base_decision_2 is True, "Base permits alter-topic-config"
+        assert acme_decision_2 is False, "acme overlay must deny alter-topic-config — differential gating"
+
+    def test_acme_bank_dev_overlay_blocks_dsp_plan(self):
+        """Acme overlay blocks /dsp:plan from dev profiles; base does not.
+
+        Skill-level differential gating proof (complements the tool-level differentials above).
+        """
+        assert check_skill_permitted("developer/sandbox", "dsp-plan") is True, (
+            "Base FSI dev sandbox permits /dsp:plan"
+        )
+        assert check_skill_permitted("developer/sandbox", "dsp-plan", customer="acme-bank") is False, (
+            "acme overlay must block /dsp:plan — skill-level differential gating"
+        )
+
+    def test_acme_bank_dev_overlay_snapshot_matches(self):
+        """Regression guard: acme-bank dev permit matrix matches the committed baseline."""
+        snapshot_path = SNAPSHOT_DIR / "h4c_acme_bank_developer_sandbox_permits.json"
+        assert snapshot_path.exists(), (
+            "Snapshot missing — regenerate via the one-liner in H.4c-01-PLAN Task 2a"
+        )
+        snapshot = json.loads(snapshot_path.read_text())
+        key = "developer/sandbox @ acme-bank"
+        assert key in snapshot
+        for tool, expected_permit in snapshot[key].items():
+            actual = check_tool_permitted("developer/sandbox", tool, customer="acme-bank")
+            assert actual == expected_permit, (
+                f"acme-bank dev permit drift: tool={tool!r} snapshot={expected_permit} live={actual}"
+            )
