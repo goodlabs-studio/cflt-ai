@@ -9,6 +9,12 @@ Usage:
     from canon.stack import resolve_stack
     config, stack_hash = resolve_stack()
     # config is the merged dict, stack_hash is a hex string
+
+H.4b: resolve_stack() now accepts `family` and `canon_layer` keyword args.
+      Operator family (default) uses industry/fsi as before; developer family
+      routes to the profile's canon_layer (default industry/fsi/developer-sandbox).
+      v1.0 callers (resolve_stack() with no args, or with customer=...) are
+      byte-compatible — the operator default preserves exact pre-H.4b behavior.
 """
 import hashlib
 import json
@@ -19,7 +25,40 @@ import yaml
 
 
 CANON_ROOT = Path(__file__).resolve().parent
-LAYER_ORDER = ["base", "industry/fsi", "customer", "engagement"]
+
+
+def _layer_order_for(family: str = "operator", canon_layer: Optional[str] = None) -> List[str]:
+    """Compute the layer order for the canon stack (H.4b).
+
+    Operator family uses the prod FSI overlay (industry/fsi) as the industry layer.
+    Developer family uses `canon_layer` (defaults to industry/fsi/developer-sandbox)
+    as the industry layer.
+
+    Customer and engagement layers are appended last regardless of family.
+
+    Args:
+        family:      "operator" (default) or "developer".
+        canon_layer: Optional explicit industry-layer path. When None, defaults are
+                     operator → "industry/fsi"; developer → "industry/fsi/developer-sandbox".
+
+    Returns:
+        List of layer names in composition order.
+
+    Raises:
+        ValueError: If family is not a recognized canon family.
+    """
+    if family == "developer":
+        industry_layer = canon_layer or "industry/fsi/developer-sandbox"
+    elif family == "operator":
+        industry_layer = canon_layer or "industry/fsi"
+    else:
+        raise ValueError(f"Unknown profile family for canon stack: {family!r}")
+    return ["base", industry_layer, "customer", "engagement"]
+
+
+# Module-level constant for back-compat — any code that imported LAYER_ORDER directly
+# still gets the operator-family default order. H.4b: prefer _layer_order_for() in new code.
+LAYER_ORDER = _layer_order_for()
 
 
 def _deep_merge(base: dict, override: dict) -> dict:
@@ -54,19 +93,32 @@ def resolve_stack(
     layers: Optional[List[str]] = None,
     customer: Optional[str] = None,
     engagement: Optional[str] = None,
+    family: str = "operator",
+    canon_layer: Optional[str] = None,
 ) -> Tuple[Dict, str]:
     """Resolve the full canon stack by merging layers in order.
 
     Args:
-        layers: Override default layer order (for testing).
-        customer: Customer name to load customer/{name}/overrides.yaml.
-        engagement: Engagement name to load engagement/{name}/overrides.yaml.
+        layers:      Override default layer order (for testing). When provided,
+                     `family` and `canon_layer` are ignored — caller has full control.
+        customer:    Customer name to load customer/{name}/overrides.yaml.
+        engagement:  Engagement name to load engagement/{name}/overrides.yaml.
+        family:      "operator" (default) or "developer" — selects industry-layer
+                     routing when `layers` is not explicitly provided. Default
+                     preserves byte-identical v1.0 behavior.
+        canon_layer: Optional explicit industry-layer path (e.g.,
+                     "industry/fsi/developer-sandbox"). Used when the profile JSON
+                     specifies its own canon_layer field. If None, defaults are
+                     operator → "industry/fsi"; developer → "industry/fsi/developer-sandbox".
 
     Returns:
         Tuple of (merged_config_dict, sha256_hex_hash).
+
+    Raises:
+        ValueError: If family is unknown (via _layer_order_for).
     """
     if layers is None:
-        layers = list(LAYER_ORDER)
+        layers = _layer_order_for(family=family, canon_layer=canon_layer)
 
     # Substitute customer/engagement names if provided
     resolved_layers = []
