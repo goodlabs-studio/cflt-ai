@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
 status: Phase complete — ready for verification
-stopped_at: Completed H.4b-01-PLAN.md
-last_updated: "2026-05-17T17:42:22.324Z"
+stopped_at: Completed H.4c-01-PLAN.md
+last_updated: "2026-05-17T17:52:04.949Z"
 last_activity: 2026-05-17
 progress:
   total_phases: 8
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-16)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase H.4b — Developer-sandbox profile + FSI dev canon overlay
+**Current focus:** Phase H.4c — acme-bank developer overlay
 
 ## Current Position
 
 Milestone: v2.0
-Phase: H.4b (Developer-sandbox profile + FSI dev canon overlay) — EXECUTING
+Phase: H.4c (acme-bank developer overlay) — EXECUTING
 Plan: 1 of 1
 Last activity: 2026-05-17
 
@@ -103,6 +103,7 @@ Tag: `v1.0`
 | Phase H.3a P01 | 8min | 5 tasks | 6 files |
 | Phase H.4a-profile-family-schema-extension P01 | 4min | 5 tasks | 7 files |
 | Phase H.4b-developer-sandbox-profile-fsi-dev-canon P01 | 18min | 6 tasks | 7 files |
+| Phase H.4c-acme-bank-developer-overlay P01 | 3min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -210,6 +211,10 @@ Recent decisions affecting current work:
 - [Phase H.4b-developer-sandbox-profile-fsi-dev-canon]: Substituted 4 D-01 tool names to match tool_classification reality (describe-* → get-/read-/list-/search- equivalents); preserved 15 tool_overrides count
 - [Phase H.4b-developer-sandbox-profile-fsi-dev-canon]: _layer_order_for(family, canon_layer) helper extracted from LAYER_ORDER constant; module-level LAYER_ORDER retained as operator default for back-compat
 - [Phase H.4b-developer-sandbox-profile-fsi-dev-canon]: Customer-overlay branch in load_profile() routes via _profile_path so H.4c acme-bank developer/sandbox.json works without further engine plumbing
+- [Phase H.4c-acme-bank-developer-overlay]: Customer overlay is a complete profile (D-01) — load_profile returns the overlay file directly when customer=acme-bank; customer_overrides field is documentation/audit only
+- [Phase H.4c-acme-bank-developer-overlay]: Three differential signals (D-02) — 2 tool-level (delete-topics, alter-topic-config removed) + 1 skill-level (dsp-plan blocked) — robust against future base-canon shifts
+- [Phase H.4c-acme-bank-developer-overlay]: Zero engine changes (D-04) — H.4b's _profile_path + customer branch already handles slash-separated profile names for customer-overlay lookup
+- [Phase H.4c-acme-bank-developer-overlay]: ADR-004 ships as Accepted stub (D-05) cross-referencing adr-003 — formal ADR promotion deferred until first acme engagement validates the dev overlay in practice
 
 ### Pending Todos
 
@@ -221,6 +226,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-17T17:42:13.162Z
-Stopped at: Completed H.4b-01-PLAN.md
+Last session: 2026-05-17T17:51:50.515Z
+Stopped at: Completed H.4c-01-PLAN.md
 Resume file: None
