@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
 status: Phase complete — ready for verification
-stopped_at: Completed H.4a-01-PLAN.md
-last_updated: "2026-05-17T17:28:03.282Z"
+stopped_at: Completed H.4b-01-PLAN.md
+last_updated: "2026-05-17T17:42:22.324Z"
 last_activity: 2026-05-17
 progress:
   total_phases: 8
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-16)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase H.4a — Profile-family schema extension
+**Current focus:** Phase H.4b — Developer-sandbox profile + FSI dev canon overlay
 
 ## Current Position
 
 Milestone: v2.0
-Phase: H.4a (Profile-family schema extension) — EXECUTING
+Phase: H.4b (Developer-sandbox profile + FSI dev canon overlay) — EXECUTING
 Plan: 1 of 1
 Last activity: 2026-05-17
 
@@ -102,6 +102,7 @@ Tag: `v1.0`
 | Phase H.2-eval-harness-extension P04 | 2min | 2 tasks | 1 files |
 | Phase H.3a P01 | 8min | 5 tasks | 6 files |
 | Phase H.4a-profile-family-schema-extension P01 | 4min | 5 tasks | 7 files |
+| Phase H.4b-developer-sandbox-profile-fsi-dev-canon P01 | 18min | 6 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -206,6 +207,9 @@ Recent decisions affecting current work:
 - [Phase H.4a-profile-family-schema-extension]: Profile-family branching landed at apply_engine.check_tool_permitted() entry — operator branch byte-identical to v1.0 (proven via 162-decision snapshot); developer branch reads tool_overrides map (proven via test-dev-fixture); pure-Python validation, no jsonschema dep
 - [Phase H.4a-profile-family-schema-extension]: Back-compat default: load_profile() injects family=operator when absent + stderr-notes the legacy shape; lets acme-bank customer-overlay engineer.json (no family field) keep working unchanged until H.4c explicitly adds the field
 - [Phase H.4a-profile-family-schema-extension]: Snapshot pattern: tests/snapshots/h4a_operator_permits.json captures all 3×54=162 operator-branch permit decisions; regenerator one-liner lives in test docstring so it travels with the test; future tool_classification.json shifts force a visible-diff PR
+- [Phase H.4b-developer-sandbox-profile-fsi-dev-canon]: Substituted 4 D-01 tool names to match tool_classification reality (describe-* → get-/read-/list-/search- equivalents); preserved 15 tool_overrides count
+- [Phase H.4b-developer-sandbox-profile-fsi-dev-canon]: _layer_order_for(family, canon_layer) helper extracted from LAYER_ORDER constant; module-level LAYER_ORDER retained as operator default for back-compat
+- [Phase H.4b-developer-sandbox-profile-fsi-dev-canon]: Customer-overlay branch in load_profile() routes via _profile_path so H.4c acme-bank developer/sandbox.json works without further engine plumbing
 
 ### Pending Todos
 
@@ -217,6 +221,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-17T17:27:53.859Z
-Stopped at: Completed H.4a-01-PLAN.md
+Last session: 2026-05-17T17:42:13.162Z
+Stopped at: Completed H.4b-01-PLAN.md
 Resume file: None

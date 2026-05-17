@@ -85,10 +85,10 @@ v1.0 traceability archived to [`milestones/v1.0-REQUIREMENTS.md`](milestones/v1.
 | SCAF-02 | Phase H.3 | Planned |
 | SCAF-03 | Phase H.3 | Planned |
 | PROFAM-01 | Phase H.4a | Complete (H.4a-01) |
-| PROFAM-02 | Phase H.4a + H.4b | Partial (H.4a-01: developer-branch dispatch proven via fixture; H.4b lands the real developer profile + full negative-space matrix) |
-| DEVPROF-01 | Phase H.4 | Planned |
-| DEVCAN-01 | Phase H.4 | Planned |
-| DEVPROF-02 | Phase H.4 | Planned |
+| PROFAM-02 | Phase H.4a + H.4b | Complete (H.4a-01 + H.4b-01: developer-branch dispatch + full per-family negative-space matrix in tests/test_per_family_isolation.py) |
+| DEVPROF-01 | Phase H.4b | Complete (H.4b-01: tools/profiles/developer/sandbox.json) |
+| DEVCAN-01 | Phase H.4b | Complete (H.4b-01: canon/industry/fsi/developer-sandbox/) |
+| DEVPROF-02 | Phase H.4b + H.4c | Partial (H.4b-01: negative-space isolation + dsp-apply fail-closed; H.4c will land acme-bank customer-fork differential gating) |
 
 **Coverage:**
 - v1.0 requirements: 44 total, all shipped — archived to `milestones/v1.0-REQUIREMENTS.md`

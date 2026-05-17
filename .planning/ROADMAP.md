@@ -30,7 +30,7 @@ Full details: [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
 - [x] **Phase H.2: Eval harness extension to all skills** — Port confluentinc/agent-skills evals.json pattern (prompt + grep-checkable expectations[] at 90% threshold blocks merge) to /review, /wiki:*, /dsp:plan, /dsp:apply (completed 2026-05-17)
 - [x] **Phase H.3a: Plugin install + canon-overlay wiki article** — Install streaming-skills-plugin; author wiki overlay documenting FSI overrides on top of upstream skills; hook into CLAUDE.md so overlay loads when upstream skills activate (completed 2026-05-17)
 - [x] **Phase H.4a: Profile-family schema extension** — Add `family: "operator" | "developer"` field to every profile JSON; branch apply_engine on family; back-compat default to operator (Complete 2026-05-17)
-- [ ] **Phase H.4b: Developer-sandbox profile + FSI dev canon overlay** — Author developer-sandbox profile with `tool_overrides` for data-plane ops; bifurcate FSI canon into prod/dev overlays; negative-space test matrix proves operator-only tools fail closed under developer family
+- [x] **Phase H.4b: Developer-sandbox profile + FSI dev canon overlay** — Author developer-sandbox profile with `tool_overrides` for data-plane ops; bifurcate FSI canon into prod/dev overlays; negative-space test matrix proves operator-only tools fail closed under developer family (Complete 2026-05-17)
 - [ ] **Phase H.4c: acme-bank developer overlay** — Customer-fork demo: acme-bank developer overlay produces differential gating against base FSI dev canon; mirrors v1.0 ACTG-04 for the developer family
 - [ ] **Phase H.3b: Version pin + CI drift gate** — Pin streaming-skills-plugin version in `tools/vendor-plugins.json`; add `.github/workflows/streaming-skills-drift.yml` mirroring G.2c pattern exactly
 - [ ] **Phase H.3c: /dsp:scaffold wrapper** — New cflt-ai skill wrapping upstream scaffolders; materializes output as canon-compliant fsi-dsp artifact (MANIFEST entry, activity log, profile-gated). Hard prereq: H.4c (canon family must exist)
@@ -113,7 +113,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped earl
   1. `tools/profiles/developer/sandbox.json` exists with the shape documented above and passes JSON Schema validation.
   2. `canon/industry/fsi/developer-sandbox/` overlay exists and contains every Confluent Canon dimension from CLAUDE.md with explicit dev-tier values (auth, processing.guarantee, schema format, compatibility, RF, ISR, retention, naming convention).
   3. Per-profile-family negative-space test suite runs and proves: operator profiles cannot invoke `tool_overrides` entries from developer family, and developer profiles cannot invoke operator-tier-only tools (e.g., `delete-environment`, `create-cluster`); `/dsp:apply` fails closed under developer-sandbox with explicit error message referencing the family.
-**Plans:** 0/1 plan (H.4b-01-PLAN.md)
+**Plans:** 1/1 plan (H.4b-01-PLAN.md ✓ — see H.4b-01-SUMMARY.md)
 
 ### Phase H.4c: acme-bank developer overlay
 **Goal:** Mirror v1.0 Phase 3c ACTG-04 for the developer family. `canon/customer/acme-bank/profiles/developer/sandbox.json` overlays the FSI developer canon with acme-specific topic naming, environment patterns (e.g., `acme-*-sandbox`), pre-approved upstream connector list, additional `skill_blocklist` entries. Test demonstrates the customer overlay produces a differential gating result against base FSI dev canon — proves customer-fork differential gating works for the developer family the same way it does for the operator family.
