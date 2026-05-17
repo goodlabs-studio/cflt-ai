@@ -6,5 +6,17 @@
     "vendor_path": "raw/vendor/confluent-agent-skills/91d1871e/",
     "license": "Apache-2.0",
     "kind": "wiki-source"
+  },
+  "streaming-skills-plugin": {
+    "upstream": "https://github.com/confluentinc/agent-skills",
+    "repo": "confluentinc/agent-skills",
+    "marketplace": "confluent-agent-skills",
+    "plugin_name": "streaming-skills-plugin",
+    "version": "1.0.0",
+    "commit": "91d1871ef8c320be92bca955c8e42492a2778cb4",
+    "installed_at": "2026-05-17",
+    "kind": "claude-plugin",
+    "license": "Apache-2.0",
+    "drift_check": "tools/check_streaming_skills_drift.py"
   }
 }
