@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
 status: Phase complete — ready for verification
-stopped_at: Completed H.3a-01-PLAN.md
-last_updated: "2026-05-17T17:14:00.096Z"
+stopped_at: Completed H.4a-01-PLAN.md
+last_updated: "2026-05-17T17:28:03.282Z"
 last_activity: 2026-05-17
 progress:
   total_phases: 8
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-16)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase H.3a — Plugin install + canon-overlay wiki article
+**Current focus:** Phase H.4a — Profile-family schema extension
 
 ## Current Position
 
 Milestone: v2.0
-Phase: H.3a (Plugin install + canon-overlay wiki article) — EXECUTING
+Phase: H.4a (Profile-family schema extension) — EXECUTING
 Plan: 1 of 1
 Last activity: 2026-05-17
 
@@ -101,6 +101,7 @@ Tag: `v1.0`
 | Phase H.2 P03 | 3min | 3 tasks | 3 files |
 | Phase H.2-eval-harness-extension P04 | 2min | 2 tasks | 1 files |
 | Phase H.3a P01 | 8min | 5 tasks | 6 files |
+| Phase H.4a-profile-family-schema-extension P01 | 4min | 5 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -202,6 +203,9 @@ Recent decisions affecting current work:
 - [Phase H.3a]: Dual-source attestation for canon-overlay rows: 'Upstream Default' column cites SKILL.md path:line; 'Canon Source' column cites CLAUDE.md §; FSI Override is the documented delta — eliminates need for MCP cross-check on canon-grounded claims
 - [Phase H.3a]: Inbound graph edges selected by cross-reference density: fsi-governance-automation (15), fsi-exactly-once (12), topic-naming (12) — picked top 3 for maximum SA-traversal discoverability
 - [Phase H.3a]: Canon-overlay article frontmatter uses free-form 'source: streaming-skills-plugin@1.0.0' field per D-10; wiki-lint UNKNOWN VENDOR finding is expected — H.3b formalizes the pin in tools/vendor-plugins.json and the finding will clear
+- [Phase H.4a-profile-family-schema-extension]: Profile-family branching landed at apply_engine.check_tool_permitted() entry — operator branch byte-identical to v1.0 (proven via 162-decision snapshot); developer branch reads tool_overrides map (proven via test-dev-fixture); pure-Python validation, no jsonschema dep
+- [Phase H.4a-profile-family-schema-extension]: Back-compat default: load_profile() injects family=operator when absent + stderr-notes the legacy shape; lets acme-bank customer-overlay engineer.json (no family field) keep working unchanged until H.4c explicitly adds the field
+- [Phase H.4a-profile-family-schema-extension]: Snapshot pattern: tests/snapshots/h4a_operator_permits.json captures all 3×54=162 operator-branch permit decisions; regenerator one-liner lives in test docstring so it travels with the test; future tool_classification.json shifts force a visible-diff PR
 
 ### Pending Todos
 
@@ -213,6 +217,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-17T17:13:28.004Z
-Stopped at: Completed H.3a-01-PLAN.md
+Last session: 2026-05-17T17:27:53.859Z
+Stopped at: Completed H.4a-01-PLAN.md
 Resume file: None

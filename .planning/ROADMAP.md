@@ -29,7 +29,7 @@ Full details: [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
 - [x] **Phase H.1: Wiki ingest from confluent-agent-skills references** — Compile ~10 peer-reviewed Confluent reference articles into wiki; lift trip-wire facts as high-confidence wiki articles (completed 2026-05-16)
 - [x] **Phase H.2: Eval harness extension to all skills** — Port confluentinc/agent-skills evals.json pattern (prompt + grep-checkable expectations[] at 90% threshold blocks merge) to /review, /wiki:*, /dsp:plan, /dsp:apply (completed 2026-05-17)
 - [x] **Phase H.3a: Plugin install + canon-overlay wiki article** — Install streaming-skills-plugin; author wiki overlay documenting FSI overrides on top of upstream skills; hook into CLAUDE.md so overlay loads when upstream skills activate (completed 2026-05-17)
-- [ ] **Phase H.4a: Profile-family schema extension** — Add `family: "operator" | "developer"` field to every profile JSON; branch apply_engine on family; back-compat default to operator
+- [x] **Phase H.4a: Profile-family schema extension** — Add `family: "operator" | "developer"` field to every profile JSON; branch apply_engine on family; back-compat default to operator (Complete 2026-05-17)
 - [ ] **Phase H.4b: Developer-sandbox profile + FSI dev canon overlay** — Author developer-sandbox profile with `tool_overrides` for data-plane ops; bifurcate FSI canon into prod/dev overlays; negative-space test matrix proves operator-only tools fail closed under developer family
 - [ ] **Phase H.4c: acme-bank developer overlay** — Customer-fork demo: acme-bank developer overlay produces differential gating against base FSI dev canon; mirrors v1.0 ACTG-04 for the developer family
 - [ ] **Phase H.3b: Version pin + CI drift gate** — Pin streaming-skills-plugin version in `tools/vendor-plugins.json`; add `.github/workflows/streaming-skills-drift.yml` mirroring G.2c pattern exactly
@@ -103,7 +103,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped earl
   2. `check_tool_permitted()` branches on family — operator path uses the existing tier cascade, developer path reads a `tool_overrides` map; both branches unit-tested (developer branch tested via fixture profile, no real developer profile required yet).
   3. JSON Schema for profiles validates the new `family` field and rejects unknown values with a clear error.
   4. All existing operator-profile tests still pass — zero behavior change for operator family.
-**Plans:** 0/1 plan (H.4a-01-PLAN.md)
+**Plans:** 1/1 plan complete (H.4a-01-PLAN.md → H.4a-01-SUMMARY.md, 2026-05-17)
 
 ### Phase H.4b: Developer-sandbox profile + FSI dev canon overlay
 **Goal:** Author `tools/profiles/developer/sandbox.json` with `family: "developer"`, `primary_tooling.skills` allowlist for upstream confluent-agent-skills, `tool_overrides` promoting data-plane ops (produce-message, consume-messages, create-topics, delete-topics, alter-topic-config, create-flink-statement, delete-flink-statements) to `developer-sandbox` tier, `skill_blocklist` excluding `/dsp:apply`, and a soft `environment_guard` pattern matching sandbox/dev cluster names. Author `canon/industry/fsi/developer-sandbox/` overlay with the bifurcated dev defaults (OAUTHBEARER, at_least_once, JSON Schema OK, BACKWARD compatibility). Negative-space test matrix proves operator-tier-only tools fail closed under developer-sandbox and `/dsp:apply` refuses to run.
@@ -176,7 +176,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward into v2.0 backlog (se
 | H.1. Wiki ingest from agent-skills refs | v2.0 | 3/3 | Complete | 2026-05-16 |
 | H.2. Eval harness extension | v2.0 | 4/4 | Complete | 2026-05-17 |
 | H.3a. Plugin install + canon-overlay article | v2.0 | 1/1 | Complete | 2026-05-17 |
-| H.4a. Profile-family schema extension | v2.0 | 0/1 | Not started | - |
+| H.4a. Profile-family schema extension | v2.0 | 1/1 | Complete | 2026-05-17 |
 | H.4b. Developer-sandbox profile + FSI dev canon | v2.0 | 0/1 | Not started | - |
 | H.4c. acme-bank developer overlay | v2.0 | 0/1 | Not started | - |
 | H.3b. Version pin + CI drift gate | v2.0 | 0/1 | Not started | - |

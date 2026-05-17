@@ -84,8 +84,8 @@ v1.0 traceability archived to [`milestones/v1.0-REQUIREMENTS.md`](milestones/v1.
 | SCAF-01 | Phase H.3 | Planned |
 | SCAF-02 | Phase H.3 | Planned |
 | SCAF-03 | Phase H.3 | Planned |
-| PROFAM-01 | Phase H.4 | Planned |
-| PROFAM-02 | Phase H.4 | Planned |
+| PROFAM-01 | Phase H.4a | Complete (H.4a-01) |
+| PROFAM-02 | Phase H.4a + H.4b | Partial (H.4a-01: developer-branch dispatch proven via fixture; H.4b lands the real developer profile + full negative-space matrix) |
 | DEVPROF-01 | Phase H.4 | Planned |
 | DEVCAN-01 | Phase H.4 | Planned |
 | DEVPROF-02 | Phase H.4 | Planned |
