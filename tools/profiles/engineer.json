@@ -1,6 +1,7 @@
 {
   "name": "engineer",
   "description": "Plan + apply standard non-destructive modules (topics, schemas, RBAC, Flink) and Confluent Cloud starter-kit scenarios that compose those modules with DR cluster-linking.",
+  "family": "operator",
   "allowed_operations": [
     "module/topic",
     "module/flink",
