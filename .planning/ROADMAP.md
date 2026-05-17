@@ -75,7 +75,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped with
   5. At least 5 trip-wire facts from H.1 are encoded as `expectations[]` lines so wiki + skills stay in sync (e.g., "asks about target environment before generating producer code", "uses kafka-avro-console-producer not kafka-console-producer")
 **Plans:** 1/4 plans executed
 - [x] H.2-01-PLAN.md — Pytest runner + MD/JSON adapters + 90% per-skill threshold gate + adapter unit tests
-- [ ] H.2-02-PLAN.md — Author 4 new wiki-skill evals.json (40 cases incl. 2 D-08 trip-wires in /wiki:ingest)
+- [x] H.2-02-PLAN.md — Author 4 new wiki-skill evals.json (40 cases incl. 2 D-08 trip-wires in /wiki:ingest)
 - [ ] H.2-03-PLAN.md — Author 3 thin-wrapper evals.json for /review, /dsp:plan, /dsp:apply (55 cases incl. 7 D-08 trip-wires)
 - [ ] H.2-04-PLAN.md — CI workflow .github/workflows/skill-evals.yml + final phase-exit regression gate
 
