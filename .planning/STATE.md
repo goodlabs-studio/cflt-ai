@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
 status: Phase complete — ready for verification
-stopped_at: Completed H.3b-01-PLAN.md
-last_updated: "2026-05-17T18:04:34.722Z"
+stopped_at: Completed H.3c-01-PLAN.md — v2.0 milestone CLOSED
+last_updated: "2026-05-17T18:19:34.556Z"
 last_activity: 2026-05-17
 progress:
   total_phases: 8
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-16)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase H.3b — Version pin + CI drift gate
+**Current focus:** Phase H.3c — /dsp:scaffold wrapper
 
 ## Current Position
 
 Milestone: v2.0
-Phase: H.3b (Version pin + CI drift gate) — EXECUTING
+Phase: H.3c (/dsp:scaffold wrapper) — EXECUTING
 Plan: 1 of 1
 Last activity: 2026-05-17
 
@@ -105,6 +105,7 @@ Tag: `v1.0`
 | Phase H.4b-developer-sandbox-profile-fsi-dev-canon P01 | 18min | 6 tasks | 7 files |
 | Phase H.4c-acme-bank-developer-overlay P01 | 3min | 3 tasks | 4 files |
 | Phase H.3b-version-pin-ci-drift-gate P01 | 10m | 5 tasks | 4 files |
+| Phase H.3c-dsp-scaffold-wrapper P01 | 6m | 6 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -217,6 +218,10 @@ Recent decisions affecting current work:
 - [Phase H.4c-acme-bank-developer-overlay]: Zero engine changes (D-04) — H.4b's _profile_path + customer branch already handles slash-separated profile names for customer-overlay lookup
 - [Phase H.4c-acme-bank-developer-overlay]: ADR-004 ships as Accepted stub (D-05) cross-referencing adr-003 — formal ADR promotion deferred until first acme engagement validates the dev overlay in practice
 - [Phase H.3b-version-pin-ci-drift-gate]: Pinned streaming-skills-plugin at commit 91d1871e; CI drift gate via git ls-remote (no Node.js, no API auth) mirrors G.2c pattern
+- [Phase H.3c-dsp-scaffold-wrapper]: Three-gate sequence (skill-blocklist → read-only → cross-family) ordered for activity-log granularity; gate-1 fires first because skill_blocklist is the explicit profile intent, gate-2 is belt-and-suspenders for legacy operator profiles without blocklist field
+- [Phase H.3c-dsp-scaffold-wrapper]: Producer stub generator reads resolved canon dict (acks/compression/idempotence/sr-format/auth) — proves end-to-end canon-stack wiring without invoking the upstream skill's interactive HARD-GATE flow
+- [Phase H.3c-dsp-scaffold-wrapper]: Activity-log entries are written on every invocation (success, blocked, not-implemented) — audit-trail completeness outranks log silence; matches ACTA-04 schema
+- [Phase H.3c-dsp-scaffold-wrapper]: _safe_relative() helper added so provenance.scaffold_dir is always populated even when OUTPUT_ROOT is monkeypatched outside PROJECT_ROOT (test isolation); production paths still emit repo-relative string
 
 ### Pending Todos
 
@@ -228,6 +233,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-17T18:04:34.720Z
-Stopped at: Completed H.3b-01-PLAN.md
+Last session: 2026-05-17T18:19:34.554Z
+Stopped at: Completed H.3c-01-PLAN.md — v2.0 milestone CLOSED
 Resume file: None
