@@ -1,0 +1,303 @@
+{
+  "skill_name": "/dsp:plan",
+  "evals": [
+    {
+      "id": 1,
+      "case_ref": "bypass-gate3-018",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/bypass-gate3-018.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 2,
+      "case_ref": "bypass-gate4-017",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/bypass-gate4-017.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 3,
+      "case_ref": "flink-cdc-pipeline-005",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/flink-cdc-pipeline-005.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 4,
+      "case_ref": "flink-stream-processing-004",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/flink-stream-processing-004.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 5,
+      "case_ref": "negative-inline-terraform-020",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/negative-inline-terraform-020.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 6,
+      "case_ref": "negative-mongodb-019",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/negative-mongodb-019.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 7,
+      "case_ref": "negative-redis-cache-022",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/negative-redis-cache-022.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 8,
+      "case_ref": "negative-write-tool-021",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/negative-write-tool-021.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 9,
+      "case_ref": "overlay-acme-topic-015",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/overlay-acme-topic-015.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 10,
+      "case_ref": "overlay-fsi-latency-016",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/overlay-fsi-latency-016.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 11,
+      "case_ref": "role-connect-workers-010",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/role-connect-workers-010.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 12,
+      "case_ref": "role-cp-topic-007",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/role-cp-topic-007.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 13,
+      "case_ref": "role-dr-mirrormaker-011",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/role-dr-mirrormaker-011.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 14,
+      "case_ref": "role-rbac-bindings-009",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/role-rbac-bindings-009.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 15,
+      "case_ref": "role-schema-registry-008",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/role-schema-registry-008.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 16,
+      "case_ref": "scenario-cc-aws-012",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/scenario-cc-aws-012.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 17,
+      "case_ref": "scenario-cfk-openshift-013",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/scenario-cfk-openshift-013.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 18,
+      "case_ref": "scenario-cp-rhel-014",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/scenario-cp-rhel-014.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 19,
+      "case_ref": "topic-compliance-audit-003",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/topic-compliance-audit-003.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 20,
+      "case_ref": "topic-market-data-002",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/topic-market-data-002.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 21,
+      "case_ref": "topic-trade-events-001",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/topic-trade-events-001.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 22,
+      "case_ref": "topic-with-schema-006",
+      "prompt": "Plan the fsi-dsp artifact selection for the request in the referenced MD case. Apply the 4-gate chain (intent -> tool-class -> drift -> canon).",
+      "expected_output": "A plan output matching the MD case's expected_artifact / required_claims / forbidden_claims frontmatter.",
+      "files": ["tests/golden/act/cases/topic-with-schema-006.md"],
+      "expectations": [
+        "Plan output references the expected_artifact from the MD case",
+        "Plan output's required_claims appear in the response",
+        "Plan output's forbidden_claims do NOT appear (especially the standard `resource \"confluent_` no-inline-Terraform constraint per ACT-06)"
+      ]
+    },
+    {
+      "id": 23,
+      "prompt": "Plan a change to an existing Tableflow-enabled topic switching from CHANGELOG to APPEND mode after first materialization.",
+      "expected_output": "Plan refuses — directs operator to delete+recreate per Tableflow changelog mode immutability rule.",
+      "files": [],
+      "expectations": [
+        "Refuses to plan a Tableflow changelog mode change on an already-materialized topic — directs to delete+recreate per immutability rule",
+        "Plan cites wiki/concepts/tableflow-changelog-mode-immutability.md or equivalent canonical reference",
+        "Plan output uses `no matching artifact` per ACT-06 negative-space convention"
+      ]
+    },
+    {
+      "id": 24,
+      "prompt": "Plan an OracleXStreamSource connector with `after.state.only=true` to reduce payload size.",
+      "expected_output": "Plan refuses — Oracle XStream does not support after.state.only config.",
+      "files": [],
+      "expectations": [
+        "Refuses to plan OracleXStreamSource with `after.state.only=true` — that config is not supported by Oracle XStream",
+        "Plan cites wiki/concepts/oracle-xstream-source-limitations.md or equivalent canonical reference",
+        "Plan output uses `no matching artifact` per ACT-06 negative-space convention"
+      ]
+    },
+    {
+      "id": 25,
+      "prompt": "Plan a JSON Schema registration against a WarpStream cluster's built-in Schema Registry endpoint.",
+      "expected_output": "Plan refuses — WarpStream's built-in Schema Registry supports only Avro and Protobuf.",
+      "files": [],
+      "expectations": [
+        "Refuses to plan JSON Schema registration against WarpStream's built-in Schema Registry — accepts Avro or Protobuf only",
+        "Plan cites wiki/concepts/warpstream-schema-registry-format-constraint.md or equivalent canonical reference",
+        "Plan output includes the FSI-context note that WarpStream is competitive context, not FSI production",
+        "Plan output uses `no matching artifact` per ACT-06 negative-space convention"
+      ]
+    }
+  ]
+}
