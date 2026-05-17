@@ -16,6 +16,8 @@ from tools.apply_engine import (
     check_tool_permitted,
     load_profile,
     load_tool_classification,
+    VALID_FAMILIES,
+    PROFILES_DIR,
 )
 
 # Load classification table for parametrization
@@ -190,3 +192,152 @@ class TestCustomerDifferential:
         assert "module/flink" in profile["allowed_operations"], (
             "Fallback to base engineer must include module/flink"
         )
+
+
+# ---------------------------------------------------------------------------
+# H.4a — Family field round-trip + branch dispatch tests
+# ---------------------------------------------------------------------------
+
+FIXTURE_DIR = Path(__file__).parent / "fixtures" / "profiles"
+SNAPSHOT_DIR = Path(__file__).parent / "snapshots"
+
+
+class TestFamilyRoundTrip:
+    """H.4a D-09 test group 1 — family field round-trip through load_profile()."""
+
+    def test_load_profile_reads_family_for_all_operator_profiles(self):
+        """Every committed operator profile loads with family == 'operator'."""
+        for name in ("read-only", "engineer", "break-glass"):
+            p = load_profile(name)
+            assert p["family"] == "operator", (
+                f"Profile {name!r} expected family=operator, got {p.get('family')!r}"
+            )
+
+    def test_load_profile_defaults_family_to_operator_when_absent(self, tmp_path, monkeypatch):
+        """A profile JSON missing the family field defaults to operator (back-compat)."""
+        legacy_profile = {
+            "name": "engineer",  # name MUST be a VALID_PROFILES entry for load to proceed
+            "description": "Pre-H.4a shape",
+            "allowed_operations": [],
+        }
+        tmp_profiles = tmp_path / "profiles"
+        tmp_profiles.mkdir()
+        (tmp_profiles / "engineer.json").write_text(json.dumps(legacy_profile))
+        monkeypatch.setattr("tools.apply_engine.PROFILES_DIR", tmp_profiles)
+        p = load_profile("engineer")
+        assert p["family"] == "operator", (
+            f"Absent family field should default to 'operator', got {p.get('family')!r}"
+        )
+
+    def test_load_profile_rejects_unknown_family(self, tmp_path, monkeypatch):
+        """A profile with family not in VALID_FAMILIES raises ValueError."""
+        bad_profile = {
+            "name": "engineer",
+            "description": "Bogus family value",
+            "family": "platform",  # not in VALID_FAMILIES
+            "allowed_operations": [],
+        }
+        tmp_profiles = tmp_path / "profiles"
+        tmp_profiles.mkdir()
+        (tmp_profiles / "engineer.json").write_text(json.dumps(bad_profile))
+        monkeypatch.setattr("tools.apply_engine.PROFILES_DIR", tmp_profiles)
+        with pytest.raises(ValueError, match="unknown family"):
+            load_profile("engineer")
+
+
+class TestOperatorBranchByteCompat:
+    """H.4a D-09 test group 2 — operator-branch behavior byte-identical to pre-H.4a.
+
+    The snapshot at tests/snapshots/h4a_operator_permits.json captures every
+    (operator-profile x tool) permit decision after the H.4a refactor. Any future
+    change that shifts the permit set will fail this test, forcing the snapshot
+    to be regenerated in a separate visible-diff PR.
+
+    Regenerator one-liner (run from project root):
+        python3 -c "
+        import json
+        from tools.apply_engine import check_tool_permitted, load_tool_classification
+        tc = load_tool_classification()
+        operator_profiles = ['read-only', 'engineer', 'break-glass']
+        snap = {p: {t: check_tool_permitted(p, t) for t in sorted(tc['tools'])} for p in operator_profiles}
+        print(json.dumps(snap, indent=2))
+        " > tests/snapshots/h4a_operator_permits.json
+    """
+
+    def test_check_tool_permitted_operator_branch_byte_identical(self):
+        snapshot_path = SNAPSHOT_DIR / "h4a_operator_permits.json"
+        assert snapshot_path.exists(), (
+            "Snapshot missing — regenerate via the one-liner in this test's docstring"
+        )
+        snapshot = json.loads(snapshot_path.read_text())
+        for profile_name, tool_decisions in snapshot.items():
+            for tool_name, expected_permit in tool_decisions.items():
+                actual = check_tool_permitted(profile_name, tool_name)
+                assert actual == expected_permit, (
+                    f"Permit drift: profile={profile_name!r} tool={tool_name!r} "
+                    f"snapshot={expected_permit} live={actual}"
+                )
+
+
+class TestDeveloperBranchDispatch:
+    """H.4a D-09 test group 3 — developer-branch dispatches against tool_overrides."""
+
+    def test_check_tool_permitted_developer_branch_reads_tool_overrides(self, monkeypatch):
+        """Developer profile permits only tools listed in tool_overrides; denies all others.
+
+        Note: We monkeypatch PROFILES_DIR and add the dev fixture name to VALID_PROFILES
+        for the duration of this test. Production code never sees test-dev-fixture.
+        """
+        from tools import apply_engine
+        monkeypatch.setattr(apply_engine, "PROFILES_DIR", FIXTURE_DIR)
+        monkeypatch.setattr(
+            apply_engine, "VALID_PROFILES",
+            apply_engine.VALID_PROFILES | {"test-dev-fixture"},
+        )
+        # Permit: in tool_overrides
+        assert check_tool_permitted("test-dev-fixture", "produce-message") is True
+        assert check_tool_permitted("test-dev-fixture", "consume-messages") is True
+        assert check_tool_permitted("test-dev-fixture", "create-topics") is True
+        # Deny: NOT in tool_overrides (would be permitted at engineer-tier under operator branch)
+        assert check_tool_permitted("test-dev-fixture", "list-environments") is False
+        assert check_tool_permitted("test-dev-fixture", "describe-cluster") is False
+        # Deny: unknown tool name (fail-closed)
+        assert check_tool_permitted("test-dev-fixture", "totally-fake-tool-name-xyz") is False
+
+
+class TestPerFamilyInvariants:
+    """H.4a D-07 — load_profile validates per-family invariants."""
+
+    def test_operator_profile_missing_allowed_operations_raises(self, tmp_path, monkeypatch):
+        bad_profile = {
+            "name": "engineer",
+            "description": "Operator missing required field",
+            "family": "operator",
+            # no allowed_operations
+        }
+        tmp_profiles = tmp_path / "profiles"
+        tmp_profiles.mkdir()
+        (tmp_profiles / "engineer.json").write_text(json.dumps(bad_profile))
+        monkeypatch.setattr("tools.apply_engine.PROFILES_DIR", tmp_profiles)
+        with pytest.raises(ValueError, match="allowed_operations"):
+            load_profile("engineer")
+
+    def test_developer_profile_missing_tool_overrides_raises(self, tmp_path, monkeypatch):
+        from tools import apply_engine
+        bad_profile = {
+            "name": "test-dev-fixture",
+            "description": "Developer missing required field",
+            "family": "developer",
+            "skill_blocklist": [],
+            # no tool_overrides
+        }
+        tmp_profiles = tmp_path / "profiles"
+        tmp_profiles.mkdir()
+        (tmp_profiles / "test-dev-fixture.json").write_text(json.dumps(bad_profile))
+        monkeypatch.setattr(apply_engine, "PROFILES_DIR", tmp_profiles)
+        monkeypatch.setattr(
+            apply_engine, "VALID_PROFILES",
+            apply_engine.VALID_PROFILES | {"test-dev-fixture"},
+        )
+        with pytest.raises(ValueError, match="tool_overrides"):
+            load_profile("test-dev-fixture")

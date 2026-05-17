@@ -1,0 +1,11 @@
+{
+  "name": "test-dev-fixture",
+  "description": "Test fixture — do not load in production. Used by tests/test_profile_gating.py to prove the developer-family branch dispatches against tool_overrides.",
+  "family": "developer",
+  "skill_blocklist": [],
+  "tool_overrides": {
+    "produce-message": "developer-sandbox",
+    "consume-messages": "developer-sandbox",
+    "create-topics": "developer-sandbox"
+  }
+}
