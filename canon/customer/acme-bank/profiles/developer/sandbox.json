@@ -1,0 +1,43 @@
+{
+  "name": "developer/sandbox",
+  "description": "Acme Bank developer-sandbox profile: stricter than base FSI dev canon — no topic destruction self-service; /dsp:plan blocked for dev profiles; sandbox restricted to acme-prefixed clusters.",
+  "family": "developer",
+  "primary_tooling": {
+    "skills": [
+      "streaming-skills-plugin:kafka-streams-programming",
+      "streaming-skills-plugin:developing-kafka-python-client",
+      "streaming-skills-plugin:kafka-schema-registry",
+      "streaming-skills-plugin:confluent-cloud-cdc-tableflow"
+    ]
+  },
+  "tool_overrides": {
+    "produce-message": "developer-sandbox",
+    "consume-messages": "developer-sandbox",
+    "create-topics": "developer-sandbox",
+    "list-topics": "developer-sandbox",
+    "get-topic-config": "developer-sandbox",
+    "create-flink-statement": "developer-sandbox",
+    "delete-flink-statements": "developer-sandbox",
+    "list-flink-statements": "developer-sandbox",
+    "read-flink-statement": "developer-sandbox",
+    "list-clusters": "developer-sandbox",
+    "list-environments": "developer-sandbox",
+    "list-schemas": "developer-sandbox",
+    "search-topics-by-name": "developer-sandbox"
+  },
+  "skill_blocklist": [
+    "dsp-apply",
+    "dsp-plan"
+  ],
+  "environment_guard": {
+    "pattern": "acme-*-sandbox",
+    "enforcement": "advisory"
+  },
+  "canon_layer": "industry/fsi/developer-sandbox",
+  "customer_overrides": {
+    "removed_from_tool_overrides": ["delete-topics", "alter-topic-config"],
+    "added_to_skill_blocklist": ["dsp-plan"],
+    "tightened_environment_guard": "*-sandbox -> acme-*-sandbox",
+    "adr_ref": "canon/customer/acme-bank/adrs/adr-004.md"
+  }
+}
