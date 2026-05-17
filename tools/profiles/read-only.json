@@ -2,5 +2,6 @@
   "name": "read-only",
   "description": "Plan and inspect only. No apply operations.",
   "family": "operator",
+  "skill_blocklist": ["dsp-scaffold"],
   "allowed_operations": []
 }
