@@ -1,0 +1,77 @@
+name: Skill Evals
+
+# Phase H.2 (EVAL-03): unified eval harness gate.
+#
+# Runs tests/evals/run_skill_evals.py which:
+#   1. Discovers cases from tests/golden/*/cases/*.md   (89 existing MD cases — D-01 hybrid)
+#   2. Discovers cases from tests/evals/*/evals.json    (40 new JSON cases — Plans 02+03)
+#   3. Enforces >= 90% pass rate per skill              (D-06 threshold)
+#
+# CI fails the PR when:
+#   - any skill drops below 90% (test_threshold_per_skill assertion)
+#   - any case file is malformed (test_case_well_formed parametrize)
+#   - any of the 7 named skills is missing from tests/evals/ (test_all_seven_new_skills_discovered)
+#
+# Threshold enforcement is INSIDE pytest, not as a separate CI gate — keeps the
+# workflow YAML minimal and centralizes the rule in one tested code path.
+#
+# Triggers are paths-scoped per D-09 — workflow fires only when relevant trees change.
+
+on:
+  pull_request:
+    paths:
+      - 'tests/evals/**'
+      - 'tests/golden/**'
+      - 'wiki/**'
+      - '.claude/commands/**'
+      - 'tools/**'
+      - '.github/workflows/skill-evals.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'tests/evals/**'
+      - 'tests/golden/**'
+      - 'wiki/**'
+      - '.claude/commands/**'
+      - 'tools/**'
+      - '.github/workflows/skill-evals.yml'
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        # Python 3.12 matches the existing tool-classification-drift.yml and
+        # canon-parity.yml workflows — single toolchain across FSI CI.
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install harness dependencies
+        # pytest for the runner, pyyaml for parsing the MD case frontmatter
+        # (per tests/evals/run_skill_evals.py imports). No model SDKs — D-04 structural-only.
+        run: pip install pytest pyyaml
+
+      - name: Run unified skill eval harness
+        # Exit code:
+        #   0 = all skills >= 90% pass rate AND all 7 named skills discovered AND all cases well-formed
+        #   non-zero = at least one threshold failure, malformed case, or missing skill
+        #
+        # The -v flag surfaces per-test results in the GitHub Actions log so
+        # a developer can see exactly which skill / case failed without re-running.
+        run: python -m pytest tests/evals/run_skill_evals.py -v
+
+      - name: Run runner adapter unit tests
+        # Catches regressions in the adapters themselves (load_md_cases, load_json_cases)
+        # before they cascade into false-positive threshold failures.
+        run: python -m pytest tests/evals/test_runner_adapters.py -v
+
+      - name: Regression gate — existing tests/golden/ harnesses
+        # D-01 hybrid lock: the 89 existing MD cases MUST keep working.
+        # If anyone modifies tests/golden/{ask,review,act}/cases/ in a way
+        # that breaks the original harnesses, fail here so the breakage is
+        # surfaced separately from the new eval harness.
+        run: python -m pytest tests/golden/ -v --tb=short
