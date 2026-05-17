@@ -1,0 +1,38 @@
+{
+  "name": "developer/sandbox",
+  "description": "Developer-tier sandbox profile: upstream confluent-agent-skills available; data-plane ops permitted on *-sandbox clusters; /dsp:apply blocked. First developer-family profile (H.4b).",
+  "family": "developer",
+  "primary_tooling": {
+    "skills": [
+      "streaming-skills-plugin:kafka-streams-programming",
+      "streaming-skills-plugin:developing-kafka-python-client",
+      "streaming-skills-plugin:kafka-schema-registry",
+      "streaming-skills-plugin:confluent-cloud-cdc-tableflow"
+    ]
+  },
+  "tool_overrides": {
+    "produce-message": "developer-sandbox",
+    "consume-messages": "developer-sandbox",
+    "create-topics": "developer-sandbox",
+    "delete-topics": "developer-sandbox",
+    "alter-topic-config": "developer-sandbox",
+    "list-topics": "developer-sandbox",
+    "get-topic-config": "developer-sandbox",
+    "create-flink-statement": "developer-sandbox",
+    "delete-flink-statements": "developer-sandbox",
+    "list-flink-statements": "developer-sandbox",
+    "read-flink-statement": "developer-sandbox",
+    "list-clusters": "developer-sandbox",
+    "list-environments": "developer-sandbox",
+    "list-schemas": "developer-sandbox",
+    "search-topics-by-name": "developer-sandbox"
+  },
+  "skill_blocklist": [
+    "dsp-apply"
+  ],
+  "environment_guard": {
+    "pattern": "*-sandbox",
+    "enforcement": "advisory"
+  },
+  "canon_layer": "industry/fsi/developer-sandbox"
+}
