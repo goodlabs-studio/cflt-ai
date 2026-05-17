@@ -108,6 +108,19 @@ When the work is in a financial services context:
 
 ---
 
+## Upstream Confluent Skills (streaming-skills-plugin)
+
+The `streaming-skills-plugin@confluent-agent-skills` plugin is installed at project scope (version 1.0.0, commit `91d1871e`). It exposes four upstream Confluent skills:
+
+- `kafka-streams-programming` — KStream/KTable topology, debugging, production hardening
+- `developing-kafka-python-client` — Python producer/consumer scaffolding + Schema Registry integration
+- `kafka-schema-registry` — Schema discovery, PII tagging, Terraform registration
+- `confluent-cloud-cdc-tableflow` — Debezium → Flink → Tableflow CDC pipelines
+
+**FSI guardrails:** When any of these skills activates, read `wiki/patterns/fsi-canon-overlay-for-confluent-skills.md` and apply the documented FSI overrides on top of the upstream defaults. The overlay is the source of truth for FSI-tier values (mTLS, exactly_once_v2, Avro/Protobuf, FULL compatibility, etc.). Plugin version pin and CI drift gate land separately in Phase H.3b.
+
+---
+
 ## MCP Tool Availability
 
 | Tool | Purpose | When to Use |
