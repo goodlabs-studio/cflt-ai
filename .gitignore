@@ -16,3 +16,6 @@ outputs/slides/*.pdf
 # State files, provider plugins, and rendered tfvars are local-only —
 # never committed. Recreated per-plan-slug on demand.
 outputs/runs/
+
+# Scaffolded output (H.3c) — audit trail lives in wiki/activity/, not in the file tree
+outputs/scaffolded/
