@@ -32,7 +32,7 @@ Full details: [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
 - [x] **Phase H.4a: Profile-family schema extension** — Add `family: "operator" | "developer"` field to every profile JSON; branch apply_engine on family; back-compat default to operator (Complete 2026-05-17)
 - [x] **Phase H.4b: Developer-sandbox profile + FSI dev canon overlay** — Author developer-sandbox profile with `tool_overrides` for data-plane ops; bifurcate FSI canon into prod/dev overlays; negative-space test matrix proves operator-only tools fail closed under developer family (Complete 2026-05-17)
 - [ ] **Phase H.4c: acme-bank developer overlay** — Customer-fork demo: acme-bank developer overlay produces differential gating against base FSI dev canon; mirrors v1.0 ACTG-04 for the developer family
-- [ ] **Phase H.3b: Version pin + CI drift gate** — Pin streaming-skills-plugin version in `tools/vendor-plugins.json`; add `.github/workflows/streaming-skills-drift.yml` mirroring G.2c pattern exactly
+- [x] **Phase H.3b: Version pin + CI drift gate** — Pin streaming-skills-plugin commit in `tools/vendor-sources.json`; `.github/workflows/streaming-skills-drift.yml` runs `tools/check_streaming_skills_drift.py --check` on PR (completed 2026-05-17)
 - [ ] **Phase H.3c: /dsp:scaffold wrapper** — New cflt-ai skill wrapping upstream scaffolders; materializes output as canon-compliant fsi-dsp artifact (MANIFEST entry, activity log, profile-gated). Hard prereq: H.4c (canon family must exist)
 
 ### Deferred sub-phases (G.2 carry-forward)
@@ -132,7 +132,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped earl
   1. `tools/vendor-plugins.json` exists (or extended `tools/vendor-sources.json` with a `claude-plugin` kind) and contains the pinned `streaming-skills-plugin` version + upstream commit/ref.
   2. `.github/workflows/streaming-skills-drift.yml` exists, runs on PR, and fails when the upstream plugin's `plugin.json` version field differs from the pinned version without a matching update to the pin file.
   3. Drift-gate generator has a `--check` mode that exits non-zero on drift (mirrors G.2c's generator/`--check` shape exactly; same script pattern, swapped target).
-**Plans:** 0/1 plan (H.3b-01-PLAN.md)
+**Plans:** 1/1 plan (H.3b-01-PLAN.md → H.3b-01-SUMMARY.md complete 2026-05-17)
 
 ### Phase H.3c: /dsp:scaffold wrapper
 **Goal:** New cflt-ai skill `/dsp:scaffold <artifact-type> <name>` that triages a scaffolding request, picks the right upstream skill to invoke (from streaming-skills-plugin), applies the active profile-family canon overlay as structured config (not just prose hints), invokes the upstream skill, then registers the scaffolded output as an artifact entry in fsi-dsp's `MANIFEST.yaml` with a capability block and provenance footer. Profile-gated (engineer family can scaffold prod artifacts; developer-sandbox family can scaffold dev artifacts; read-only cannot scaffold at all). Activity-logged with full provenance.
@@ -179,7 +179,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward into v2.0 backlog (se
 | H.4a. Profile-family schema extension | v2.0 | 1/1 | Complete | 2026-05-17 |
 | H.4b. Developer-sandbox profile + FSI dev canon | v2.0 | 0/1 | Not started | - |
 | H.4c. acme-bank developer overlay | v2.0 | 0/1 | Not started | - |
-| H.3b. Version pin + CI drift gate | v2.0 | 0/1 | Not started | - |
+| H.3b. Version pin + CI drift gate | v2.0 | 1/1 | Complete | 2026-05-17 |
 | H.3c. /dsp:scaffold wrapper | v2.0 | 0/1 | Not started | - |
 | G.2a. mcp-confluent tool-call executor | v2.0 carry | 0/1 | Not started | - |
 | G.2b. Composite scenario executor | v2.0 carry | 0/1 | Not started | - |

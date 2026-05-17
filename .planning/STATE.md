@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
 status: Phase complete — ready for verification
-stopped_at: Completed H.4c-01-PLAN.md
-last_updated: "2026-05-17T17:52:04.949Z"
+stopped_at: Completed H.3b-01-PLAN.md
+last_updated: "2026-05-17T18:04:34.722Z"
 last_activity: 2026-05-17
 progress:
   total_phases: 8
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-16)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase H.4c — acme-bank developer overlay
+**Current focus:** Phase H.3b — Version pin + CI drift gate
 
 ## Current Position
 
 Milestone: v2.0
-Phase: H.4c (acme-bank developer overlay) — EXECUTING
+Phase: H.3b (Version pin + CI drift gate) — EXECUTING
 Plan: 1 of 1
 Last activity: 2026-05-17
 
@@ -104,6 +104,7 @@ Tag: `v1.0`
 | Phase H.4a-profile-family-schema-extension P01 | 4min | 5 tasks | 7 files |
 | Phase H.4b-developer-sandbox-profile-fsi-dev-canon P01 | 18min | 6 tasks | 7 files |
 | Phase H.4c-acme-bank-developer-overlay P01 | 3min | 3 tasks | 4 files |
+| Phase H.3b-version-pin-ci-drift-gate P01 | 10m | 5 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -215,6 +216,7 @@ Recent decisions affecting current work:
 - [Phase H.4c-acme-bank-developer-overlay]: Three differential signals (D-02) — 2 tool-level (delete-topics, alter-topic-config removed) + 1 skill-level (dsp-plan blocked) — robust against future base-canon shifts
 - [Phase H.4c-acme-bank-developer-overlay]: Zero engine changes (D-04) — H.4b's _profile_path + customer branch already handles slash-separated profile names for customer-overlay lookup
 - [Phase H.4c-acme-bank-developer-overlay]: ADR-004 ships as Accepted stub (D-05) cross-referencing adr-003 — formal ADR promotion deferred until first acme engagement validates the dev overlay in practice
+- [Phase H.3b-version-pin-ci-drift-gate]: Pinned streaming-skills-plugin at commit 91d1871e; CI drift gate via git ls-remote (no Node.js, no API auth) mirrors G.2c pattern
 
 ### Pending Todos
 
@@ -226,6 +228,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-17T17:51:50.515Z
-Stopped at: Completed H.4c-01-PLAN.md
+Last session: 2026-05-17T18:04:34.720Z
+Stopped at: Completed H.3b-01-PLAN.md
 Resume file: None

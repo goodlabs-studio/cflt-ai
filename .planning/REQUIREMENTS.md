@@ -79,7 +79,7 @@ v1.0 traceability archived to [`milestones/v1.0-REQUIREMENTS.md`](milestones/v1.
 | EVAL-01 | Phase H.2 | Complete (H.2-01) |
 | EVAL-02 | Phase H.2 | Complete (H.2-02 + H.2-03) |
 | EVAL-03 | Phase H.2 | Complete (H.2-02 + H.2-03 encode 9/9 trip-wires; H.2-04 lands `.github/workflows/skill-evals.yml` PR gate) |
-| INST-01 | Phase H.3 | Partial (H.3a-01: install verified + overlay landed; H.3b adds pin file + CI drift gate) |
+| INST-01 | Phase H.3 | Complete (H.3a-01: install verified + overlay landed; H.3b-01: pin in tools/vendor-sources.json + .github/workflows/streaming-skills-drift.yml CI gate) |
 | CAN-OVR-01 | Phase H.3 | Complete (H.3a-01) |
 | SCAF-01 | Phase H.3 | Planned |
 | SCAF-02 | Phase H.3 | Planned |
