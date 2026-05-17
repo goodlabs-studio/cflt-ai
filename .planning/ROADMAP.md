@@ -28,7 +28,7 @@ Full details: [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
 
 - [x] **Phase H.1: Wiki ingest from confluent-agent-skills references** — Compile ~10 peer-reviewed Confluent reference articles into wiki; lift trip-wire facts as high-confidence wiki articles (completed 2026-05-16)
 - [x] **Phase H.2: Eval harness extension to all skills** — Port confluentinc/agent-skills evals.json pattern (prompt + grep-checkable expectations[] at 90% threshold blocks merge) to /review, /wiki:*, /dsp:plan, /dsp:apply (completed 2026-05-17)
-- [ ] **Phase H.3a: Plugin install + canon-overlay wiki article** — Install streaming-skills-plugin; author wiki overlay documenting FSI overrides on top of upstream skills; hook into CLAUDE.md so overlay loads when upstream skills activate
+- [x] **Phase H.3a: Plugin install + canon-overlay wiki article** — Install streaming-skills-plugin; author wiki overlay documenting FSI overrides on top of upstream skills; hook into CLAUDE.md so overlay loads when upstream skills activate (completed 2026-05-17)
 - [ ] **Phase H.4a: Profile-family schema extension** — Add `family: "operator" | "developer"` field to every profile JSON; branch apply_engine on family; back-compat default to operator
 - [ ] **Phase H.4b: Developer-sandbox profile + FSI dev canon overlay** — Author developer-sandbox profile with `tool_overrides` for data-plane ops; bifurcate FSI canon into prod/dev overlays; negative-space test matrix proves operator-only tools fail closed under developer family
 - [ ] **Phase H.4c: acme-bank developer overlay** — Customer-fork demo: acme-bank developer overlay produces differential gating against base FSI dev canon; mirrors v1.0 ACTG-04 for the developer family
@@ -92,7 +92,7 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped earl
   2. `wiki/patterns/fsi-canon-overlay-for-confluent-skills.md` exists with per-upstream-skill override tables (4 sections: kafka-streams, python-client, schema-registry, CDC-tableflow), each listing FSI overrides that must apply on top of upstream defaults.
   3. CLAUDE.md (cflt-ai project file) references the overlay article in the canon section so upstream-skill activations pick up the FSI overrides automatically.
   4. `/wiki:validate` against MCP sources passes on the overlay article (zero drift findings); article has `confidence: high` frontmatter with `last_validated: <today>`.
-**Plans:** 0/1 plan (H.3a-01-PLAN.md)
+**Plans:** 1/1 plan complete (H.3a-01-PLAN.md → H.3a-01-SUMMARY.md, 2026-05-17)
 
 ### Phase H.4a: Profile-family schema extension
 **Goal:** Add `family: "operator" | "developer"` field to every profile JSON; update `apply_engine.load_profile()` and `check_tool_permitted()` to read the family and branch behavior (operator → existing tier cascade; developer → new `tool_overrides` map). Default to `"operator"` when absent for back-compat. No behavior change yet — just schema groundwork that unblocks H.4b.
@@ -175,7 +175,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward into v2.0 backlog (se
 | G.2c. Tool-classification rename | v1.0 | 3/3 | Complete | 2026-05-15 |
 | H.1. Wiki ingest from agent-skills refs | v2.0 | 3/3 | Complete | 2026-05-16 |
 | H.2. Eval harness extension | v2.0 | 4/4 | Complete | 2026-05-17 |
-| H.3a. Plugin install + canon-overlay article | v2.0 | 0/1 | Not started | - |
+| H.3a. Plugin install + canon-overlay article | v2.0 | 1/1 | Complete | 2026-05-17 |
 | H.4a. Profile-family schema extension | v2.0 | 0/1 | Not started | - |
 | H.4b. Developer-sandbox profile + FSI dev canon | v2.0 | 0/1 | Not started | - |
 | H.4c. acme-bank developer overlay | v2.0 | 0/1 | Not started | - |

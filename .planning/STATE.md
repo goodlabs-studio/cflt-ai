@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
-status: In progress
-stopped_at: Phase H.3a context gathered (auto-mode)
-last_updated: "2026-05-17T16:56:29.400Z"
+status: Phase complete — ready for verification
+stopped_at: Completed H.3a-01-PLAN.md
+last_updated: "2026-05-17T17:14:00.096Z"
 last_activity: 2026-05-17
 progress:
   total_phases: 8
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-05-16)
 ## Current Position
 
 Milestone: v2.0
-Phase: H.3a (next)
-Plan: Not started
+Phase: H.3a (Plugin install + canon-overlay wiki article) — EXECUTING
+Plan: 1 of 1
 Last activity: 2026-05-17
 
 Progress: [█████░░░░░] 54%
@@ -100,6 +100,7 @@ Tag: `v1.0`
 | Phase H.2 P02 | 3 | 2 tasks | 4 files |
 | Phase H.2 P03 | 3min | 3 tasks | 3 files |
 | Phase H.2-eval-harness-extension P04 | 2min | 2 tasks | 1 files |
+| Phase H.3a P01 | 8min | 5 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -197,6 +198,10 @@ Recent decisions affecting current work:
 - [Phase H.2-eval-harness-extension]: Three pytest invocations split into distinct workflow steps (runner / adapters / golden) — failure-attribution in the GitHub UI is worth the marginal YAML
 - [Phase H.2-eval-harness-extension]: Threshold enforcement inside pytest (test_threshold_per_skill assertion), NOT as a separate workflow gate — D-06 lives in one tested code path
 - [Phase H.2-eval-harness-extension]: Zero secrets, zero model SDKs in CI — D-04 structural-only enforced architecturally in the runner and visible structurally in the workflow shape
+- [Phase H.3a]: wiki/_graph.md uses line-based 'source → target : relation' format throughout — H.3a overlay graph block added in this convention (not the ### block format described in plan task spec) per Rule 3 deviation; reformatting the existing 360-line graph was out of scope
+- [Phase H.3a]: Dual-source attestation for canon-overlay rows: 'Upstream Default' column cites SKILL.md path:line; 'Canon Source' column cites CLAUDE.md §; FSI Override is the documented delta — eliminates need for MCP cross-check on canon-grounded claims
+- [Phase H.3a]: Inbound graph edges selected by cross-reference density: fsi-governance-automation (15), fsi-exactly-once (12), topic-naming (12) — picked top 3 for maximum SA-traversal discoverability
+- [Phase H.3a]: Canon-overlay article frontmatter uses free-form 'source: streaming-skills-plugin@1.0.0' field per D-10; wiki-lint UNKNOWN VENDOR finding is expected — H.3b formalizes the pin in tools/vendor-plugins.json and the finding will clear
 
 ### Pending Todos
 
@@ -208,6 +213,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-17T16:56:29.398Z
-Stopped at: Phase H.3a context gathered (auto-mode)
-Resume file: .planning/phases/H.3a-plugin-install-canon-overlay-wiki-article/H.3a-CONTEXT.md
+Last session: 2026-05-17T17:13:28.004Z
+Stopped at: Completed H.3a-01-PLAN.md
+Resume file: None
