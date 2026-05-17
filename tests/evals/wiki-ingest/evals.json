@@ -1,0 +1,123 @@
+{
+  "skill_name": "/wiki:ingest",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Ingest the Kafka Streams topology-patterns reference at raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/topology-patterns.md into wiki/patterns/.",
+      "expected_output": "A new wiki/patterns/kafka-streams-topology-patterns.md article with source: confluent-agent-skills@<sha> frontmatter and a provenance footer citing the upstream path.",
+      "files": ["raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references/topology-patterns.md"],
+      "expectations": [
+        "Output article frontmatter includes `source: confluent-agent-skills@91d1871e`",
+        "Output article frontmatter includes `upstream_path: skills/kafka-streams-programming/references/topology-patterns.md`",
+        "Output article includes a provenance footer line beginning with `Source: confluentinc/agent-skills@`",
+        "Output article path is `wiki/patterns/kafka-streams-topology-patterns.md` (no vendor-prefix in filename per H.1 D-04)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Ingest a draft article that proposes placing Avro schemas under `src/main/resources/avro/`. Validate against upstream Confluent canon before writing.",
+      "expected_output": "MCP-validation flags the path as incorrect and the resulting article cites `src/main/avro/` (Gradle and Maven Avro plugin default).",
+      "files": [],
+      "expectations": [
+        "When ingesting an article that proposes Avro schemas under `src/main/resources/avro/`, MCP-validation flags this as incorrect and the article cites `src/main/avro/` instead",
+        "Resulting article includes `src/main/avro/` as the canonical directory",
+        "Resulting article does NOT cite `src/main/resources/avro/` as a recommendation"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Ingest a draft article on WarpStream tuning that proposes setting `fetch.min.bytes=1024`. Validate against upstream Confluent canon and WarpStream documentation before writing.",
+      "expected_output": "MCP-validation flags fetch.min.bytes as unsupported on WarpStream; the article documents the omission and notes WarpStream's BYOC architecture pre-empts client-side fetch batching.",
+      "files": [],
+      "expectations": [
+        "When ingesting an article that proposes WarpStream `fetch.min.bytes` config, MCP-validation flags this as unsupported and the article documents the omission",
+        "Resulting article notes that `replication.factor` on WarpStream is cosmetic (always 3)",
+        "Resulting article includes the FSI-context paragraph framing WarpStream as competitive context, not FSI production guidance"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Process the next pending entry in `raw/_ingest.md` — fill `wiki/concepts/flink-confluent-cloud-setup.md` from `wiki/_queue.md` Stubs.",
+      "expected_output": "A new wiki/concepts/flink-confluent-cloud-setup.md article covering compute pool creation, catalog/database/table mapping, RBAC model, statement lifecycle, watermarks, statement evolution.",
+      "files": ["wiki/_queue.md"],
+      "expectations": [
+        "Output article path is `wiki/concepts/flink-confluent-cloud-setup.md`",
+        "Output article includes a section on compute pool creation",
+        "Output article includes `catalog`, `database`, and `table` mapping concepts",
+        "Output article references `RBAC` for dual control-plane + data-plane access",
+        "`raw/_ingest.md` Pending section no longer contains the flink-confluent-cloud-setup entry",
+        "`wiki/_index.md` contains a line referencing `flink-confluent-cloud-setup.md`"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Ingest the schema-registry detection-patterns reference at raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/detection-patterns.md, merged with code-migration.md, into wiki/patterns/schema-registry-adoption-playbook.md.",
+      "expected_output": "A merged wiki/patterns/schema-registry-adoption-playbook.md article with both reference sources cited in the provenance footer and both sources listed in `upstream_path` (or equivalent multi-source representation).",
+      "files": [
+        "raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/detection-patterns.md",
+        "raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/code-migration.md"
+      ],
+      "expectations": [
+        "Output article path is `wiki/patterns/schema-registry-adoption-playbook.md`",
+        "Output article cites both upstream paths in provenance",
+        "Output article header includes `detection` and `migration` as top-level sections",
+        "Output article frontmatter includes `confidence: high` (source attestation per H.1 D-07)"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Ingest a new pattern article without confluent-docs MCP available. Use context7 for architectural patterns and document the validation gap.",
+      "expected_output": "Article ingests with `confidence: medium` (downgraded due to incomplete MCP validation) and a frontmatter note explaining the missing confluent-docs check.",
+      "files": [],
+      "expectations": [
+        "Output article frontmatter includes `confidence: medium` or lower when confluent-docs MCP was unavailable",
+        "Output article documents which MCP sources were used and which were skipped",
+        "Article is NOT silently promoted to `confidence: high` without full MCP coverage"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Ingest an article whose proposed `related:` frontmatter would create a 0-inbound entry in wiki/_graph.md. Detect and reject (or add the inbound automatically).",
+      "expected_output": "Either /wiki:ingest fails closed with a graph-coverage error, OR it adds at least one inbound link in wiki/_graph.md before writing the article.",
+      "files": ["wiki/_graph.md"],
+      "expectations": [
+        "Output article has >= 1 inbound link in wiki/_graph.md after ingest",
+        "Output article has >= 1 outbound link in wiki/_graph.md after ingest",
+        "Ingest never produces an orphan article (0 inbound)"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Ingest two articles that both want to claim `wiki/concepts/kafka-streams-debugging.md` as a target path. Resolve the collision deterministically.",
+      "expected_output": "The first ingest succeeds; the second fails closed with a name-collision error and suggests an alternate slug.",
+      "files": [],
+      "expectations": [
+        "Second ingest exits non-zero or emits an explicit collision-detection message",
+        "Second ingest does NOT silently overwrite the first article's content",
+        "Suggested alternate slug does not contain a vendor-prefix per H.1 D-04 (e.g., `kafka-streams-debugging-v2.md` is OK; `confluent.kafka-streams-debugging.md` is NOT)"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Ingest from a non-vendored URL (e.g., a Confluent blog post). Confirm the source-attestation path differs from vendored-tree ingest.",
+      "expected_output": "Article frontmatter omits the `source: confluent-agent-skills@<sha>` field, uses `sources:` (plural list) with the URL, and sets `confidence: high` only if MCP validation completes.",
+      "files": [],
+      "expectations": [
+        "Output article frontmatter does NOT include `source: confluent-agent-skills@`",
+        "Output article frontmatter `sources:` list includes the URL",
+        "Output article frontmatter does NOT include `upstream_path:` (that field is vendored-tree-only)"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Ingest an article and update wiki/_index.md and wiki/_graph.md in the same operation. Verify both are touched.",
+      "expected_output": "After /wiki:ingest completes, both wiki/_index.md and wiki/_graph.md have new lines referencing the new article.",
+      "files": ["wiki/_index.md", "wiki/_graph.md"],
+      "expectations": [
+        "`wiki/_index.md` contains a new line referencing the article slug",
+        "`wiki/_graph.md` contains at least one new edge involving the new article",
+        "Both index and graph updates happen atomically (single commit message references both)"
+      ]
+    }
+  ]
+}
