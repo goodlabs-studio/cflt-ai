@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 — Foundation through Act Rail** — 9 phases, 26 plans (shipped 2026-05-16). See [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md).
-- 🚧 **v2.0 — Developer Persona + Quality Gates** — 4 phases planned, 0 complete
+- 🚧 **v2.0 — Developer Persona + Quality Gates** — 8 phases planned, 2 complete
 
 ## Phases
 
@@ -27,13 +27,17 @@ Full details: [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
 ### 🚧 v2.0 — Developer Persona + Quality Gates
 
 - [x] **Phase H.1: Wiki ingest from confluent-agent-skills references** — Compile ~10 peer-reviewed Confluent reference articles into wiki; lift trip-wire facts as high-confidence wiki articles (completed 2026-05-16)
-- [x] **Phase H.2: Eval harness extension to all skills** — Port confluentinc/agent-skills evals.json pattern (prompt + grep-checkable expectations[] at 90% threshold blocks merge) to /review, /wiki:*, /dsp:plan, /dsp:apply
-- [ ] **Phase H.3: Confluent skill plugin install + FSI canon overlay + /dsp:scaffold** — Install streaming-skills-plugin (version-pinned with CI drift gate); author wiki overlay article documenting FSI overrides on top of upstream skills; build /dsp:scaffold wrapper that materializes scaffolded output as canon-compliant fsi-dsp artifacts
-- [ ] **Phase H.4: Developer-sandbox profile family + bifurcated FSI canon** — Introduce orthogonal "developer" profile family alongside operator; apply_engine branches on family; FSI canon bifurcates into prod vs dev overlays; acme-bank developer overlay demonstrates customer fork differential gating
+- [x] **Phase H.2: Eval harness extension to all skills** — Port confluentinc/agent-skills evals.json pattern (prompt + grep-checkable expectations[] at 90% threshold blocks merge) to /review, /wiki:*, /dsp:plan, /dsp:apply (completed 2026-05-17)
+- [ ] **Phase H.3a: Plugin install + canon-overlay wiki article** — Install streaming-skills-plugin; author wiki overlay documenting FSI overrides on top of upstream skills; hook into CLAUDE.md so overlay loads when upstream skills activate
+- [ ] **Phase H.4a: Profile-family schema extension** — Add `family: "operator" | "developer"` field to every profile JSON; branch apply_engine on family; back-compat default to operator
+- [ ] **Phase H.4b: Developer-sandbox profile + FSI dev canon overlay** — Author developer-sandbox profile with `tool_overrides` for data-plane ops; bifurcate FSI canon into prod/dev overlays; negative-space test matrix proves operator-only tools fail closed under developer family
+- [ ] **Phase H.4c: acme-bank developer overlay** — Customer-fork demo: acme-bank developer overlay produces differential gating against base FSI dev canon; mirrors v1.0 ACTG-04 for the developer family
+- [ ] **Phase H.3b: Version pin + CI drift gate** — Pin streaming-skills-plugin version in `tools/vendor-plugins.json`; add `.github/workflows/streaming-skills-drift.yml` mirroring G.2c pattern exactly
+- [ ] **Phase H.3c: /dsp:scaffold wrapper** — New cflt-ai skill wrapping upstream scaffolders; materializes output as canon-compliant fsi-dsp artifact (MANIFEST entry, activity log, profile-gated). Hard prereq: H.4c (canon family must exist)
 
-### Carry-forward from v1.0 G.2 (deferred sub-phases)
+### Deferred sub-phases (G.2 carry-forward)
 
-These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped within v1.0. The remaining sub-phases carry into v2.0 backlog; promote individually when sequencing demands.
+These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped earlier. The remaining sub-phases carry into v2.0 backlog; promote individually when sequencing demands.
 
 - [ ] **G.2a: mcp-confluent tool-call executor** — Dispatch `artifact.type == "mcp-confluent-tool"` to a tool-call sequence executor via stdio MCP from Python. Smallest, most isolated of the remaining G.2 work; proves the MCP-stdio-from-Python plumbing. Unblocked now that G.2c has corrected the tool classification.
 - [ ] **G.2b: Composite scenario executor** — Dispatch `artifact.type == "scenario"` to a chained executor that walks an `apply_sequence` field in MANIFEST (fsi-dsp PR required). Re-entrant via the existing dispatcher.
@@ -42,11 +46,11 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped with
 
 ## Phase Details
 
-# Milestone v2.0 — Developer Persona + Quality Gates
-
 **Theme:** Expand cflt-ai from SA-only (operator profiles) to cover the developer persona inside customer engagements, and introduce evaluation discipline across every skill so quality stops drifting silently. Triggered by the `confluentinc/agent-skills` release (2026-03-13) which provides four production-ready developer skills (kafka-streams, python-client, schema-registry, CDC-to-Tableflow) we can incorporate as upstream tooling.
 
-**Recommended execution order:** H.1 → H.3a (install + canon overlay article) → H.4 (developer-sandbox profile family) → H.3b (version-pin CI gate) → H.3c (/dsp:scaffold wrapper) → H.2 (eval harness extension). H.3c depends on H.4 because `/dsp:scaffold` needs to know which canon family (operator-prod vs developer-sandbox) to materialize.
+**Recommended execution order:** H.1 → H.2 → H.3a → H.4a → H.4b → H.4c → H.3b → H.3c. H.3c is last because `/dsp:scaffold` needs both the installed plugin (H.3a/b) and the developer canon family (H.4b/c) to materialize artifacts under the correct profile family. H.3b is grouped late so H.4a–c can proceed in parallel with overlay-article work in H.3a; the version-pin gate has no functional dependency on the canon work.
+
+**Restructure note (2026-05-17):** Original H.3 and H.4 phases were split into 6 first-class GSD phases (H.3a, H.3b, H.3c, H.4a, H.4b, H.4c) so each sub-phase becomes a single-plan unit the GSD tooling can drive sequentially. Goal and success-criteria text below preserves the original H.3/H.4 substance.
 
 ### Phase H.1: Wiki ingest from confluent-agent-skills references
 **Goal:** Compile the peer-reviewed reference articles inside `confluentinc/agent-skills/skills/*/references/` into our wiki, and lift the embedded trip-wire facts into individual high-confidence articles. After H.1, our wiki has authoritative coverage of Kafka Streams topology/debugging/production-hardening, Schema Registry adoption playbook, CDC-to-Tableflow pipeline construction, and the dozen-or-so hard-won correctness facts (Tableflow tombstone immutability, KS 4.x nested-class rename, Avro source path, OracleXStream `after.state.only` limitation, WarpStream SR format constraint, etc.).
@@ -79,44 +83,66 @@ These were promoted from backlog 999.3 into Phase G.2 but only G.2c shipped with
 - [x] H.2-03-PLAN.md — Author 3 thin-wrapper evals.json for /review, /dsp:plan, /dsp:apply (55 cases incl. 7 D-08 trip-wires)
 - [x] H.2-04-PLAN.md — CI workflow .github/workflows/skill-evals.yml + final phase-exit regression gate
 
-### Phase H.3: confluent-agent-skills install + FSI canon overlay + /dsp:scaffold
-**Goal:** Install `streaming-skills-plugin` so the four upstream Confluent skills become available inside Claude Code sessions; pin its version with a CI drift check that mirrors G.2c's pattern; author wiki overlay articles that document the FSI-specific overrides on top of upstream skill defaults (mTLS, exactly_once_v2, schema format, etc.); build a new `/dsp:scaffold <artifact-type> <name>` skill that wraps the upstream scaffolders so their output materializes as a canon-compliant fsi-dsp artifact (registered in MANIFEST.yaml, activity-logged, profile-gated, ready for downstream `/dsp:apply`).
-**Depends on:** H.1 (the canon overlay article needs the ingested reference articles to cite). H.4 is a soft prereq for H.3c — `/dsp:scaffold` needs the profile family to know which canon to materialize.
-**Requirements:** INST-01, CAN-OVR-01, SCAF-01, SCAF-02, SCAF-03
-
-**Sub-phases (each its own PLAN.md):**
-
-- **H.3a: Plugin install + canon-overlay wiki article** (~half day) — `/plugin marketplace add confluentinc/agent-skills`; `/plugin install streaming-skills-plugin@confluent-agent-skills`; author `wiki/patterns/fsi-canon-overlay-for-confluent-skills.md` per upstream skill (4 sections), each listing the FSI-canon overrides that must apply on top of the upstream defaults; hook into cflt-ai's CLAUDE.md so the overlay article is read whenever an upstream skill activates. Smallest, fastest, immediate value.
-- **H.3b: Version pin + CI drift gate** (~half day) — Pin `streaming-skills-plugin` version inside `.planning/config.json` (or a new `tools/vendor-plugins.json`); add `.github/workflows/streaming-skills-drift.yml` that warns on upstream plugin manifest changes. Mirrors the G.2c pattern exactly — same generator/`--check`/CI-gate shape.
-- **H.3c: `/dsp:scaffold` skill** (~1 week) — New cflt-ai skill that triages a scaffolding request, picks the right upstream skill to invoke, applies the active profile-family canon overlay as structured config (not just prose), invokes the upstream skill, then registers the scaffolded output as an artifact entry in fsi-dsp's `MANIFEST.yaml` with a capability block and provenance footer. Profile-gated (engineer family can scaffold prod artifacts; developer-sandbox family can scaffold dev artifacts; read-only cannot scaffold at all). Activity-logged. Hard prereq: H.4 (canon family must exist before scaffold can apply it).
-
+### Phase H.3a: Plugin install + canon-overlay wiki article
+**Goal:** Install `streaming-skills-plugin` so the four upstream Confluent skills (kafka-streams, python-client, schema-registry, CDC-tableflow) become available inside Claude Code sessions, and author a wiki overlay article documenting the FSI-specific overrides on top of upstream skill defaults (mTLS, exactly_once_v2, schema format, compatibility mode, etc.). Hook into cflt-ai's CLAUDE.md so the overlay article is read whenever an upstream skill activates. Smallest, fastest, immediate value — proves the install path and gives developers FSI guardrails the moment they invoke an upstream skill.
+**Depends on:** H.1 (canon overlay article cites ingested reference articles).
+**Requirements:** INST-01, CAN-OVR-01
 **Success Criteria** (what must be TRUE):
-  1. `streaming-skills-plugin` is installed and version-pinned in repo; pinned version visible in `tools/vendor-plugins.json` (or equivalent)
-  2. `.github/workflows/streaming-skills-drift.yml` exists and fails on PR when the upstream plugin's `plugin.json` version field changes without a matching pin update
-  3. `wiki/patterns/fsi-canon-overlay-for-confluent-skills.md` exists with per-upstream-skill override tables (4 sections: kafka-streams, python-client, schema-registry, CDC-tableflow)
-  4. `/dsp:scaffold <artifact-type> <name>` exists as a cflt-ai skill and runs end-to-end for at least one artifact type (e.g., `/dsp:scaffold producer my-payments-producer`)
-  5. Scaffolded output for that one type appears as a new MANIFEST.yaml capability entry in fsi-dsp with full provenance (operator, profile, canon-stack hash, timestamp, upstream-skill version)
-  6. `/dsp:scaffold` refuses to run under `read-only` profile and refuses to scaffold a prod-canon artifact under `developer-sandbox` profile (negative-space tests prove fail-closed)
-**Plans:** 0/3 plans (H.3a, H.3b, H.3c — one PLAN.md per sub-phase)
+  1. `streaming-skills-plugin` is installed (via `/plugin install streaming-skills-plugin@confluent-agent-skills` or marketplace add + install); install state visible in claude config; the four upstream skills appear in `/help` skill listings.
+  2. `wiki/patterns/fsi-canon-overlay-for-confluent-skills.md` exists with per-upstream-skill override tables (4 sections: kafka-streams, python-client, schema-registry, CDC-tableflow), each listing FSI overrides that must apply on top of upstream defaults.
+  3. CLAUDE.md (cflt-ai project file) references the overlay article in the canon section so upstream-skill activations pick up the FSI overrides automatically.
+  4. `/wiki:validate` against MCP sources passes on the overlay article (zero drift findings); article has `confidence: high` frontmatter with `last_validated: <today>`.
+**Plans:** 0/1 plan (H.3a-01-PLAN.md)
 
-### Phase H.4: Developer-sandbox profile family + bifurcated FSI canon
-**Goal:** Introduce a second profile family — `developer` — alongside the existing operator tier hierarchy. The developer family doesn't extend the read-only/engineer/break-glass cascade; it runs orthogonally with its own allowed-skills list, its own data-plane scope (sandbox-only mcp-confluent write ops like produce-message/consume-messages/create-topics), and its own canon overlay. FSI canon bifurcates into a prod overlay (operator-tier, mTLS + exactly_once_v2 + Avro/Protobuf + FULL compatibility) and a dev overlay (developer-tier, OAUTHBEARER + at_least_once + JSON Schema OK + BACKWARD compatibility). acme-bank gets a developer overlay demonstrating customer-fork differential gating, mirroring ACTG-04 for the developer family.
-**Depends on:** Nothing structurally — can run parallel to H.3a/H.3b. Hard prereq for H.3c (scaffold wrapper needs to know which canon family to materialize).
-**Requirements:** PROFAM-01, PROFAM-02, DEVPROF-01, DEVCAN-01, DEVPROF-02
-
-**Sub-phases:**
-
-- **H.4a: Profile-family schema extension** (~half day) — Add `family: "operator" | "developer"` field to every profile JSON; update `apply_engine.load_profile()` and `check_tool_permitted()` to read the family and branch behavior (operator → tier cascade; developer → `tool_overrides` map). Default to `"operator"` when absent for back-compat. No behavior change yet — just schema groundwork.
-- **H.4b: Developer-sandbox profile + FSI dev canon overlay** (~1 day) — Author `tools/profiles/developer/sandbox.json` with `family: "developer"`, `primary_tooling.skills` allowlist for upstream confluent-agent-skills, `tool_overrides` promoting data-plane ops (produce-message, consume-messages, create-topics, delete-topics, alter-topic-config, create-flink-statement, delete-flink-statements) to `developer-sandbox` tier, `skill_blocklist` excluding `/dsp:apply`, and a soft `environment_guard` pattern matching sandbox/dev cluster names. Author `canon/industry/fsi/developer-sandbox/` overlay with the bifurcated dev defaults. Negative-space test matrix: per-profile-family parametrized assertion that no operator-tier-only tool runs under developer-sandbox, and `/dsp:apply` is fail-closed under developer-sandbox.
-- **H.4c: acme-bank developer overlay + customer-fork demo** (~half day) — Mirror Phase 3c ACTG-04 for the developer family. `canon/customer/acme-bank/profiles/developer/sandbox.json` overlays the FSI developer canon with acme-specific topic naming, environment patterns (e.g., `acme-*-sandbox`), pre-approved upstream connector list, additional skill_blocklist entries. Test demonstrates the customer overlay produces a differential result against base FSI dev canon.
-
+### Phase H.4a: Profile-family schema extension
+**Goal:** Add `family: "operator" | "developer"` field to every profile JSON; update `apply_engine.load_profile()` and `check_tool_permitted()` to read the family and branch behavior (operator → existing tier cascade; developer → new `tool_overrides` map). Default to `"operator"` when absent for back-compat. No behavior change yet — just schema groundwork that unblocks H.4b.
+**Depends on:** Nothing structural.
+**Requirements:** PROFAM-01, PROFAM-02
 **Success Criteria** (what must be TRUE):
-  1. Every profile JSON file has a `family` field, value `"operator"` or `"developer"`; `load_profile()` parses it; `check_tool_permitted()` branches on it (verified by unit tests)
-  2. `tools/profiles/developer/sandbox.json` exists with the shape documented in H.4 context and passes JSON Schema validation
-  3. `canon/industry/fsi/developer-sandbox/` overlay exists and contains every Confluent Canon dimension from CLAUDE.md with explicit dev-tier values (auth, processing.guarantee, schema format, compatibility, RF, ISR, retention, naming convention)
-  4. Per-profile-family negative-space test suite runs and proves: operator profiles cannot invoke `tool_overrides` entries from developer family, and developer profiles cannot invoke operator-tier-only tools (e.g., `delete-environment`, `create-cluster`); `/dsp:apply` fails closed under developer-sandbox with explicit error message
-  5. `canon/customer/acme-bank/profiles/developer/sandbox.json` exists and a test demonstrates the customer overlay produces at least one differential gating decision relative to base FSI dev canon
-**Plans:** 0/3 plans (H.4a, H.4b, H.4c — one PLAN.md per sub-phase)
+  1. Every existing profile JSON has a `family: "operator"` field; absence of field defaults to `"operator"` in `load_profile()` (verified by unit test on a fixture profile with no family field).
+  2. `check_tool_permitted()` branches on family — operator path uses the existing tier cascade, developer path reads a `tool_overrides` map; both branches unit-tested (developer branch tested via fixture profile, no real developer profile required yet).
+  3. JSON Schema for profiles validates the new `family` field and rejects unknown values with a clear error.
+  4. All existing operator-profile tests still pass — zero behavior change for operator family.
+**Plans:** 0/1 plan (H.4a-01-PLAN.md)
+
+### Phase H.4b: Developer-sandbox profile + FSI dev canon overlay
+**Goal:** Author `tools/profiles/developer/sandbox.json` with `family: "developer"`, `primary_tooling.skills` allowlist for upstream confluent-agent-skills, `tool_overrides` promoting data-plane ops (produce-message, consume-messages, create-topics, delete-topics, alter-topic-config, create-flink-statement, delete-flink-statements) to `developer-sandbox` tier, `skill_blocklist` excluding `/dsp:apply`, and a soft `environment_guard` pattern matching sandbox/dev cluster names. Author `canon/industry/fsi/developer-sandbox/` overlay with the bifurcated dev defaults (OAUTHBEARER, at_least_once, JSON Schema OK, BACKWARD compatibility). Negative-space test matrix proves operator-tier-only tools fail closed under developer-sandbox and `/dsp:apply` refuses to run.
+**Depends on:** H.4a (family schema must exist).
+**Requirements:** DEVPROF-01, DEVCAN-01, DEVPROF-02
+**Success Criteria** (what must be TRUE):
+  1. `tools/profiles/developer/sandbox.json` exists with the shape documented above and passes JSON Schema validation.
+  2. `canon/industry/fsi/developer-sandbox/` overlay exists and contains every Confluent Canon dimension from CLAUDE.md with explicit dev-tier values (auth, processing.guarantee, schema format, compatibility, RF, ISR, retention, naming convention).
+  3. Per-profile-family negative-space test suite runs and proves: operator profiles cannot invoke `tool_overrides` entries from developer family, and developer profiles cannot invoke operator-tier-only tools (e.g., `delete-environment`, `create-cluster`); `/dsp:apply` fails closed under developer-sandbox with explicit error message referencing the family.
+**Plans:** 0/1 plan (H.4b-01-PLAN.md)
+
+### Phase H.4c: acme-bank developer overlay
+**Goal:** Mirror v1.0 Phase 3c ACTG-04 for the developer family. `canon/customer/acme-bank/profiles/developer/sandbox.json` overlays the FSI developer canon with acme-specific topic naming, environment patterns (e.g., `acme-*-sandbox`), pre-approved upstream connector list, additional `skill_blocklist` entries. Test demonstrates the customer overlay produces a differential gating result against base FSI dev canon — proves customer-fork differential gating works for the developer family the same way it does for the operator family.
+**Depends on:** H.4b (FSI dev canon overlay must exist to fork from).
+**Requirements:** DEVPROF-02 (customer-fork extension)
+**Success Criteria** (what must be TRUE):
+  1. `canon/customer/acme-bank/profiles/developer/sandbox.json` exists and a test demonstrates the customer overlay produces at least one differential gating decision relative to base FSI dev canon (e.g., a tool/topic/connector permitted under base FSI dev canon is denied under acme-bank, or vice versa).
+  2. acme-bank developer overlay test mirrors the ACTG-04 pattern from v1.0 Phase 3c — same assertion shape for engineer family, adapted to developer family.
+**Plans:** 0/1 plan (H.4c-01-PLAN.md)
+
+### Phase H.3b: Version pin + CI drift gate
+**Goal:** Pin `streaming-skills-plugin` version inside `tools/vendor-plugins.json` (new file, or merge into existing `tools/vendor-sources.json` schema); add `.github/workflows/streaming-skills-drift.yml` that fails on PR when the upstream plugin manifest version changes without a matching pin update. Mirrors the G.2c pattern exactly — same generator / `--check` mode / CI-gate shape — so the upstream-pin discipline is consistent across vendor sources (H.1) and vendor plugins (here).
+**Depends on:** H.3a (plugin must be installed to know what to pin).
+**Requirements:** INST-01 (drift gate)
+**Success Criteria** (what must be TRUE):
+  1. `tools/vendor-plugins.json` exists (or extended `tools/vendor-sources.json` with a `claude-plugin` kind) and contains the pinned `streaming-skills-plugin` version + upstream commit/ref.
+  2. `.github/workflows/streaming-skills-drift.yml` exists, runs on PR, and fails when the upstream plugin's `plugin.json` version field differs from the pinned version without a matching update to the pin file.
+  3. Drift-gate generator has a `--check` mode that exits non-zero on drift (mirrors G.2c's generator/`--check` shape exactly; same script pattern, swapped target).
+**Plans:** 0/1 plan (H.3b-01-PLAN.md)
+
+### Phase H.3c: /dsp:scaffold wrapper
+**Goal:** New cflt-ai skill `/dsp:scaffold <artifact-type> <name>` that triages a scaffolding request, picks the right upstream skill to invoke (from streaming-skills-plugin), applies the active profile-family canon overlay as structured config (not just prose hints), invokes the upstream skill, then registers the scaffolded output as an artifact entry in fsi-dsp's `MANIFEST.yaml` with a capability block and provenance footer. Profile-gated (engineer family can scaffold prod artifacts; developer-sandbox family can scaffold dev artifacts; read-only cannot scaffold at all). Activity-logged with full provenance.
+**Depends on:** H.3a (plugin installed), H.3b (pin in place so scaffold output references a stable upstream version), H.4c (canon families exist so scaffold can apply the right one).
+**Requirements:** SCAF-01, SCAF-02, SCAF-03
+**Success Criteria** (what must be TRUE):
+  1. `/dsp:scaffold <artifact-type> <name>` exists as a cflt-ai skill and runs end-to-end for at least one artifact type (e.g., `/dsp:scaffold producer my-payments-producer`).
+  2. Scaffolded output for that one type appears as a new MANIFEST.yaml capability entry in fsi-dsp with full provenance (operator, profile, canon-stack hash, timestamp, upstream-skill version).
+  3. `/dsp:scaffold` refuses to run under `read-only` profile and refuses to scaffold a prod-canon artifact under `developer-sandbox` profile (negative-space tests prove fail-closed with explicit error messages).
+**Plans:** 0/1 plan (H.3c-01-PLAN.md)
 
 ## Backlog (999.x — parking lot)
 
@@ -147,10 +173,14 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward into v2.0 backlog (se
 | F.1. FRANZ pre-confirmed apply | v1.0 | 1/1 | Complete | 2026-05-13 |
 | G.1. Terraform-module executor | v1.0 | 1/1 | Complete | 2026-05-14 |
 | G.2c. Tool-classification rename | v1.0 | 3/3 | Complete | 2026-05-15 |
-| H.1. Wiki ingest from agent-skills refs | v2.0 | 2/3 | Complete    | 2026-05-16 |
-| H.2. Eval harness extension | v2.0 | 4/4 | Complete    | 2026-05-17 |
-| H.3. confluent-agent-skills install + overlay + /dsp:scaffold | v2.0 | 0/3 | Not started | - |
-| H.4. Developer-sandbox profile family + bifurcated FSI canon | v2.0 | 0/3 | Not started | - |
+| H.1. Wiki ingest from agent-skills refs | v2.0 | 3/3 | Complete | 2026-05-16 |
+| H.2. Eval harness extension | v2.0 | 4/4 | Complete | 2026-05-17 |
+| H.3a. Plugin install + canon-overlay article | v2.0 | 0/1 | Not started | - |
+| H.4a. Profile-family schema extension | v2.0 | 0/1 | Not started | - |
+| H.4b. Developer-sandbox profile + FSI dev canon | v2.0 | 0/1 | Not started | - |
+| H.4c. acme-bank developer overlay | v2.0 | 0/1 | Not started | - |
+| H.3b. Version pin + CI drift gate | v2.0 | 0/1 | Not started | - |
+| H.3c. /dsp:scaffold wrapper | v2.0 | 0/1 | Not started | - |
 | G.2a. mcp-confluent tool-call executor | v2.0 carry | 0/1 | Not started | - |
 | G.2b. Composite scenario executor | v2.0 carry | 0/1 | Not started | - |
 | G.2d. GitOps apply mode | v2.0 carry | 0/1 | Not started | - |

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
-status: Milestone complete
-stopped_at: Completed H.2-04-PLAN.md
-last_updated: "2026-05-17T16:12:19.954Z"
+status: In progress
+stopped_at: Resumed after H.2-04; H.3 and H.4 split into 6 first-class phases (H.3a, H.4a, H.4b, H.4c, H.3b, H.3c)
+last_updated: "2026-05-17T16:30:00.000Z"
 last_activity: 2026-05-17
 progress:
-  total_phases: 9
-  completed_phases: 9
-  total_plans: 31
-  completed_plans: 31
-  percent: 100
+  total_phases: 8
+  completed_phases: 2
+  total_plans: 13
+  completed_plans: 7
+  percent: 54
 ---
 
 # Project State
@@ -21,16 +21,26 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-16)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase H.2 — Eval harness extension
+**Current focus:** Phase H.3a — Plugin install + canon-overlay wiki article
 
 ## Current Position
 
 Milestone: v2.0
-Phase: H.2
+Phase: H.3a (next)
 Plan: Not started
 Last activity: 2026-05-17
 
-Progress: [██████████] 100%
+Progress: [█████░░░░░] 54%
+
+**Phase pipeline (v2.0):**
+1. H.1 ✅ (3/3 plans)
+2. H.2 ✅ (4/4 plans)
+3. H.3a — Plugin install + canon-overlay wiki article (NEXT)
+4. H.4a — Profile-family schema extension
+5. H.4b — Developer-sandbox profile + FSI dev canon overlay
+6. H.4c — acme-bank developer overlay
+7. H.3b — Version pin + CI drift gate
+8. H.3c — /dsp:scaffold wrapper
 
 ## v1.0 Reference
 
