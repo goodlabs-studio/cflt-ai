@@ -1,5 +1,15 @@
 # Milestones
 
+## v2.0 Developer Persona + Quality Gates (Shipped: 2026-05-17)
+
+**Phases completed:** 0 phases, 0 plans, 0 tasks
+
+**Key accomplishments:**
+
+- (none recorded)
+
+---
+
 ## v1.0 — Foundation through Act Rail (Shipped: 2026-05-16)
 
 **Phases:** 9 shipped (Phase 0, 1, 2, 3a, 3b, 3c + post-roadmap F.1, G.1, G.2c)

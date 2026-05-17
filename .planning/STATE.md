@@ -2,46 +2,40 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — Developer Persona + Quality Gates
-status: Phase complete — ready for verification
-stopped_at: Completed H.3c-01-PLAN.md — v2.0 milestone CLOSED
-last_updated: "2026-05-17T18:19:34.556Z"
+status: Milestone shipped
+stopped_at: v2.0 milestone CLOSED — 8 phases, 13 plans, 16/16 requirements, audit passed, tag v2.0 created
+last_updated: "2026-05-17T18:45:00.000Z"
 last_activity: 2026-05-17
 progress:
   total_phases: 8
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 54
+  completed_phases: 8
+  total_plans: 13
+  completed_plans: 13
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-16)
+See: .planning/PROJECT.md (updated 2026-05-17)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase H.3c — /dsp:scaffold wrapper
+**Current focus:** Planning v2.1 — run `/gsd:new-milestone`
 
 ## Current Position
 
-Milestone: v2.0
-Phase: H.3c (/dsp:scaffold wrapper) — EXECUTING
-Plan: 1 of 1
+Milestone: v2.0 SHIPPED 2026-05-17
+Next: v2.1 (TBD — run `/gsd:new-milestone` to scope)
 Last activity: 2026-05-17
 
-Progress: [█████░░░░░] 54%
+Progress: [██████████] 100%
 
-**Phase pipeline (v2.0):**
+## v2.0 Reference
 
-1. H.1 ✅ (3/3 plans)
-2. H.2 ✅ (4/4 plans)
-3. H.3a — Plugin install + canon-overlay wiki article (NEXT)
-4. H.4a — Profile-family schema extension
-5. H.4b — Developer-sandbox profile + FSI dev canon overlay
-6. H.4c — acme-bank developer overlay
-7. H.3b — Version pin + CI drift gate
-8. H.3c — /dsp:scaffold wrapper
+Shipped: 2026-05-17 — 8 phases, 13 plans, 16/16 requirements validated.
+Archive: `.planning/milestones/v2.0-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`
+Tag: `v2.0`
 
 ## v1.0 Reference
 

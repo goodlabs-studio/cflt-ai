@@ -36,13 +36,25 @@ The canon overlay stack works — customers can fork and override safely. Base (
 - ✓ Phase G.1: Terraform-module executor for /dsp-apply Step 7 — v1.0
 - ✓ Phase G.2c: Tool-classification rename to live mcp-confluent 1.3.0 registry + bidirectional CI drift gate — v1.0
 
-### Active (v2.0 — Developer Persona + Quality Gates)
+### Validated (v2.0 — shipped 2026-05-17)
 
-- [ ] Phase H.1: Wiki ingest from confluent-agent-skills references (10+ articles + trip-wire facts)
-- [ ] Phase H.2: Eval harness extension across /review, /wiki:*, /dsp:plan, /dsp:apply at 90% CI threshold
-- [ ] Phase H.3: streaming-skills-plugin install + version pin + FSI canon overlay article + /dsp:scaffold wrapper
-- [ ] Phase H.4: Developer-sandbox profile family + bifurcated FSI canon (prod vs dev) + acme-bank customer overlay
-- [ ] Carry-forward: G.2a (mcp-confluent tool-call executor), G.2b (composite scenario executor), G.2d (GitOps apply mode), G.2e (ansible-role executor)
+- ✓ Phase H.1: 10 wiki articles + 9 trip-wires ingested from confluentinc/agent-skills@91d1871e with full MCP validation — v2.0
+- ✓ Phase H.2: Eval harness across /review, /wiki:*, /dsp:plan, /dsp:apply with 175 cases at 90% CI threshold — v2.0
+- ✓ Phase H.3a: streaming-skills-plugin installed; wiki/patterns/fsi-canon-overlay-for-confluent-skills.md authored with 4-section override tables; CLAUDE.md hook — v2.0
+- ✓ Phase H.3b: streaming-skills-plugin pinned in tools/vendor-sources.json; .github/workflows/streaming-skills-drift.yml mirrors G.2c pattern — v2.0
+- ✓ Phase H.3c: /dsp:scaffold wrapper with triage + 3 gates + manifest-entry.yaml + provenance.json (producer artifact-type end-to-end) — v2.0
+- ✓ Phase H.4a: Profile-family schema extension (family: operator|developer field + apply_engine branching + back-compat default) — v2.0
+- ✓ Phase H.4b: tools/profiles/developer/sandbox.json + canon/industry/fsi/developer-sandbox/ overlay + per-family negative-space test matrix — v2.0
+- ✓ Phase H.4c: canon/customer/acme-bank/profiles/developer/sandbox.json + 3 differential gating decisions vs base FSI dev canon (ACTG-04 mirror) — v2.0
+
+### Active (v2.1 — TBD)
+
+Run `/gsd:new-milestone` to scope. Candidate items from v2.0 tech debt:
+- [ ] Extend `/dsp:scaffold` to remaining 4 artifact-types (consumer, kafka-streams-app, schema, cdc-pipeline)
+- [ ] `scaffolded-producer` executor inside `raw/repos/fsi-dsp/` (separate PR) so /dsp:plan + /dsp:apply consume scaffolded artifacts
+- [ ] Promote `canon/industry/fsi/developer-sandbox/` CONTEXT-sourced override decisions to formal ADRs after first customer engagement uses developer profile
+- [ ] G.2 carry-forward: G.2a (mcp-confluent tool-call executor), G.2b (composite scenario executor), G.2d (GitOps apply mode), G.2e (ansible-role executor)
+- [ ] Resolve 2 pre-existing test failures (test_check_canon_parity.py, test_manifest.py — fsi-dsp submodule version drift)
 
 ### Out of Scope
 
@@ -80,7 +92,9 @@ The canon overlay stack works — customers can fork and override safely. Base (
 | Phase exits on threshold, not dates | Quality gates prevent shipping broken skills; golden harness is the source of truth | ⚠️ Revisit — structural harness shipped (KNOW-04, KNOW-05, REVW-01, ACT-07) but LIVE-model evaluation was deferred from v1.0; v2.0 H.2 closes this gap |
 | Pin upstream tooling at exact version with CI drift gate (G.2c pattern) | mcp-confluent 1.3.0 rename established the pattern: install pinned version, parse upstream, CI fails bidirectional drift; same approach scales to v2.0 H.3b (streaming-skills-plugin) and beyond | ✓ Good — G.2c shipped 54-tool kebab-case classification with bidirectional drift CI gate; pattern reusable |
 | Big-bang rewrite over bilingual compatibility (G.2c pattern) | When fictional/stale upstream entries can be cleanly purged with zero prod callers, single PR + regenerated tests beats deprecation layer | ✓ Good — G.2c purged ~25 fictional snake_case entries cleanly; 214 tests passing post-rewrite |
-| Two profile families, not one tier hierarchy (v2.0 architectural decision) | Operator (read-only/engineer/break-glass) and developer (sandbox/etc.) are orthogonal personas — different blast radius, different tooling, different canon overlay; one-tier-hierarchy creates categorical confusion | — Pending v2.0 H.4 |
+| Two profile families, not one tier hierarchy (v2.0 architectural decision) | Operator (read-only/engineer/break-glass) and developer (sandbox/etc.) are orthogonal personas — different blast radius, different tooling, different canon overlay; one-tier-hierarchy creates categorical confusion | ✓ Good — v2.0 H.4 shipped: developer family lives orthogonally to operator tier cascade; per-family negative-space test matrix proves isolation; acme-bank customer fork extends to dev family via overlay |
+| Stub generator for non-interactive scaffold output (v2.0 H.3c) | Upstream streaming-skills-plugin skills have HARD-GATE confirmation prompts; non-interactive execution wraps them with a stub generator (1 artifact-type end-to-end in H.3c, others marked NotImplementedError) | ✓ Good — H.3c shipped /dsp:scaffold for producer artifact with full provenance + MANIFEST entry proposal; remaining 4 artifact-types each become 1 follow-on phase |
+| Free-form `kind` field in tools/vendor-sources.json (H.1 D-?, extended H.3b) | New vendor kinds (claude-plugin, terraform-module) slot in without schema migration | ✓ Good — H.3b extended schema with `kind: "claude-plugin"` alongside H.1's `wiki-source` with zero friction; both share bidirectional drift discipline |
 
 ## Evolution
 
@@ -98,6 +112,10 @@ This document evolves at phase transitions and milestone boundaries.
 2. Core Value check — still the right priority?
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
+
+---
+
+*Last updated: 2026-05-17 after v2.0 milestone (Developer Persona + Quality Gates)*
 
 ---
 *Last updated: 2026-05-16 after v1.0 milestone shipped — Foundation through Act Rail + post-roadmap F.1/G.1/G.2c. v2.0 (Developer Persona + Quality Gates) active.*
