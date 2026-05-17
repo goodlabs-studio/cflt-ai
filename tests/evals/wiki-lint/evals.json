@@ -1,0 +1,115 @@
+{
+  "skill_name": "/wiki:lint",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run wiki-lint on a clean wiki tree. Expect exit 0.",
+      "expected_output": "wiki-lint exits 0 with no findings on a clean tree.",
+      "files": [],
+      "expectations": [
+        "Exit code is 0 when no findings exist",
+        "Output to stdout is empty or only a summary line `wiki-lint: 0 findings`",
+        "Tool does NOT write to disk in default (non-fix) mode"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Run wiki-lint on a wiki with a broken internal link. Detect and report.",
+      "expected_output": "Exit non-zero; output names the broken link target.",
+      "files": [],
+      "expectations": [
+        "Exit code is non-zero when broken-link findings exist",
+        "Output names the source article and the broken target path",
+        "Finding type is `broken-link`"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Run wiki-lint --fix on an article with stale `last_validated` field. Expect the field to be apply_decay_fix-rewritten.",
+      "expected_output": "Article frontmatter is updated to `confidence: medium` (decay applied); body is untouched.",
+      "files": [],
+      "expectations": [
+        "Frontmatter field `confidence` changes from `high` to `medium`",
+        "Body of the article is byte-identical pre/post --fix",
+        "Per H.1 phase decision: apply_decay_fix is regex-scoped to frontmatter block only — never rewrites body text"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Run wiki-lint --full on the entire tree. Expect a categorized finding list.",
+      "expected_output": "Categorized output: broken-link, orphan, malformed, decay, drift, schema, citation-resolution, vendor-drift.",
+      "files": [],
+      "expectations": [
+        "Output is grouped by finding type",
+        "Each finding includes the source article path and a brief reason",
+        "--full includes vendor-drift findings (H.1 D-09 extension)"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Run wiki-lint on an article with malformed YAML frontmatter (space-separated tag list `tags: a b c`).",
+      "expected_output": "Lint flags the malformed list as a schema violation; --fix can repair it.",
+      "files": [],
+      "expectations": [
+        "Finding type is `schema-violation` or `malformed-frontmatter`",
+        "--fix mode rewrites `tags: a b c` to `tags: [a, b, c]`",
+        "yaml.safe_load on the corrected frontmatter exits successfully"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Run wiki-lint on an article missing required frontmatter fields (`title`, `tags`, `sources`, `confidence`).",
+      "expected_output": "Lint reports each missing field as a separate finding.",
+      "files": [],
+      "expectations": [
+        "Each missing field produces a distinct finding line",
+        "Finding type is `missing-field` or equivalent",
+        "Exit code is non-zero"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Run wiki-lint on a wiki where wiki/_graph.md has an orphan article (0 inbound edges).",
+      "expected_output": "Lint reports the orphan with the article path.",
+      "files": ["wiki/_graph.md"],
+      "expectations": [
+        "Finding type is `orphan`",
+        "Output names the orphan article path",
+        "Articles with >= 1 inbound edge are NOT flagged"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Run wiki-lint on an article with `source: confluent-agent-skills@<stale-sha>` (SHA differs from tools/vendor-sources.json pin).",
+      "expected_output": "Vendor-drift finding emitted; exit code is 0 (passive per H.1 D-09).",
+      "files": ["tools/vendor-sources.json"],
+      "expectations": [
+        "Finding type is `vendor-drift` or `DRIFT`",
+        "Exit code is 0 (passive vendor-drift per H.1 D-09)",
+        "Output names the stale SHA and the current pin"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Run wiki-lint with citation-resolution check on an article that references a non-existent fsi-dsp:// URI.",
+      "expected_output": "Lint reports the unresolvable citation as a finding.",
+      "files": [],
+      "expectations": [
+        "Finding type is `citation-unresolved` or `broken-citation`",
+        "Output names the unresolvable URI",
+        "Exit code is non-zero"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Run wiki-lint --fix on a wiki where multiple findings exist. Expect deterministic ordering and idempotency.",
+      "expected_output": "All fixable findings are applied in a stable order; running --fix again produces zero new changes.",
+      "files": [],
+      "expectations": [
+        "First --fix run modifies one or more files",
+        "Second --fix run produces zero new modifications (`git diff --quiet` exits 0)",
+        "Findings are processed in a stable order (e.g., alphabetical by path)"
+      ]
+    }
+  ]
+}

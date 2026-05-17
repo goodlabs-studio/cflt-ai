@@ -1,0 +1,115 @@
+{
+  "skill_name": "/wiki:recommend",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Invoke /wiki:recommend with a question that has wiki coverage. Confirm the alias dispatches to /ask --mode reconsolidate.",
+      "expected_output": "Output references /ask under the hood and writes back any newly discovered facts to wiki.",
+      "files": [],
+      "expectations": [
+        "Output indicates /ask was invoked with `--mode reconsolidate`",
+        "If new facts were discovered during answer, they are appended to the relevant wiki article",
+        "If no new facts emerged, no wiki write occurs (write-back is conditional)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Invoke /wiki:recommend on a topic with zero wiki coverage. Confirm a queue stub is created in wiki/_queue.md.",
+      "expected_output": "wiki/_queue.md grows by one Stubs entry referencing the missing topic.",
+      "files": ["wiki/_queue.md"],
+      "expectations": [
+        "wiki/_queue.md `## Stubs to Create` section has one additional entry after the call",
+        "The new entry follows the format `- [ ] wiki/concepts/<slug>.md — brief description`",
+        "Auto-stub fires even in ephemeral mode (Phase 01 decision: coverage gaps are never lost)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Invoke /wiki:recommend on a question that has only `confidence: medium` wiki coverage. Confirm the answer flags the uncertainty.",
+      "expected_output": "Response cites the medium-confidence article AND notes the confidence floor; suggests /wiki:validate as next step.",
+      "files": [],
+      "expectations": [
+        "Response cites article path",
+        "Response includes the phrase `confidence: medium` or equivalent uncertainty marker",
+        "Response suggests `/wiki:validate` as a follow-up action"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Invoke /wiki:recommend in ephemeral mode (no write-back). Confirm wiki is byte-identical post-call.",
+      "expected_output": "wiki/ directory has zero modifications after the call (except auto-stub if coverage gap detected).",
+      "files": [],
+      "expectations": [
+        "Wiki articles are byte-identical pre/post (no auto-write)",
+        "wiki/_queue.md MAY grow (auto-stub fires per Phase 01 decision)",
+        "wiki/_index.md and wiki/_graph.md are byte-identical"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Invoke /wiki:recommend on a triage classifier route-failure case (ambiguous). Confirm graceful degradation.",
+      "expected_output": "Response either picks a default route (deep) and proceeds, or refuses with a clear explanation.",
+      "files": [],
+      "expectations": [
+        "Response does NOT crash with a stack trace",
+        "Response either declares a route choice or refuses cleanly",
+        "If refused, the reason is human-readable (e.g., `ambiguous query — please specify topic`)"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Invoke /wiki:recommend --force-route deep on a question that triage would otherwise route to wiki-only.",
+      "expected_output": "Deep route runs even though triage suggested wiki-only.",
+      "files": [],
+      "expectations": [
+        "Response invokes the deep route per --force-route bypass",
+        "Triage classifier is logged but its route choice is overridden",
+        "Per Phase 01 decision: --force-route bypasses the classifier"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Invoke /wiki:recommend on a multi-doc question (cites multiple wiki articles). Confirm provenance footers reference all cited articles.",
+      "expected_output": "Response cites every wiki article used; output includes a `Provenance:` block listing them.",
+      "files": [],
+      "expectations": [
+        "Output includes a Provenance section",
+        "Every cited article appears in the Provenance block by path",
+        "Citation order is stable (alphabetical or invocation-order, deterministic)"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Invoke /wiki:recommend after the queue stub from a prior call has been filled. Confirm the queue entry is removed.",
+      "expected_output": "wiki/_queue.md `## Stubs to Create` section loses the resolved entry; new entry may move to `## Resolved`.",
+      "files": ["wiki/_queue.md"],
+      "expectations": [
+        "Stub entry is removed from `## Stubs to Create`",
+        "Either the entry is fully deleted OR moved to a `## Resolved` section (implementation choice)",
+        "The new wiki article is referenced in wiki/_index.md"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Invoke /wiki:recommend on a question that crosses into the FSI overlay (e.g., `which auth mechanism should I use?`). Confirm canon overlay applies.",
+      "expected_output": "Response cites both the upstream canon AND the FSI overlay; recommends mTLS per FSI canon.",
+      "files": [],
+      "expectations": [
+        "Response cites the FSI canon overlay (`mTLS` for FSI, not just SASL/PLAIN)",
+        "Response distinguishes between general canon and FSI-specific overlay",
+        "Response does NOT recommend username/password auth for FSI workloads (per CLAUDE.md FSI overlay rule)"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Invoke /wiki:recommend twice on the same query. Confirm deterministic output (modulo write-back side effects).",
+      "expected_output": "The response content is identical or near-identical across two invocations on a frozen wiki state.",
+      "files": [],
+      "expectations": [
+        "Two invocations on the same query produce the same cited articles",
+        "Two invocations produce the same route choice (modulo classifier nondeterminism — acceptable variance documented if any)",
+        "wiki/_queue.md auto-stub is idempotent — second invocation does not append a duplicate stub entry"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "skill_name": "/wiki:validate",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Validate wiki/concepts/schema-registry-best-practices.md against MCP sources. Report any drift findings.",
+      "expected_output": "Zero drift findings — confluent-docs and context7 agree with article content.",
+      "files": ["wiki/concepts/schema-registry-best-practices.md"],
+      "expectations": [
+        "Validation output includes `confluent-docs` as a queried MCP source",
+        "Validation output includes `context7` as a queried MCP source",
+        "Validation output includes `drift: 0` or equivalent zero-finding marker",
+        "If `last_validated` < 90 days, `confidence: high` is preserved"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Validate an article with `last_validated: 2025-01-01` (over 90 days stale). Trigger the decay rule.",
+      "expected_output": "Article confidence drops from `high` to `medium` per the 90-day decay rule.",
+      "files": [],
+      "expectations": [
+        "Output includes `decay` as a finding type",
+        "Output proposes `confidence: medium` for the stale article",
+        "Output does NOT silently rewrite the article — it surfaces the finding for human review"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Validate an article that links to wiki/concepts/nonexistent-article.md. Detect broken-link.",
+      "expected_output": "Validation flags the broken inbound or outbound link.",
+      "files": [],
+      "expectations": [
+        "Output includes `broken-link` as a finding type",
+        "Output names the missing target path",
+        "Validation exit is non-zero if --strict is set; otherwise warning-only"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Validate wiki/_graph.md to find orphans (articles with 0 inbound edges).",
+      "expected_output": "Any orphan articles are reported with their paths.",
+      "files": ["wiki/_graph.md"],
+      "expectations": [
+        "Output includes `orphan` as a finding type when 0-inbound articles exist",
+        "Output names each orphan article path",
+        "Articles with >= 1 inbound edge are NOT reported as orphans"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Validate an article with malformed YAML frontmatter (e.g., space-separated tag array `tags: a b c`).",
+      "expected_output": "Validation flags the malformed frontmatter (H.1 blocker lesson: only comma-separated arrays are valid YAML flow sequences).",
+      "files": [],
+      "expectations": [
+        "Output includes `schema-violation` or `malformed-frontmatter` as a finding type",
+        "Output references the comma-separated array requirement",
+        "yaml.safe_load on the corrected frontmatter exits successfully"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Validate vendored-source articles by comparing `source: confluent-agent-skills@<sha>` against the pin in tools/vendor-sources.json.",
+      "expected_output": "Articles with stale SHA report `vendor-drift` (per H.1 D-09 passive detection).",
+      "files": ["tools/vendor-sources.json"],
+      "expectations": [
+        "Output includes `vendor-drift` as a finding type when SHA is stale",
+        "Vendor-drift findings are non-fatal (exit 0) per H.1 D-09 passive posture",
+        "Output names the stale SHA and the current pin"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Validate an article that cites WarpStream behavior. Confirm the FSI-context paragraph is present.",
+      "expected_output": "Validation passes only if the article contains the canonical FSI-context paragraph framing WarpStream as competitive context.",
+      "files": ["wiki/concepts/warpstream-schema-registry-format-constraint.md"],
+      "expectations": [
+        "Output checks for the phrase `competitive context for SA conversations` or equivalent FSI-framing",
+        "Article without FSI-framing is flagged as `fsi-framing-missing`",
+        "Article with FSI-framing passes this check"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Validate the cdc-to-tableflow-flink-decode.md pattern article against confluent-docs MCP. Confirm the decode-pattern claim is current.",
+      "expected_output": "confluent-docs returns content consistent with the article's claim that Tableflow on a CDC source topic requires a Flink decode step.",
+      "files": ["wiki/patterns/cdc-to-tableflow-flink-decode.md"],
+      "expectations": [
+        "Output queries confluent-docs MCP",
+        "Output confirms `Flink decode` is the documented mitigation",
+        "Output confirms `Tableflow` on CDC source topic is documented as unsupported direct"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Validate that every wiki article with `confidence: high` either has MCP-validated sources OR explicit source attestation (per H.1 D-07).",
+      "expected_output": "Articles claiming `confidence: high` without either provenance signal are flagged.",
+      "files": [],
+      "expectations": [
+        "Output includes `confidence-unjustified` as a finding type",
+        "Articles with `source: confluent-agent-skills@<sha>` pass this check (source attestation)",
+        "Articles with `sources: [...]` and recent `last_validated` pass this check (MCP attestation)",
+        "Articles with neither are flagged"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Validate the entire wiki/ tree in batch mode. Report total finding counts per type.",
+      "expected_output": "Summary block listing finding counts: `drift: N1`, `decay: N2`, `broken-link: N3`, `orphan: N4`, `schema-violation: N5`, `vendor-drift: N6`, `confidence-unjustified: N7`.",
+      "files": [],
+      "expectations": [
+        "Output includes a summary block with per-type counts",
+        "Output is parseable line-by-line (one finding per line, or JSON output for --format=json)",
+        "Exit code is 0 for warning-only findings (decay, vendor-drift); non-zero for hard violations (broken-link, schema-violation) when --strict is set"
+      ]
+    }
+  ]
+}
