@@ -225,7 +225,7 @@ def scaffold(
         "canon_stack_hash": canon_hash,
         "canon_family": canon_family,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "scaffold_dir": str(scaffold_dir.relative_to(PROJECT_ROOT)),
+        "scaffold_dir": _safe_relative(scaffold_dir),
         "phase": "H.3c",
     }
     (scaffold_dir / "provenance.json").write_text(json.dumps(provenance, indent=2))
@@ -313,6 +313,19 @@ def scaffold(
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _safe_relative(path: Path) -> str:
+    """Return path relative to PROJECT_ROOT when possible; otherwise absolute.
+
+    Tests monkeypatch OUTPUT_ROOT to a tmp_path that lives outside the repo —
+    relative_to() raises ValueError in that case. Fall back to the absolute
+    path so the provenance.json field is always populated and machine-readable.
+    """
+    try:
+        return str(path.relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path)
+
 
 def _write_producer_stub(
     target_dir: Path,
