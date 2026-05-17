@@ -1,0 +1,55 @@
+# FSI developer-sandbox overrides — dev-tier values distinct from prod FSI overlay.
+# Composes on top of canon/base/defaults.yaml via dict merge when family=developer
+# and the profile's canon_layer points here.
+# Override rule: each override references its rationale (formal ADR or H.4b CONTEXT decision).
+#
+# Promote CONTEXT-sourced decisions to formal ADRs (canon/industry/fsi/developer-sandbox/adrs/)
+# after one customer engagement validates the dev-tier values in practice.
+
+security:
+  auth_mechanism: "OAUTHBEARER"          # Dev-tier — easier than mTLS for fast iteration
+  override_source: "H.4b CONTEXT D-07 — dev-tier auth"
+  service_account_scope: "per_application"
+  audit_log: false                       # Sandbox — no compliance log requirement
+
+processing_guarantees:
+  delivery: "at_least_once"              # Dev iteration; exactly_once is prod-only
+  override_source: "H.4b CONTEXT D-07 — dev-tier processing"
+
+schema_registry:
+  format: "json"                         # JSON Schema acceptable in sandbox
+  override_source: "H.4b CONTEXT D-07 — dev-tier schema"
+  subject_naming_strategy: "TopicNameStrategy"
+  compatibility_mode: "BACKWARD"
+
+topic_design:
+  replication_factor: 1                  # Sandbox tolerates RF=1
+  min_insync_replicas: 1
+  naming_convention: "<owner>.<feature>.<entity>-sandbox"
+  naming_source: "H.4b CONTEXT D-07 — dev topic naming"
+  partition_formula: "1"                 # Sandbox — single partition is enough
+
+producer:
+  acks: "1"                              # Sandbox — performance over durability
+  enable_idempotence: false              # Defer to user choice
+  compression_type: "snappy"             # Faster for dev iteration
+
+consumer:
+  group_design: "per_developer_instance" # OK in sandbox — easy reset
+  auto_offset_reset: "latest"            # Common dev preference
+  enable_auto_commit: true               # OK for non-critical dev paths
+
+flink_sql:
+  api_preference: "table"                # Same as base
+  watermark_strategy: "BOUNDED_OUT_OF_ORDERNESS"
+  window_preference: "tumbling"
+  scan_startup_mode: "latest-offset"     # Dev — latest is fine, replay rarely needed
+
+cluster_linking:
+  preferred_over: "none"                 # Sandbox — single cluster typically
+  override_source: "H.4b CONTEXT D-07 — dev cluster topology"
+
+environment_guard:
+  pattern: "*-sandbox"
+  enforcement: "advisory"
+  override_source: "H.4b CONTEXT D-07 — dev environment guard"
