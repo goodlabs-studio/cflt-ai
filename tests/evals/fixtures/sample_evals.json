@@ -1,0 +1,25 @@
+{
+  "skill_name": "/test:fake",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a sample producer",
+      "expected_output": "Generates a working producer with acks=all and idempotence enabled",
+      "files": [],
+      "expectations": [
+        "Uses acks=all in production code",
+        "Sets enable.idempotence=true",
+        "Does NOT use kafka-console-producer for schema-bound topics"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Generate a debug topology",
+      "expected_output": "A KStream topology with TRACE logging",
+      "files": ["src/main/java/example/App.java"],
+      "expectations": [
+        "Imports StreamsUncaughtExceptionHandler from org.apache.kafka.streams.errors"
+      ]
+    }
+  ]
+}
