@@ -33,7 +33,9 @@ from canon.stack import active_layers  # noqa: E402 (after sys.path.insert)
 PROFILES_DIR = PROJECT_ROOT / "tools" / "profiles"
 
 # Explicit set of valid profile names — fail-closed: unrecognized names raise ValueError
-VALID_PROFILES = {"read-only", "engineer", "break-glass"}
+# H.4b: developer/sandbox added as first developer-family profile. Slash in name denotes
+# nested directory on disk: tools/profiles/developer/sandbox.json (see _profile_path).
+VALID_PROFILES = {"read-only", "engineer", "break-glass", "developer/sandbox"}
 
 # Tier order for hierarchy comparison: read-only < engineer < break-glass
 PROFILE_TIER_ORDER = ["read-only", "engineer", "break-glass"]
@@ -122,6 +124,37 @@ def check_tool_permitted(profile_name: str, tool_name: str, customer: Optional[s
         raise ValueError(f"Unknown profile family {family!r} for profile {profile_name!r}")
 
 
+def check_skill_permitted(
+    profile_name: str,
+    skill_name: str,
+    customer: Optional[str] = None,
+) -> bool:
+    """Check whether profile_name permits invoking skill_name (H.4b).
+
+    Consults the profile's `skill_blocklist` (developer family) or returns True
+    unconditionally (operator family, which has no blocklist field).
+
+    Use this at any cflt-ai skill entry-point (e.g., /dsp:apply) to gate access
+    based on the active profile. Currently wired into H.4b's negative-space test
+    matrix only — production callers in /dsp:apply etc. follow in subsequent phases.
+
+    Args:
+        profile_name: One of VALID_PROFILES.
+        skill_name:   Skill identifier (e.g., 'dsp-apply', 'wiki-validate').
+        customer:     Optional customer overlay name (keyword-only).
+
+    Returns:
+        False if skill_name is in the profile's skill_blocklist, True otherwise.
+        Operator profiles (no blocklist field) return True for every skill.
+
+    Raises:
+        ValueError: If profile_name is not in VALID_PROFILES (via load_profile).
+    """
+    profile = load_profile(profile_name, customer=customer)
+    blocklist = profile.get("skill_blocklist", [])
+    return skill_name not in blocklist
+
+
 # ---------------------------------------------------------------------------
 # Profile Loading (ACTA-03 + H.4a family schema)
 # ---------------------------------------------------------------------------
@@ -178,6 +211,20 @@ def _normalize_and_validate_profile(profile_data: Dict, profile_name: str) -> Di
     return profile_data
 
 
+def _profile_path(profiles_root: Path, profile_name: str) -> Path:
+    """Resolve profile_name (possibly slash-separated) to filesystem path under profiles_root.
+
+    Slashes in profile_name denote nested directories under profiles_root. Pathlib's
+    `__truediv__` already accepts slash-containing strings as relative paths, so e.g.
+    `profiles_root / "developer/sandbox.json"` resolves to
+    `profiles_root / "developer" / "sandbox.json"`. No additional split logic needed.
+
+    H.4b: introduced so load_profile() can route "developer/sandbox" to the on-disk
+    nested layout while preserving v1.0 callers ("engineer" → engineer.json).
+    """
+    return profiles_root / (profile_name + ".json")
+
+
 def load_profile(profile_name: str, *, customer: Optional[str] = None) -> Dict:
     """Load a policy profile by name from PROFILES_DIR.
 
@@ -214,15 +261,20 @@ def load_profile(profile_name: str, *, customer: Optional[str] = None) -> Dict:
         )
 
     # Check customer overlay first (ACTG-04)
+    # H.4b: customer overlay also routes through _profile_path so customer-side
+    # developer/sandbox.json overrides work (H.4c will exercise this path).
     if customer:
-        customer_profile = PROJECT_ROOT / "canon" / "customer" / customer / "profiles" / f"{profile_name}.json"
+        customer_profile = _profile_path(
+            PROJECT_ROOT / "canon" / "customer" / customer / "profiles",
+            profile_name,
+        )
         if customer_profile.exists():
             return _normalize_and_validate_profile(
                 json.loads(customer_profile.read_text()), profile_name
             )
 
-    # Fall back to base profile
-    profile_path = PROFILES_DIR / f"{profile_name}.json"
+    # Fall back to base profile (H.4b: slash-separated names resolve to nested dirs)
+    profile_path = _profile_path(PROFILES_DIR, profile_name)
     profile_data = json.loads(profile_path.read_text())
     return _normalize_and_validate_profile(profile_data, profile_name)
 
