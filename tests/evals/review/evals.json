@@ -1,0 +1,241 @@
+{
+  "skill_name": "/review",
+  "evals": [
+    {
+      "id": 1,
+      "case_ref": "review-bad-acks-001",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-bad-acks-001.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 2,
+      "case_ref": "review-bad-acks-premise-002",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-bad-acks-premise-002.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 3,
+      "case_ref": "review-behavior-assertion-012",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-behavior-assertion-012.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 4,
+      "case_ref": "review-config-values-011",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-config-values-011.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 5,
+      "case_ref": "review-correct-consumer-003",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-correct-consumer-003.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 6,
+      "case_ref": "review-empty-premise-016",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-empty-premise-016.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 7,
+      "case_ref": "review-fsi-latency-004",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-fsi-latency-004.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 8,
+      "case_ref": "review-fsi-overlay-latency-005",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-fsi-overlay-latency-005.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 9,
+      "case_ref": "review-full-pipeline-015",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-full-pipeline-015.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 10,
+      "case_ref": "review-metrics-sla-013",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-metrics-sla-013.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 11,
+      "case_ref": "review-multi-doc-006",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-multi-doc-006.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 12,
+      "case_ref": "review-multi-doc-contradiction-014",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-multi-doc-contradiction-014.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 13,
+      "case_ref": "review-overlay-compression-007",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-overlay-compression-007.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 14,
+      "case_ref": "review-overlay-compression-diff-008",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-overlay-compression-diff-008.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 15,
+      "case_ref": "review-schema-evolution-009",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-schema-evolution-009.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 16,
+      "case_ref": "review-schema-premise-010",
+      "prompt": "Review the fixture document referenced by the MD case. Apply premise-challenge then wiki cross-reference per the /review skill flow.",
+      "expected_output": "A review report matching the MD case's required_report_sections / forbidden_content frontmatter.",
+      "files": ["tests/golden/review/cases/review-schema-premise-010.md"],
+      "expectations": [
+        "Report includes the required_report_sections listed in the MD case frontmatter",
+        "Report does NOT include any forbidden_content from the MD case frontmatter",
+        "Report includes a YAML claim block before the verdict table (Phase 02-review-skill reproducibility anchor)"
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "Review a customer architecture deck that proposes enabling Tableflow directly on a Debezium CDC source topic emitting tombstones.",
+      "expected_output": "Report flags the Tableflow-on-CDC pattern as a violation and cites the Flink decode pattern as the required mitigation.",
+      "files": [],
+      "expectations": [
+        "Flags Tableflow-on-CDC-source-topic claims as a violation — citing the Flink decode pattern as the required mitigation",
+        "Report cites wiki/concepts/cdc-tableflow-flink-decode-required.md or equivalent canonical reference",
+        "Report does NOT recommend enabling Tableflow directly on a CDC source topic"
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "Review a runbook that enables exactly_once_v2 on a WarpStream cluster without flagging the throughput cost.",
+      "expected_output": "Report flags exactly-once-v2 on WarpStream as a throughput-cost violation; cites the 'EOS enables idempotent producers internally' fact.",
+      "files": [],
+      "expectations": [
+        "Flags exactly-once-v2 on WarpStream claims as a throughput-cost violation — citing the 'EOS enables idempotent producers internally' fact",
+        "Report cites wiki/concepts/exactly-once-v2-warpstream-throughput-cost.md or equivalent canonical reference",
+        "Report flags this as the WarpStream-specific in-flight request concurrency limit"
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "Review a verification snippet that uses kafka-console-producer to publish a message to a topic registered with Schema Registry.",
+      "expected_output": "Report flags kafka-console-producer as Schema-Registry-incompatible; recommends kafka-avro-console-producer.",
+      "files": [],
+      "expectations": [
+        "Flags kafka-console-producer usage in verification snippets as a Schema-Registry-incompatible tool — recommends kafka-avro-console-producer",
+        "Report cites wiki/concepts/schema-aware-console-producer-required.md or equivalent canonical reference",
+        "Report's verdict on the snippet is `Corrected` per REVW-01 verdict taxonomy"
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "Review a Java code sample on Kafka Streams 4.x that imports StreamsUncaughtExceptionHandler as a nested class under KafkaStreams.",
+      "expected_output": "Report flags the nested-class import as the KS 3.x pattern; corrects to org.apache.kafka.streams.errors.StreamsUncaughtExceptionHandler.",
+      "files": [],
+      "expectations": [
+        "Flags `StreamsUncaughtExceptionHandler` cited as a nested class under `KafkaStreams` — corrects to org.apache.kafka.streams.errors import (KS 4.x rename)",
+        "Report cites wiki/concepts/kafka-streams-4x-uncaught-exception-handler-import.md or equivalent canonical reference",
+        "Report's verdict is `Corrected`"
+      ]
+    }
+  ]
+}
