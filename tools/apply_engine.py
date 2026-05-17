@@ -38,6 +38,17 @@ VALID_PROFILES = {"read-only", "engineer", "break-glass"}
 # Tier order for hierarchy comparison: read-only < engineer < break-glass
 PROFILE_TIER_ORDER = ["read-only", "engineer", "break-glass"]
 
+# Profile families (H.4a):
+#   - "operator" — tier cascade (read-only < engineer < break-glass) via PROFILE_TIER_ORDER.
+#                  Profile JSON MUST have "allowed_operations" list. Tool permission via
+#                  check_tool_permitted() consults tool_classification.json (G.2c).
+#   - "developer" — per-profile tool_overrides map. Profile JSON MUST have
+#                   "tool_overrides" dict AND "skill_blocklist" list (may be empty).
+#                   NO allowed_operations field (operator-only). Authored in H.4b.
+# Unknown family value → ValueError. Missing family field → defaults to "operator" for
+# back-compat with pre-H.4a external profiles; log the default-application.
+VALID_FAMILIES = {"operator", "developer"}
+
 
 # ---------------------------------------------------------------------------
 # Tool Classification (ACTG-01)
@@ -82,8 +93,60 @@ def check_tool_permitted(profile_name: str, tool_name: str, customer: Optional[s
 
 
 # ---------------------------------------------------------------------------
-# Profile Loading (ACTA-03)
+# Profile Loading (ACTA-03 + H.4a family schema)
 # ---------------------------------------------------------------------------
+
+def _normalize_and_validate_profile(profile_data: Dict, profile_name: str) -> Dict:
+    """Inject family default + validate per-family invariants (H.4a D-02, D-03, D-07)."""
+    # D-02: Missing family field defaults to "operator" for back-compat with pre-H.4a
+    # external/customer fixtures. Surface the default-application via stderr so test
+    # runs make legacy shapes visible.
+    if "family" not in profile_data:
+        sys.stderr.write(
+            f"[apply_engine] profile {profile_name!r} missing 'family' field; "
+            f"defaulting to 'operator' (pre-H.4a shape)\n"
+        )
+        profile_data["family"] = "operator"
+
+    # D-03: Unknown family value is a hard error (fail-closed).
+    family = profile_data["family"]
+    if family not in VALID_FAMILIES:
+        raise ValueError(
+            f"Profile {profile_name!r} has unknown family {family!r} — "
+            f"must be one of {sorted(VALID_FAMILIES)}"
+        )
+
+    # D-07: Per-family invariants.
+    if family == "operator":
+        allowed_ops = profile_data.get("allowed_operations")
+        if not isinstance(allowed_ops, list):
+            raise ValueError(
+                f"Operator profile {profile_name!r} is missing required "
+                f"'allowed_operations' list"
+            )
+    elif family == "developer":
+        # D-06: Developer profiles MUST have tool_overrides (dict) AND skill_blocklist (list).
+        # They MUST NOT have allowed_operations (operator-only).
+        tool_overrides = profile_data.get("tool_overrides")
+        if not isinstance(tool_overrides, dict):
+            raise ValueError(
+                f"Developer profile {profile_name!r} is missing required "
+                f"'tool_overrides' dict"
+            )
+        skill_blocklist = profile_data.get("skill_blocklist")
+        if not isinstance(skill_blocklist, list):
+            raise ValueError(
+                f"Developer profile {profile_name!r} is missing required "
+                f"'skill_blocklist' list (may be empty)"
+            )
+        if "allowed_operations" in profile_data:
+            raise ValueError(
+                f"Developer profile {profile_name!r} must NOT have "
+                f"'allowed_operations' field (operator-only)"
+            )
+
+    return profile_data
+
 
 def load_profile(profile_name: str, *, customer: Optional[str] = None) -> Dict:
     """Load a policy profile by name from PROFILES_DIR.
@@ -94,15 +157,23 @@ def load_profile(profile_name: str, *, customer: Optional[str] = None) -> Dict:
     If customer is provided, checks canon/customer/<name>/profiles/<profile>.json first,
     falling back to the base profile in PROFILES_DIR if the customer overlay is absent.
 
+    After loading, the profile is run through _normalize_and_validate_profile() which
+    injects family="operator" default when absent (H.4a back-compat) and validates
+    per-family invariants (operator → allowed_operations; developer → tool_overrides +
+    skill_blocklist, no allowed_operations).
+
     Args:
         profile_name: Name of the profile to load (e.g., "engineer").
         customer:     Optional customer name for overlay resolution (keyword-only).
 
     Returns:
-        Dict with keys: name (str), description (str), allowed_operations (list).
+        Dict with keys: name (str), description (str), family (str), and either
+        allowed_operations (list, operator family) or tool_overrides (dict) +
+        skill_blocklist (list) for the developer family.
 
     Raises:
-        ValueError: If profile_name is not in VALID_PROFILES or is empty.
+        ValueError: If profile_name is not in VALID_PROFILES, is empty, has an unknown
+                    family value, or violates per-family invariants.
     """
     if not profile_name:
         raise ValueError(f"Unknown profile: {profile_name!r} — must be one of {VALID_PROFILES}")
@@ -116,12 +187,14 @@ def load_profile(profile_name: str, *, customer: Optional[str] = None) -> Dict:
     if customer:
         customer_profile = PROJECT_ROOT / "canon" / "customer" / customer / "profiles" / f"{profile_name}.json"
         if customer_profile.exists():
-            return json.loads(customer_profile.read_text())
+            return _normalize_and_validate_profile(
+                json.loads(customer_profile.read_text()), profile_name
+            )
 
     # Fall back to base profile
     profile_path = PROFILES_DIR / f"{profile_name}.json"
     profile_data = json.loads(profile_path.read_text())
-    return profile_data
+    return _normalize_and_validate_profile(profile_data, profile_name)
 
 
 # ---------------------------------------------------------------------------
