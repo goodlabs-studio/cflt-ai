@@ -74,6 +74,7 @@ The LLM maintains this file. Do not edit manually.
 [CDC to Tableflow — Flink Decode Pattern](patterns/cdc-to-tableflow-flink-decode.md) — Debezium → Kafka raw → Flink decode → clean topic (changelog.mode=upsert) → Tableflow → Iceberg/Delta; never enable Tableflow on raw CDC (tombstones break APPEND) — #tableflow #cdc #flink #confluent-cloud #confluent-agent-skills
 [Schema Registry Adoption Playbook](patterns/schema-registry-adoption-playbook.md) — Detection patterns (build files, producers, consumers, custom serializers, risk flags) + code migration recipes (Avro/Protobuf/JSON Schema) across 5 languages with category-based rollout order — #schema-registry #adoption #migration #terraform #confluent-agent-skills
 [CDC-Tableflow — Flink Decode Required](patterns/cdc-tableflow-flink-decode-required.md) — Trip-wire pattern: Don't enable Tableflow on CDC source topics; tombstones break APPEND mode; decode through Flink to a clean topic first — #trip-wire #pattern #tableflow #cdc #flink #confluent-cloud #confluent-agent-skills
+[FSI Canon Overlay for Confluent Agent Skills](patterns/fsi-canon-overlay-for-confluent-skills.md) — FSI overrides on top of streaming-skills-plugin upstream defaults; read on upstream-skill activation — #fsi #overlay #upstream-skills #canon #kafka-streams #python-client #schema-registry #tableflow
 
 ## Incidents
 

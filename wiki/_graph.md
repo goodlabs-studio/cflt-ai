@@ -357,3 +357,18 @@ concepts/exactly-once-v2-warpstream-throughput-cost → concepts/exactly-once-se
 concepts/exactly-once-v2-warpstream-throughput-cost → concepts/kafka-streams-production-hardening : parent ingest article (back-link per D-06)
 concepts/exactly-once-v2-warpstream-throughput-cost → concepts/warpstream-config-overrides : sibling WarpStream trip-wire
 concepts/exactly-once-v2-warpstream-throughput-cost → concepts/warpstream-schema-registry-format-constraint : sibling WarpStream trip-wire
+
+## H.3a — FSI canon overlay for streaming-skills-plugin (2026-05-17)
+
+# Outbound (overlay article → wiki articles it depends on / references)
+patterns/fsi-canon-overlay-for-confluent-skills → concepts/exactly-once-semantics : EOS foundation for kafka-streams + python-client override rows (processing.guarantee, enable.idempotence)
+patterns/fsi-canon-overlay-for-confluent-skills → concepts/schema-registry-best-practices : SR operational surface for kafka-schema-registry section overrides (TopicNameStrategy, BACKWARD/FULL compatibility)
+patterns/fsi-canon-overlay-for-confluent-skills → concepts/schema-evolution-strategies : compatibility-mode policy underpinning the kafka-schema-registry section
+patterns/fsi-canon-overlay-for-confluent-skills → patterns/topic-naming : <domain>.<entity>.<event> convention referenced in kafka-streams-programming override row
+patterns/fsi-canon-overlay-for-confluent-skills → patterns/cdc-to-tableflow-flink-decode : decode pattern that the confluent-cloud-cdc-tableflow section inherits from upstream Critical Architecture Rule #1
+patterns/fsi-canon-overlay-for-confluent-skills → patterns/fsi-l1-reference-architecture : Iceberg + CC Tableflow → Databricks analytics flow cited in the Tableflow destination override row
+
+# Inbound (existing wiki articles → overlay) — 3 inbound to satisfy graph rule + ride existing high-density patterns
+patterns/fsi-governance-automation → patterns/fsi-canon-overlay-for-confluent-skills : FSI operator overlay companion; governance-automation enforces canon via Terraform, overlay applies canon when upstream skills generate code
+patterns/fsi-exactly-once → patterns/fsi-canon-overlay-for-confluent-skills : kafka-streams + python-client overlay sections cite the same producer/EOS canon as the five-layer FSI EOS pattern
+patterns/topic-naming → patterns/fsi-canon-overlay-for-confluent-skills : naming-convention canon row in the kafka-streams-programming section enforces topic-naming pattern at scaffold time
