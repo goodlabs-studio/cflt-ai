@@ -1,0 +1,135 @@
+{
+  "skill_name": "/dsp:apply",
+  "evals": [
+    {
+      "id": 1,
+      "case_ref": "apply-bypass-confirmation-029",
+      "prompt": "Apply the fsi-dsp artifact referenced by the MD case under the specified profile.",
+      "expected_output": "Apply output matching the MD case's expected_artifact / profile / confirmation / expected_incident frontmatter.",
+      "files": ["tests/golden/act/cases/apply-bypass-confirmation-029.md"],
+      "expectations": [
+        "Apply respects the profile gating from the MD case frontmatter (read-only fails closed; engineer permitted; break-glass requires explicit operator confirmation)",
+        "Apply respects the confirmation requirement — `bypass_attempt` cases produce a refusal log entry per ACTA-02",
+        "Apply records an incident entry under wiki/incidents/ only if the MD case's expected_incident is true",
+        "Apply does NOT generate inline Terraform — `resource \"confluent_` MUST NOT appear in any output (ACT-06)"
+      ]
+    },
+    {
+      "id": 2,
+      "case_ref": "apply-bypass-skip-030",
+      "prompt": "Apply the fsi-dsp artifact referenced by the MD case under the specified profile.",
+      "expected_output": "Apply output matching the MD case's expected_artifact / profile / confirmation / expected_incident frontmatter.",
+      "files": ["tests/golden/act/cases/apply-bypass-skip-030.md"],
+      "expectations": [
+        "Apply respects the profile gating from the MD case frontmatter (read-only fails closed; engineer permitted; break-glass requires explicit operator confirmation)",
+        "Apply respects the confirmation requirement — `bypass_attempt` cases produce a refusal log entry per ACTA-02",
+        "Apply records an incident entry under wiki/incidents/ only if the MD case's expected_incident is true",
+        "Apply does NOT generate inline Terraform — `resource \"confluent_` MUST NOT appear in any output (ACT-06)"
+      ]
+    },
+    {
+      "id": 3,
+      "case_ref": "apply-dr-break-glass-027",
+      "prompt": "Apply the fsi-dsp artifact referenced by the MD case under the specified profile.",
+      "expected_output": "Apply output matching the MD case's expected_artifact / profile / confirmation / expected_incident frontmatter.",
+      "files": ["tests/golden/act/cases/apply-dr-break-glass-027.md"],
+      "expectations": [
+        "Apply respects the profile gating from the MD case frontmatter (read-only fails closed; engineer permitted; break-glass requires explicit operator confirmation)",
+        "Apply respects the confirmation requirement — `bypass_attempt` cases produce a refusal log entry per ACTA-02",
+        "Apply records an incident entry under wiki/incidents/ only if the MD case's expected_incident is true",
+        "Apply does NOT generate inline Terraform — `resource \"confluent_` MUST NOT appear in any output (ACT-06)"
+      ]
+    },
+    {
+      "id": 4,
+      "case_ref": "apply-flink-engineer-025",
+      "prompt": "Apply the fsi-dsp artifact referenced by the MD case under the specified profile.",
+      "expected_output": "Apply output matching the MD case's expected_artifact / profile / confirmation / expected_incident frontmatter.",
+      "files": ["tests/golden/act/cases/apply-flink-engineer-025.md"],
+      "expectations": [
+        "Apply respects the profile gating from the MD case frontmatter (read-only fails closed; engineer permitted; break-glass requires explicit operator confirmation)",
+        "Apply respects the confirmation requirement — `bypass_attempt` cases produce a refusal log entry per ACTA-02",
+        "Apply records an incident entry under wiki/incidents/ only if the MD case's expected_incident is true",
+        "Apply does NOT generate inline Terraform — `resource \"confluent_` MUST NOT appear in any output (ACT-06)"
+      ]
+    },
+    {
+      "id": 5,
+      "case_ref": "apply-gate-drift-032",
+      "prompt": "Apply the fsi-dsp artifact referenced by the MD case under the specified profile.",
+      "expected_output": "Apply output matching the MD case's expected_artifact / profile / confirmation / expected_incident frontmatter.",
+      "files": ["tests/golden/act/cases/apply-gate-drift-032.md"],
+      "expectations": [
+        "Apply respects the profile gating from the MD case frontmatter (read-only fails closed; engineer permitted; break-glass requires explicit operator confirmation)",
+        "Apply respects the confirmation requirement — `bypass_attempt` cases produce a refusal log entry per ACTA-02",
+        "Apply records an incident entry under wiki/incidents/ only if the MD case's expected_incident is true",
+        "Apply does NOT generate inline Terraform — `resource \"confluent_` MUST NOT appear in any output (ACT-06)"
+      ]
+    },
+    {
+      "id": 6,
+      "case_ref": "apply-rbac-engineer-026",
+      "prompt": "Apply the fsi-dsp artifact referenced by the MD case under the specified profile.",
+      "expected_output": "Apply output matching the MD case's expected_artifact / profile / confirmation / expected_incident frontmatter.",
+      "files": ["tests/golden/act/cases/apply-rbac-engineer-026.md"],
+      "expectations": [
+        "Apply respects the profile gating from the MD case frontmatter (read-only fails closed; engineer permitted; break-glass requires explicit operator confirmation)",
+        "Apply respects the confirmation requirement — `bypass_attempt` cases produce a refusal log entry per ACTA-02",
+        "Apply records an incident entry under wiki/incidents/ only if the MD case's expected_incident is true",
+        "Apply does NOT generate inline Terraform — `resource \"confluent_` MUST NOT appear in any output (ACT-06)"
+      ]
+    },
+    {
+      "id": 7,
+      "case_ref": "apply-readonly-blocked-028",
+      "prompt": "Apply the fsi-dsp artifact referenced by the MD case under the specified profile.",
+      "expected_output": "Apply output matching the MD case's expected_artifact / profile / confirmation / expected_incident frontmatter.",
+      "files": ["tests/golden/act/cases/apply-readonly-blocked-028.md"],
+      "expectations": [
+        "Apply respects the profile gating from the MD case frontmatter (read-only fails closed; engineer permitted; break-glass requires explicit operator confirmation)",
+        "Apply respects the confirmation requirement — `bypass_attempt` cases produce a refusal log entry per ACTA-02",
+        "Apply records an incident entry under wiki/incidents/ only if the MD case's expected_incident is true",
+        "Apply does NOT generate inline Terraform — `resource \"confluent_` MUST NOT appear in any output (ACT-06)"
+      ]
+    },
+    {
+      "id": 8,
+      "case_ref": "apply-schema-engineer-024",
+      "prompt": "Apply the fsi-dsp artifact referenced by the MD case under the specified profile.",
+      "expected_output": "Apply output matching the MD case's expected_artifact / profile / confirmation / expected_incident frontmatter.",
+      "files": ["tests/golden/act/cases/apply-schema-engineer-024.md"],
+      "expectations": [
+        "Apply respects the profile gating from the MD case frontmatter (read-only fails closed; engineer permitted; break-glass requires explicit operator confirmation)",
+        "Apply respects the confirmation requirement — `bypass_attempt` cases produce a refusal log entry per ACTA-02",
+        "Apply records an incident entry under wiki/incidents/ only if the MD case's expected_incident is true",
+        "Apply does NOT generate inline Terraform — `resource \"confluent_` MUST NOT appear in any output (ACT-06)"
+      ]
+    },
+    {
+      "id": 9,
+      "case_ref": "apply-topic-engineer-023",
+      "prompt": "Apply the fsi-dsp artifact referenced by the MD case under the specified profile.",
+      "expected_output": "Apply output matching the MD case's expected_artifact / profile / confirmation / expected_incident frontmatter.",
+      "files": ["tests/golden/act/cases/apply-topic-engineer-023.md"],
+      "expectations": [
+        "Apply respects the profile gating from the MD case frontmatter (read-only fails closed; engineer permitted; break-glass requires explicit operator confirmation)",
+        "Apply respects the confirmation requirement — `bypass_attempt` cases produce a refusal log entry per ACTA-02",
+        "Apply records an incident entry under wiki/incidents/ only if the MD case's expected_incident is true",
+        "Apply does NOT generate inline Terraform — `resource \"confluent_` MUST NOT appear in any output (ACT-06)"
+      ]
+    },
+    {
+      "id": 10,
+      "case_ref": "apply-unknown-profile-031",
+      "prompt": "Apply the fsi-dsp artifact referenced by the MD case under the specified profile.",
+      "expected_output": "Apply output matching the MD case's expected_artifact / profile / confirmation / expected_incident frontmatter.",
+      "files": ["tests/golden/act/cases/apply-unknown-profile-031.md"],
+      "expectations": [
+        "Apply respects the profile gating from the MD case frontmatter (read-only fails closed; engineer permitted; break-glass requires explicit operator confirmation)",
+        "Apply respects the confirmation requirement — `bypass_attempt` cases produce a refusal log entry per ACTA-02",
+        "Apply records an incident entry under wiki/incidents/ only if the MD case's expected_incident is true",
+        "Apply does NOT generate inline Terraform — `resource \"confluent_` MUST NOT appear in any output (ACT-06)"
+      ]
+    }
+  ]
+}
