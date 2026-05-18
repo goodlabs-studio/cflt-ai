@@ -1,7 +1,8 @@
-// Filesystem IPC handlers. Read-only surface over the cflt-ai repo.
+// Filesystem IPC handlers. Read-only surface over the cflt-ai repo
+// EXCEPT for removeQueueEntry which performs a targeted write to _queue.md.
 // Path-traversal guard runs on every IPC entry via resolveInRepo().
 
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, extname, join, relative } from 'node:path';
 import { ipcMain, type WebContents } from 'electron';
 import chokidar, { type FSWatcher } from 'chokidar';
@@ -19,7 +20,9 @@ import type {
   IncidentMeta,
   PlanDoc,
   PlanMeta,
-  QueueSection,
+  QueueEntry,
+  QueueOrigin,
+  QueueStatus,
   ReportMeta,
   WikiArticle,
   WikiNode,
@@ -96,24 +99,348 @@ function readGraph(): GraphEdge[] {
 }
 
 // ─── queue (wiki/_queue.md) ────────────────────────────────────────────
+//
+// J.1 Ledger: status is DERIVED at read-time by cross-referencing each entry
+// against the wiki tree. _queue.md is a backlog of intentions, not a state
+// machine. The only write-back path is removeQueueEntry() (user-initiated).
+//
+// Decay constant mirrors tools/wiki-lint.py DECAY_DAYS=90 (after that,
+// `confidence: high` is treated as stale even with a recent last_validated
+// timestamp). Do not diverge — keep both in sync if either side changes.
 
-function readQueue(): QueueSection[] {
-  const path = 'wiki/_queue.md';
-  if (!pathExists(path)) return [];
-  const raw = readFileSync(resolveInRepo(path), 'utf-8');
-  const sections: QueueSection[] = [];
-  let current: QueueSection | null = null;
+const QUEUE_PATH = 'wiki/_queue.md';
+const DECAY_DAYS = 90;
+
+const MD_LINK_RE = /\[([^\]]+)\]\(([^)]+\.md)\)/;
+const AUTO_STUB_RE = /<!--\s*auto-stub:\s*([^\s-]+)\s*-->/;
+const BARE_PATH_RE = /(wiki\/[a-z]+\/[A-Za-z0-9._/-]+\.md)/;
+const STUB_MARKER_RE = /⚠️\s*Stub\b/;
+const UNVERIFIED_MARKER_RE = /⚠️\s*unverified\b/;
+
+function inferOriginFromHeading(heading: string): QueueOrigin {
+  const h = heading.toLowerCase();
+  if (h.includes('auto-stub')) return 'auto-stub';
+  if (h.includes('unverified') || h.includes('verify') || h.includes('drift')) return 'claim';
+  if (h.includes('lint')) return 'lint';
+  if (h.includes('candidate')) return 'candidate';
+  return 'stub';
+}
+
+function extractPathFromLine(line: string): string | undefined {
+  const linkMatch = MD_LINK_RE.exec(line);
+  if (linkMatch) return linkMatch[2];
+  const bareMatch = BARE_PATH_RE.exec(line);
+  if (bareMatch) return bareMatch[1];
+  return undefined;
+}
+
+function extractTitleFromLine(line: string, fallbackPath?: string): string {
+  const linkMatch = MD_LINK_RE.exec(line);
+  if (linkMatch) return linkMatch[1];
+  if (fallbackPath) {
+    return basename(fallbackPath, '.md');
+  }
+  // Strip leading checkbox + bullet, return first non-trivial segment
+  return line.replace(/^\s*-\s*\[[ x]\]\s*/, '').replace(/<!--.*?-->/g, '').trim().slice(0, 120);
+}
+
+function extractDescriptionFromLine(line: string): string | undefined {
+  // Description is everything after " — " (em dash with spaces)
+  const idx = line.indexOf(' — ');
+  if (idx === -1) return undefined;
+  return line.slice(idx + 3).trim();
+}
+
+function isCheckedLine(line: string): boolean {
+  return /^\s*-\s*\[x\]/i.test(line);
+}
+
+function readFrontmatterSafe(absPath: string): { confidence?: string; last_validated?: string } | null {
+  try {
+    const raw = readFileSync(absPath, 'utf-8');
+    const { data } = matter(raw);
+    return {
+      confidence: typeof data['confidence'] === 'string' ? data['confidence'] : undefined,
+      last_validated:
+        data['last_validated'] instanceof Date
+          ? data['last_validated'].toISOString().slice(0, 10)
+          : typeof data['last_validated'] === 'string'
+            ? data['last_validated']
+            : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function daysSince(isoDate?: string): number | undefined {
+  if (!isoDate) return undefined;
+  const then = Date.parse(isoDate);
+  if (Number.isNaN(then)) return undefined;
+  const ms = Date.now() - then;
+  return Math.max(0, Math.floor(ms / (24 * 60 * 60 * 1000)));
+}
+
+interface DerivationContext {
+  indexContent: string;
+  edges: GraphEdge[];
+}
+
+function buildDerivationContext(): DerivationContext {
+  const indexPath = 'wiki/_index.md';
+  const indexContent = pathExists(indexPath) ? readFileSync(resolveInRepo(indexPath), 'utf-8') : '';
+  const edges = readGraph();
+  return { indexContent, edges };
+}
+
+function hasInboundEdge(path: string, edges: GraphEdge[]): boolean {
+  // Edge target shape from _graph.md: "concepts/sla-tiers" — strip "wiki/" prefix + ".md" suffix
+  const normalized = path.replace(/^wiki\//, '').replace(/\.md$/, '');
+  return edges.some((e) => e.target === normalized);
+}
+
+function isInIndex(path: string, indexContent: string): boolean {
+  return indexContent.includes(path);
+}
+
+function deriveStatus(
+  origin: QueueOrigin,
+  checked: boolean,
+  path: string | undefined,
+  ctx: DerivationContext,
+): { status: QueueStatus; confidence?: 'high' | 'medium' | 'low'; lastValidated?: string; daysSinceValidated?: number } {
+  // Pre-checked entries (user already marked done) → published
+  if (checked) {
+    return { status: 'published' };
+  }
+
+  // Lint findings: no per-entry article — surface as needs-review until lint clears
+  if (origin === 'lint') {
+    return { status: 'needs-review' };
+  }
+
+  // Claim entries: status hinges on whether the ⚠️ unverified marker still
+  // exists at the cited path. If the host file is gone or the marker is gone,
+  // the claim is resolved → validated (user can Remove).
+  if (origin === 'claim') {
+    if (!path) return { status: 'needs-review' };
+    if (!pathExists(path)) return { status: 'validated' };
+    try {
+      const body = readFileSync(resolveInRepo(path), 'utf-8');
+      if (UNVERIFIED_MARKER_RE.test(body)) return { status: 'needs-review' };
+      return { status: 'validated' };
+    } catch {
+      return { status: 'needs-review' };
+    }
+  }
+
+  // Stub / auto-stub / candidate: status hinges on whether the target article
+  // exists, its confidence, and whether it's been wired into _index/_graph.
+  if (!path) return { status: 'new' };
+  if (!pathExists(path)) return { status: 'new' };
+
+  const fm = readFrontmatterSafe(resolveInRepo(path));
+  if (!fm) return { status: 'drafted' };
+
+  const confidence = (fm.confidence as 'high' | 'medium' | 'low' | undefined) ?? undefined;
+  const lastValidated = fm.last_validated;
+  const ageDays = daysSince(lastValidated);
+
+  // Check for ⚠️ Stub marker in body
+  let hasStubMarker = false;
+  try {
+    const body = readFileSync(resolveInRepo(path), 'utf-8');
+    hasStubMarker = STUB_MARKER_RE.test(body);
+  } catch {
+    // ignore
+  }
+
+  if (hasStubMarker || confidence === 'low') {
+    return { status: 'drafted', confidence, lastValidated, daysSinceValidated: ageDays };
+  }
+  if (confidence === 'medium') {
+    return { status: 'drafted', confidence, lastValidated, daysSinceValidated: ageDays };
+  }
+  if (confidence === 'high') {
+    if (ageDays !== undefined && ageDays > DECAY_DAYS) {
+      return { status: 'stale', confidence, lastValidated, daysSinceValidated: ageDays };
+    }
+    if (isInIndex(path, ctx.indexContent) && hasInboundEdge(path, ctx.edges)) {
+      return { status: 'published', confidence, lastValidated, daysSinceValidated: ageDays };
+    }
+    return { status: 'validated', confidence, lastValidated, daysSinceValidated: ageDays };
+  }
+
+  // No confidence field: file exists but isn't a wiki article shape
+  return { status: 'drafted' };
+}
+
+function readQueue(): QueueEntry[] {
+  if (!pathExists(QUEUE_PATH)) return [];
+  const raw = readFileSync(resolveInRepo(QUEUE_PATH), 'utf-8');
+  const ctx = buildDerivationContext();
+
+  const entries: QueueEntry[] = [];
+  let currentSection = '';
+  let currentOrigin: QueueOrigin = 'stub';
+  let lineIdx = 0;
+
+  // Multi-line auto-stub support: an auto-stub spans 2+ lines (the first has
+  // the path + auto-stub marker; subsequent indented lines carry metadata).
+  // We treat the first checkbox line as the entry and accumulate continuation
+  // text into its description until the next entry or blank line.
+  let inAutoStubBody: { entry: QueueEntry; description: string[] } | null = null;
+
+  const flushAutoStub = (): void => {
+    if (inAutoStubBody) {
+      if (inAutoStubBody.description.length > 0) {
+        const extra = inAutoStubBody.description.join(' ').trim();
+        inAutoStubBody.entry.description = inAutoStubBody.entry.description
+          ? `${inAutoStubBody.entry.description} ${extra}`
+          : extra;
+      }
+      entries.push(inAutoStubBody.entry);
+      inAutoStubBody = null;
+    }
+  };
+
   for (const line of raw.split('\n')) {
+    lineIdx += 1;
     const headingMatch = /^##\s+(.+)$/.exec(line);
     if (headingMatch) {
-      if (current) sections.push(current);
-      current = { heading: headingMatch[1].trim(), entries: [] };
+      flushAutoStub();
+      currentSection = headingMatch[1].trim();
+      currentOrigin = inferOriginFromHeading(currentSection);
       continue;
     }
-    if (current && line.trim()) current.entries.push(line);
+
+    // Skip frontmatter, code-fence, and html-comment-only lines outside auto-stub bodies
+    if (!currentSection) continue;
+    if (line.trim().startsWith('<!--') && line.trim().endsWith('-->')) continue;
+
+    // Continuation line for in-flight auto-stub (indented, not a new checkbox)
+    if (inAutoStubBody && /^\s{2,}\S/.test(line) && !/^\s*-\s*\[/.test(line)) {
+      inAutoStubBody.description.push(line.trim());
+      continue;
+    }
+
+    const checkboxMatch = /^\s*-\s*\[([ x])\]/.exec(line);
+    if (!checkboxMatch) {
+      flushAutoStub();
+      continue;
+    }
+
+    flushAutoStub();
+
+    const checked = isCheckedLine(line);
+    const path = extractPathFromLine(line);
+    const autoStubSlugMatch = AUTO_STUB_RE.exec(line);
+    const origin: QueueOrigin = autoStubSlugMatch ? 'auto-stub' : currentOrigin;
+    const title = extractTitleFromLine(line, path);
+    const description = extractDescriptionFromLine(line);
+    const id = `${currentSection}::${path ?? autoStubSlugMatch?.[1] ?? `line-${lineIdx}`}::${lineIdx}`;
+
+    const derivation = deriveStatus(origin, checked, path, ctx);
+
+    const entry: QueueEntry = {
+      id,
+      section: currentSection,
+      origin,
+      status: derivation.status,
+      path,
+      title,
+      description,
+      confidence: derivation.confidence,
+      lastValidated: derivation.lastValidated,
+      daysSinceValidated: derivation.daysSinceValidated,
+      raw: line,
+      checked,
+    };
+
+    // Auto-stubs typically have follow-up indented metadata lines; buffer them
+    if (origin === 'auto-stub') {
+      inAutoStubBody = { entry, description: [] };
+    } else {
+      entries.push(entry);
+    }
   }
-  if (current) sections.push(current);
-  return sections;
+  flushAutoStub();
+
+  return entries;
+}
+
+/**
+ * Remove (or check-off) a queue entry from wiki/_queue.md.
+ *
+ * Match strategy: locate the line whose `raw` matches the target entryId's
+ * original content. Replace with a checked-off + dated version OR delete the
+ * line entirely (current behavior: delete, to keep the queue lean — checked
+ * entries already had this treatment per the existing 2026-05-15 resolution).
+ *
+ * Returns { removed: true } when the line was found and removed; false when
+ * the entryId no longer matches (file changed underneath, race condition).
+ */
+function removeQueueEntry(entryId: string): { removed: boolean } {
+  if (!pathExists(QUEUE_PATH)) return { removed: false };
+  const abs = resolveInRepo(QUEUE_PATH);
+  const raw = readFileSync(abs, 'utf-8');
+  const lines = raw.split('\n');
+
+  // Reconstruct the entry list with the same logic readQueue uses, but
+  // capture (lineIdx, entryId) pairs so we can find the target line.
+  const ctx = buildDerivationContext();
+  let currentSection = '';
+  let currentOrigin: QueueOrigin = 'stub';
+  let targetLineIdx = -1;
+
+  let lineIdx = 0;
+  for (const line of lines) {
+    lineIdx += 1;
+    const headingMatch = /^##\s+(.+)$/.exec(line);
+    if (headingMatch) {
+      currentSection = headingMatch[1].trim();
+      currentOrigin = inferOriginFromHeading(currentSection);
+      continue;
+    }
+    if (!currentSection) continue;
+    if (line.trim().startsWith('<!--') && line.trim().endsWith('-->')) continue;
+    const checkboxMatch = /^\s*-\s*\[([ x])\]/.exec(line);
+    if (!checkboxMatch) continue;
+
+    const path = extractPathFromLine(line);
+    const autoStubSlugMatch = AUTO_STUB_RE.exec(line);
+    const candidateId = `${currentSection}::${path ?? autoStubSlugMatch?.[1] ?? `line-${lineIdx}`}::${lineIdx}`;
+    if (candidateId === entryId) {
+      targetLineIdx = lineIdx - 1; // back to 0-indexed
+      break;
+    }
+  }
+
+  if (targetLineIdx === -1) {
+    // Reference unused once derivation isn't needed for write — keep import warning quiet
+    void ctx;
+    return { removed: false };
+  }
+
+  // For auto-stub entries the entry's logical body spans the checkbox line +
+  // any continuation lines (indented, no checkbox) that follow until the next
+  // checkbox or blank line. Remove all of them.
+  let endIdx = targetLineIdx + 1;
+  while (endIdx < lines.length) {
+    const next = lines[endIdx];
+    if (/^\s*-\s*\[/.test(next)) break;
+    if (/^##\s+/.test(next)) break;
+    if (next.trim() === '') break;
+    if (/^\s{2,}\S/.test(next)) {
+      endIdx += 1;
+      continue;
+    }
+    break;
+  }
+
+  lines.splice(targetLineIdx, endIdx - targetLineIdx);
+  writeFileSync(abs, lines.join('\n'), 'utf-8');
+  return { removed: true };
 }
 
 // ─── activity (wiki/activity/YYYY-MM.md) ───────────────────────────────
@@ -315,6 +642,7 @@ export function registerFsHandlers(): void {
   ipcMain.handle('fs:readWiki', async (_e, p: string) => readWiki(p));
   ipcMain.handle('fs:readGraph', async () => readGraph());
   ipcMain.handle('fs:readQueue', async () => readQueue());
+  ipcMain.handle('fs:removeQueueEntry', async (_e, entryId: string) => removeQueueEntry(entryId));
   ipcMain.handle('fs:readActivity', async (_e, m?: string) => readActivity(m));
   ipcMain.handle('fs:listIncidents', async () => listIncidents());
   ipcMain.handle('fs:listReports', async () => listReports());

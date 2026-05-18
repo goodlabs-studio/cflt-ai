@@ -31,9 +31,64 @@ export interface GraphEdge {
   relationship: string;
 }
 
+/**
+ * Queue entry status — derived at read-time by cross-referencing _queue.md
+ * against the wiki tree. Never stored in _queue.md. Order matters for sort.
+ *
+ * Lifecycle: new → drafted → (needs-review for claim-type) → validated → published
+ *            (or stale if validated > DECAY_DAYS old)
+ */
+export const QUEUE_STATUS_ORDER = [
+  'new',
+  'drafted',
+  'needs-review',
+  'validated',
+  'stale',
+  'published',
+] as const;
+export type QueueStatus = (typeof QUEUE_STATUS_ORDER)[number];
+
+/**
+ * Where the queue entry came from. Drives action-button labeling and the
+ * derivation rules (claim entries point at a marker inside an existing file,
+ * stub/auto-stub entries point at a path that should become a wiki article).
+ */
+export type QueueOrigin = 'stub' | 'auto-stub' | 'claim' | 'lint' | 'candidate';
+
+export interface QueueEntry {
+  /** Stable identifier for write-back. Derived from path + section + line index. */
+  id: string;
+  /** Source section heading (kept for grouping/audit). */
+  section: string;
+  /** Origin tag — drives action verb + derivation. */
+  origin: QueueOrigin;
+  /** Derived status (see derivation table in J.1 plan). */
+  status: QueueStatus;
+  /** Target wiki path when present (e.g., "wiki/concepts/foo.md"). Claim entries put the host article path here. */
+  path?: string;
+  /** Display title — extracted markdown link text, or slug, or raw line. */
+  title: string;
+  /** Free-text description from the queue line (everything after the path/em-dash). */
+  description?: string;
+  /** Article frontmatter `confidence` when path resolves to an existing file. */
+  confidence?: 'high' | 'medium' | 'low';
+  /** ISO date string from frontmatter `last_validated`. */
+  lastValidated?: string;
+  /** Days since `last_validated` (for stale detection). Undefined if no validated date. */
+  daysSinceValidated?: number;
+  /** Verbatim source line from _queue.md (for the activity panel + write-back match). */
+  raw: string;
+  /** True when the entry's checkbox is already `[x]`. */
+  checked: boolean;
+}
+
+/**
+ * @deprecated J.1 ledger redesign — kept only for unused callers during transition.
+ * Use QueueEntry[] from readQueue() instead.
+ */
 export interface QueueSection {
-  heading: string; // verbatim section name from _queue.md
-  entries: string[]; // raw markdown lines under the section
+  heading: string;
+  entries: string[];
 }
 
 export interface ActivityEntry {
@@ -85,7 +140,8 @@ export interface CfltFsAPI {
   readWiki(path: string): Promise<WikiArticle>;
   listWikiTree(): Promise<WikiNode[]>;
   readGraph(): Promise<GraphEdge[]>;
-  readQueue(): Promise<QueueSection[]>;
+  readQueue(): Promise<QueueEntry[]>;
+  removeQueueEntry(entryId: string): Promise<{ removed: boolean }>;
   readActivity(month?: string): Promise<ActivityEntry[]>;
   listIncidents(): Promise<IncidentMeta[]>;
   listReports(): Promise<ReportMeta[]>;

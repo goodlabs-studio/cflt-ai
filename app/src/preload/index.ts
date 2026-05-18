@@ -21,6 +21,7 @@ const api: CfltAPI = {
     listWikiTree: () => ipcRenderer.invoke('fs:listWikiTree'),
     readGraph: () => ipcRenderer.invoke('fs:readGraph'),
     readQueue: () => ipcRenderer.invoke('fs:readQueue'),
+    removeQueueEntry: (entryId: string) => ipcRenderer.invoke('fs:removeQueueEntry', entryId),
     readActivity: (m) => ipcRenderer.invoke('fs:readActivity', m),
     listIncidents: () => ipcRenderer.invoke('fs:listIncidents'),
     listReports: () => ipcRenderer.invoke('fs:listReports'),
