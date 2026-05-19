@@ -71,6 +71,7 @@ const api: CfltAPI = {
   meta: {
     repoRoot: () => ipcRenderer.invoke('meta:repoRoot'),
     appVersion: () => ipcRenderer.invoke('meta:appVersion'),
+    authMode: () => ipcRenderer.invoke('meta:authMode'),
   },
 };
 

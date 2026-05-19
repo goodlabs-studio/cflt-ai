@@ -462,6 +462,12 @@ export interface CfltConfigAPI {
   set(patch: Partial<UserConfig>): Promise<UserConfig>;
 }
 
+/**
+ * How the Claude Code CLI is authenticated. Drives whether the UI shows
+ * per-run cost figures — irrelevant under OAuth (subscription).
+ */
+export type AuthMode = 'oauth' | 'api-key';
+
 export interface CfltAPI {
   fs: CfltFsAPI;
   skill: CfltSkillAPI;
@@ -474,6 +480,8 @@ export interface CfltAPI {
   meta: {
     repoRoot(): Promise<string>;
     appVersion(): Promise<string>;
+    /** OAuth (claude.ai subscription) vs API key. Cached after first call. */
+    authMode(): Promise<AuthMode>;
   };
 }
 

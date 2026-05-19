@@ -13,6 +13,7 @@ import {
   pathExists,
   isDir,
 } from '../repo.js';
+import { detectAuthMode } from '../auth.js';
 import type {
   ActivityEntry,
   FsEvent,
@@ -661,6 +662,7 @@ export function registerFsHandlers(): void {
 
   ipcMain.handle('meta:repoRoot', async () => getRepoRoot());
   ipcMain.handle('meta:appVersion', async () => '0.1.0');
+  ipcMain.handle('meta:authMode', async () => detectAuthMode());
 }
 
 export function disposeWatchers(): void {

@@ -17,6 +17,7 @@ import {
   Square,
 } from 'lucide-react';
 import type {
+  AuthMode,
   ConcurrencyState,
   QueueEntry,
   QueueStatus,
@@ -57,7 +58,17 @@ export function QueuePage(): React.JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [runs, setRuns] = useState<ActiveRun[]>([]);
   const [filter, setFilter] = useState<StatusFilter>('open');
+  // Default 'oauth' so cost stays hidden until we hear otherwise from main —
+  // subscription is the common case and the safer failure mode for a
+  // wrong-default error.
+  const [authMode, setAuthMode] = useState<AuthMode>('oauth');
   const concurrency = useConcurrency();
+
+  useEffect(() => {
+    window.cflt.meta.authMode().then(setAuthMode).catch(() => {
+      // Leave as 'oauth' default
+    });
+  }, []);
 
   // Debounce refresh so a burst of file-watcher events from parallel runs
   // doesn't hammer the IPC bridge.
@@ -156,7 +167,13 @@ export function QueuePage(): React.JSX.Element {
               break;
             case 'result': {
               const status: RunStatus = ev.result.success ? 'success' : 'error';
-              const meta = `${ev.result.durationMs}ms · $${ev.result.costUsd.toFixed(4)}`;
+              // Subscription (OAuth) users don't see a per-call charge —
+              // the CLI's total_cost_usd is API-pricing-equivalent and
+              // would mislead. Drop the cost segment in that mode.
+              const meta =
+                authMode === 'api-key'
+                  ? `${ev.result.durationMs}ms · $${ev.result.costUsd.toFixed(4)}`
+                  : `${ev.result.durationMs}ms`;
               updateRun(runId, { status, meta, cancel: undefined });
               if (ev.result.success) refresh();
               return;
