@@ -17,19 +17,221 @@ Run: `python tools/wiki-compile.py --delta` to process.
   notes: optional context for the compiler
 -->
 
-- path: kafka-best-practices.md
-  added: 2026-04-17
-  notes: C4E wiki stub covering broker, producer, consumer, app-level, AKS, CC ops, and monitoring guidance for fraud detection on CC + Azure AKS. Compile into wiki/concepts/azure-connection-management.md and wiki/patterns/latency-optimized-kafka-client.md.
+<!-- both April-17 entries processed 2026-05-18 — see Processed section below -->
+<!-- oic-kafka-integration auto-stub processed 2026-05-18 — see Processed section below -->
 
-- path: kafka-recommendations.md
-  added: 2026-04-17
-  notes: Detailed 4-phase triage/remediation plan for e2e latency on CC Dedicated + Azure AKS. Keep as report in outputs/reports/. Source for wiki stubs on azure-connection-management and latency-optimized-kafka-client.
 
 # === Phase H.1: confluent-agent-skills@91d1871e ingest queue ===
 # All 19 H.1 entries processed (10 parents in H.1-02 + 9 trip-wires in H.1-03);
 # entries moved to ## Processed below. Only the 2 pre-H.1 April-2026 entries remain in Pending.
 
 ## Processed
+
+- path: <none — MCP-only ingest, fulfills auto-stub from /review>
+  source_url: |
+    outputs/reports/oic-cc-acks-all-timeouts-review-2026-04-29.md (26 claim validations)
+    wiki/_queue.md Auto-Stubs section (oic-kafka-integration | Date: 2026-04-29 | Source: oic_cc_acks_all_timeouts.md)
+    https://kafka.apache.org/41/configuration/producer-configs/
+  added: 2026-05-18
+  notes: |
+    /wiki:ingest invoked with target wiki/concepts/oic-kafka-integration.md. Fulfills the
+    auto-stub queued from /review (2026-04-29). Concept article on Oracle Integration Cloud
+    Kafka adapter → Confluent Cloud integration. Covers Connectivity Agent architecture
+    (JVM hop in OCI publishing cross-cloud to CC on Azure/AWS), GZIP-only compression
+    constraint, partial Additional-Properties passthrough (the Critical-severity premise
+    flagged in the /review Premise Challenge), cross-cloud OCI→Azure RTT timeout overrides
+    on the FSI producer baseline (request.timeout.ms=60000, delivery.timeout.ms=120000
+    with the corrected `>= linger.ms + request.timeout.ms` rule, retry.backoff.ms=1000,
+    linger.ms=50, batch.size=65536, connections.max.idle.ms=180000), Azure ILB silent-kill
+    mitigation cross-linked to azure-connection-management, CC cluster-side settings,
+    three-layer acks=all timeout triage tree (producer JMX / cluster ISR / network RTT),
+    and EOS implications under uncertain transactional.id support. Source raw file
+    (oic_cc_acks_all_timeouts.md) not present in raw/articles/; ingest sourced from the
+    already-validated /review report with all 26 claim verdicts and the corrections
+    applied inline (delivery.timeout rule fixed; GZIP "default" attribution clarified).
+    Three inline ⚠️ unverified markers retained: (1) GZIP-only behavior of the OIC adapter
+    (operationally reported; Oracle product, not surfaced in confluent-docs), (2) Oracle's
+    honored/overridden/ignored property matrix, (3) OIC Kafka adapter transactional.id
+    support. confidence: medium pending Oracle-side authoritative confirmation.
+  compiled: 2026-05-18
+  wiki_articles:
+    - wiki/concepts/oic-kafka-integration.md
+
+- path: kafka-best-practices.md
+  added: 2026-04-17
+  notes: |
+    C4E wiki stub covering broker, producer, consumer, app-level, AKS, CC ops, and monitoring
+    guidance for fraud detection on CC + Azure AKS. /wiki:ingest invoked with target
+    wiki/patterns/latency-optimized-kafka-client.md. Raw source file NOT present in
+    raw/articles/ at compile time (file referenced in queue but absent on disk). Article
+    compiled via MCP-only path: cloud-agnostic latency baseline drawing on the
+    already-MCP-validated companion article wiki/concepts/azure-connection-management.md
+    (last_validated 2026-05-18) and the existing Azure-specific pattern
+    wiki/patterns/low-latency-kafka-azure.md. confluent-docs producer-configs fetch
+    succeeded but the page was too large to inline-grep within budget; key default
+    values cited (linger.ms, batch.size, fetch.min.bytes=1 canonical, max.poll.records=500,
+    connections.max.idle.ms=540000, reconnect.backoff.max.ms=1000) cross-checked against
+    the validated companion article. Two inline ⚠️ unverified markers: (1) Kafka 4.0
+    linger.ms KIP-1083 default change to 5ms (widely documented but not re-fetched in
+    this session), (2) cross-flag against the existing low-latency-kafka-azure article
+    incorrectly citing fetch.min.bytes default as 1024 (AK canonical is 1 byte) — that
+    article should be reconciled in a future /wiki:validate pass. confidence: medium.
+  compiled: 2026-05-18
+  wiki_articles:
+    - wiki/patterns/latency-optimized-kafka-client.md
+
+- path: kafka-recommendations.md
+  added: 2026-04-17
+  notes: |
+    Detailed 4-phase triage/remediation plan for e2e latency on CC Dedicated + Azure AKS,
+    intended as source for outputs/reports/ and wiki stubs on azure-connection-management
+    and latency-optimized-kafka-client. Raw source file NOT present in raw/articles/ at
+    compile time. Per the ingest-queue note this was always intended to land primarily as
+    a report in outputs/reports/ (not a wiki article), with wiki coverage handled by the
+    azure-connection-management concept (already compiled 2026-05-18) and the new
+    latency-optimized-kafka-client pattern. Marking processed to clear the pending queue;
+    the report side of this entry is not produced (no raw input available to render).
+    Wiki coverage of the underlying triage tree is provided by:
+      - wiki/concepts/azure-connection-management.md (ILB silent-kill)
+      - wiki/patterns/low-latency-kafka-azure.md (Azure overlay)
+      - wiki/patterns/latency-optimized-kafka-client.md (cloud-agnostic baseline)
+  compiled: 2026-05-18
+  wiki_articles:
+    - wiki/patterns/latency-optimized-kafka-client.md
+    - wiki/concepts/azure-connection-management.md
+    - wiki/patterns/low-latency-kafka-azure.md
+
+- path: <none — MCP-only ingest, fulfills _queue.md stub>
+  source_url: |
+    wiki/_queue.md Stubs to Create line 14 (Flink Event Routing — raw → Flink → derived canonical pattern)
+    wiki/patterns/flink-runtime-models.md (already-validated companion — runtime context, state-TTL semantics)
+    wiki/concepts/flink-confluent-cloud-setup.md (already-validated companion — compute pools, statement lifecycle, autopilot)
+    wiki/patterns/cdc-to-tableflow-flink-decode.md (already-validated companion — specific CDC instance of the pattern)
+    wiki/patterns/connect-deployment-models.md (where SMT routing lives in the anti-pattern architecture)
+    wiki/concepts/schema-registry-best-practices.md (CSFLE-at-SR exception for the producer-side PII case)
+  added: 2026-05-18
+  notes: |
+    /wiki:ingest invoked with target wiki/patterns/flink-event-routing.md. Pattern article on
+    the canonical raw → stateless Flink statement → derived topic shape: replayability via
+    scan.startup.mode=earliest-offset, schema decoupling from upstream wire format, debuggability
+    via preserved raw topic. Documents the stateless-vs-stateful operator boundary (filter,
+    projection, JSON_VALUE, lookup join, temporal join = OK; regular join, non-windowed agg,
+    COUNT DISTINCT = NOT a routing pattern, inherits state-TTL caveats), the multi-INSERT split
+    idiom, CC compute-pool sizing for stateless routing, and the producer-side anti-pattern
+    (Connect SMTs, app-side branching, Debezium predicates, producer flattening, pre-filtered
+    fan-out) with the narrow CSFLE-at-SR exception for PII. MCP-only ingest leveraging the
+    already-validated companion articles flink-runtime-models (last_validated 2026-05-13),
+    flink-confluent-cloud-setup (last_validated 2026-05-15), and cdc-to-tableflow-flink-decode
+    (last_validated 2026-05-16). One inline ⚠️ unverified marker on per-CFU throughput ceilings
+    for stateless routing — sizing heuristic calibrated against flink-runtime-models defaults
+    rather than published per-CFU numbers. confidence: medium.
+  compiled: 2026-05-18
+  wiki_articles:
+    - wiki/patterns/flink-event-routing.md
+
+- path: <none — MCP-only ingest, fulfills _queue.md stub>
+  source_url: |
+    wiki/_queue.md Stubs to Create line 17 (DR Application Routing — client-plane DR pattern)
+    outputs/reports/wiki-validation-2026-05-15.md (ORKA §5.1 resolution — Kroxylicious FetchResponseFilter protocol confirmation)
+    outputs/reports/wiki-validation-2026-05-18-orka-guarantees.md (ORKA §5.3 resolution — workload-class discriminator)
+    wiki/concepts/confluent-cloud-gateway.md (existing concept article — companion product view)
+    wiki/patterns/dr-cluster-linking.md (Consul KV flip pattern referenced as Solution 1)
+  added: 2026-05-18
+  notes: |
+    /wiki:ingest invoked with target wiki/patterns/dr-application-routing.md. Pattern article
+    covering the client-plane gap that data-plane DR (CL/MM2/MRC) does not solve: how clients
+    find the surviving cluster after failover. Three solution classes documented (DNS abstraction
+    via Consul, protocol proxy via Confluent Gateway / ORKA / Kroxylicious, CC One-Click DR) with
+    a decision matrix on RTO, restart requirement, advertised-listener config, consumer-pause
+    semantics, auth swapping, stateless vs stateful correctness, vendor-contract surface, and
+    topology fit (CC-only / CFK / hybrid). The load-bearing piece — per the two resolved
+    validation reports — is the explicit workload-class discriminator: stateless consumers are
+    correct under all three solutions given planned `promote` + CL offset-sync; stateful apps
+    (Streams / ksqlDB / Flink-with-state) are NOT generally correct under any of them because
+    the state surface is outside CL's replication boundary. ORKA-specific stateful-preservation
+    claims explicitly NOT attributed (vendor-internal per §5.1 and §5.3 reports; requires
+    GoodLabs disclosure to author). Inline ⚠️ unverified marker on the One-Click DR GA/surface
+    area pending current confluent-docs revalidation (the relevant Cloud Gateway DR pages
+    returned 302 redirects in the 2026-05-18 validation pass). confidence: medium.
+  compiled: 2026-05-18
+  wiki_articles:
+    - wiki/patterns/dr-application-routing.md
+
+- path: <none — MCP-only ingest, fulfills _queue.md stub>
+  source_url: |
+    wiki/_queue.md Stubs to Create line 16 (Confluent Gateway protocol-aware proxy)
+    Attempted MCP fetches (all returned 302 → docs.confluent.io/index.html):
+      https://docs.confluent.io/platform/current/kafka/gateway/overview.html
+      https://docs.confluent.io/gateway/current/overview.html
+      https://docs.confluent.io/cloud/current/networking/gateway/overview.html
+      https://docs.confluent.io/platform/current/gateway/overview.html
+      https://docs.confluent.io/operator/current/co-gateway.html
+      https://docs.confluent.io/confluent-gateway/current/overview.html
+  added: 2026-05-18
+  notes: |
+    /wiki:ingest invoked with target wiki/concepts/confluent-cloud-gateway.md. Concept
+    article on Confluent Gateway — the self-managed protocol-aware Kafka proxy (CFK/Docker)
+    for custom domains, auth swapping, traffic control, fencing/unfencing, and DR client
+    switchover without restart. Disambiguates from the Confluent Cloud Ingress
+    PrivateLink Gateway (covered in concepts/private-networking.md). MCP direct-URL
+    fetches for Confluent Gateway docs returned 302 redirects (product is real but
+    canonical doc URL not discoverable from llms.txt index in this session). Authored
+    from the queue stub description + cross-references to the resolved ORKA/proxy DR
+    validation reports (outputs/reports/wiki-validation-2026-05-15.md and
+    wiki-validation-2026-05-18-orka-guarantees.md). Inline ⚠️ unverified markers on:
+    (1) the 1.1.0 GA / CPC Gateway 1.2 version-feature pairing, (2) exact CFK CRD
+    naming, (3) the 1.5–2× sizing heuristic. confidence: medium pending a
+    /wiki:validate pass once the Confluent Gateway doc URL is locatable.
+  compiled: 2026-05-18
+  wiki_articles:
+    - wiki/concepts/confluent-cloud-gateway.md
+
+- path: <none — MCP-only ingest, fulfills auto-stub from /review>
+  source_url: |
+    https://docs.confluent.io/cloud/current/topics/tableflow/overview.html
+    outputs/reports/confluent-best-practices-quickstart.md (Part VII — Tableflow)
+    wiki/_queue.md auto-stub (Date: 2026-05-12) under Auto-Stubs
+  added: 2026-05-18
+  notes: |
+    /wiki:ingest invoked with target wiki/concepts/tableflow-iceberg-delta.md. Concept-level
+    framework article complementing the existing tableflow trip-wires
+    (concepts/tableflow-changelog-mode-immutability) and the CDC pattern
+    (patterns/cdc-to-tableflow-flink-decode). Validated against confluent-docs MCP
+    (Tableflow overview page) on 2026-05-18: formats (Iceberg + Delta Lake), GA status,
+    Schema Registry as source-of-truth, supported encodings (Avro/Protobuf/JSON Schema),
+    automatic compaction + snapshot bounds (min 10 / max 100), catalog targets
+    (AWS Glue, Databricks Unity, Apache Polaris, Snowflake Open Catalog, built-in IRC),
+    storage models (managed vs BYOS, Delta-only BYOS), and the AWS+Azure-only / not-GCP /
+    not-CP availability surface. One inline ⚠️ unverified marker on the BYOB→BYOS
+    terminology correction (source quickstart used BYOB; docs canonically use BYOS).
+    confidence: high.
+  compiled: 2026-05-18
+  wiki_articles:
+    - wiki/concepts/tableflow-iceberg-delta.md
+
+- path: <none — MCP-only ingest, concept companion to existing pattern>
+  source_url: |
+    https://docs.confluent.io/platform/current/connect/index.html
+    https://docs.confluent.io/cloud/current/connectors/overview.html
+    wiki/patterns/connect-deployment-models.md (existing MCP-validated pattern)
+    wiki/_queue.md auto-stub from /review on 2026-05-12 (source: outputs/reports/confluent-best-practices-quickstart.md)
+  added: 2026-05-18
+  notes: |
+    /wiki:ingest invoked with target wiki/concepts/kafka-connect-deployment-models.md.
+    Fulfills the auto-stub queued from /review (2026-05-12). Companion concept article to
+    the existing wiki/patterns/connect-deployment-models.md: pattern covers operational
+    decision matrix + tuning + triage; this concept article covers framework-level
+    architecture (workers, connectors, tasks, converters, SMTs, internal topics,
+    standalone vs distributed, KIP-618 EOS source, source vs sink lifecycle, the three
+    Confluent deployment models as architecture). MCP validation partial — confluent-docs
+    Connect overview pages exceeded fetch token limits; relied on the already-validated
+    pattern article + well-established Connect framework knowledge. One inline
+    ⚠️ unverified marker on current CC Custom Connector + PrivateLink support
+    compatibility (subject to product evolution). confidence: medium pending a
+    /wiki:validate pass.
+  compiled: 2026-05-18
+  wiki_articles:
+    - wiki/concepts/kafka-connect-deployment-models.md
 
 - path: <none — MCP-only ingest>
   source_url: |

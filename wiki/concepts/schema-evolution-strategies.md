@@ -2,7 +2,7 @@
 title: Schema Evolution Strategies
 tags: [schema-registry avro fsi governance]
 sources: [fsi-dsp://adr/001, fsi-dsp://adr/002]
-related: [concepts/sla-tiers, concepts/fsi-data-streaming-platform, patterns/fsi-governance-automation, patterns/topic-naming]
+related: [concepts/sla-tiers, concepts/fsi-data-streaming-platform, patterns/fsi-governance-automation, patterns/topic-naming, patterns/schema-registry-shared-types]
 confidence: high
 last_updated: 2026-04-11
 last_validated: 2026-04-28
@@ -98,4 +98,5 @@ The entity is the Avro record name (e.g., `AccountTransaction`), not part of the
 - [Topic Naming](patterns/topic-naming.md) — naming convention including version segment
 - [Governance Automation](patterns/fsi-governance-automation.md) — Terraform module enforcing these rules
 - [FSI Compliance](concepts/fsi-compliance.md) — audit trail for schema changes
+- [Schema Registry Shared-Types Library](../patterns/schema-registry-shared-types.md) — cross-cutting types governed under `FULL_TRANSITIVE` and consumed via pinned schema references
 - [ADR Index](synthesis/adr-index.md) — ADR-001 (Avro), ADR-002 (compatibility by tier)

@@ -1,6 +1,6 @@
 ---
 title: Concept Graph / Backlink Registry
-last_updated: 2026-05-16
+last_updated: 2026-05-18
 ---
 
 # Backlink Registry
@@ -79,6 +79,19 @@ synthesis/adr-index → patterns/dr-cluster-linking : CL decision (ADR-005)
 synthesis/adr-index → patterns/dr-mirrormaker2 : MM2 procedures
 synthesis/adr-index → patterns/dr-multi-region-cluster : MRC RPO=0 (ADR-005, ADR-008)
 
+patterns/latency-optimized-kafka-client → concepts/azure-connection-management : ILB silent-kill reference for Azure overlay
+patterns/latency-optimized-kafka-client → patterns/low-latency-kafka-azure : Azure overlay bundling this baseline + ILB + rebalance avoidance
+patterns/latency-optimized-kafka-client → patterns/producer-config-fsi : durability-first producer baseline this profile extends
+patterns/latency-optimized-kafka-client → patterns/consumer-config-fsi : manual-commit consumer baseline this profile extends
+patterns/latency-optimized-kafka-client → concepts/producer-batching-config : RecordAccumulator internals behind linger/batch
+patterns/latency-optimized-kafka-client → concepts/consumer-group-rebalancing : KIP-429/345/848 rebalance protocol generations
+patterns/latency-optimized-kafka-client → concepts/sla-tiers : FSI tier mapping for which workloads qualify
+
+concepts/azure-connection-management → patterns/latency-optimized-kafka-client : cloud-agnostic baseline the Azure pattern overlays
+patterns/low-latency-kafka-azure → patterns/latency-optimized-kafka-client : cross-cloud baseline this Azure pattern specializes
+patterns/producer-config-fsi → patterns/latency-optimized-kafka-client : latency-tier override on top of the FSI producer baseline
+patterns/consumer-config-fsi → patterns/latency-optimized-kafka-client : latency-tier override on top of the FSI consumer baseline
+
 concepts/cluster-linking-topology → patterns/dr-cluster-linking : CL DR pattern using CL
 concepts/cluster-linking-topology → concepts/fsi-data-streaming-platform : platform monitoring context
 concepts/cluster-linking-topology → concepts/sla-tiers : RPO/RTO targets per tier
@@ -139,6 +152,17 @@ patterns/low-latency-kafka-azure → concepts/consumer-group-rebalancing : coope
 patterns/low-latency-kafka-azure → concepts/producer-batching-config : latency-favored tuning (linger.ms=0, batch.size=16384, compression=none)
 patterns/low-latency-kafka-azure → patterns/aks-kafka-tuning : Azure-specific deployment patterns
 patterns/low-latency-kafka-azure → patterns/dr-cluster-linking : DR pattern compatible with this client profile
+patterns/low-latency-kafka-azure → concepts/azure-connection-management : Layer 2 ILB-aware connection management (canonical reference)
+
+concepts/azure-connection-management → patterns/low-latency-kafka-azure : the named profile that bundles this with latency tuning
+concepts/azure-connection-management → patterns/aks-kafka-tuning : broker-side context for AKS-hosted clusters
+concepts/azure-connection-management → concepts/private-networking : PrivateLink as architectural bypass for ILB silent kill
+concepts/azure-connection-management → concepts/network-connectivity-by-tier : tier-to-mode mapping for Confluent Cloud
+concepts/azure-connection-management → concepts/producer-batching-config : adjacent client config (throughput vs lifecycle separation)
+
+patterns/aks-kafka-tuning → concepts/azure-connection-management : canonical reference for the ILB client mitigation table
+
+concepts/private-networking → concepts/azure-connection-management : ILB silent-kill is what PrivateLink bypasses
 
 patterns/producer-config-fsi → concepts/producer-batching-config : batching internals
 patterns/producer-config-fsi → concepts/exactly-once-semantics : idempotent + transactional producer mechanics
@@ -372,3 +396,113 @@ patterns/fsi-canon-overlay-for-confluent-skills → patterns/fsi-l1-reference-ar
 patterns/fsi-governance-automation → patterns/fsi-canon-overlay-for-confluent-skills : FSI operator overlay companion; governance-automation enforces canon via Terraform, overlay applies canon when upstream skills generate code
 patterns/fsi-exactly-once → patterns/fsi-canon-overlay-for-confluent-skills : kafka-streams + python-client overlay sections cite the same producer/EOS canon as the five-layer FSI EOS pattern
 patterns/topic-naming → patterns/fsi-canon-overlay-for-confluent-skills : naming-convention canon row in the kafka-streams-programming section enforces topic-naming pattern at scaffold time
+
+## tableflow-iceberg-delta concept (2026-05-18)
+
+# Outbound (concept article → wiki articles it depends on)
+concepts/tableflow-iceberg-delta → patterns/cdc-to-tableflow-flink-decode : canonical CDC pipeline that lands in Tableflow
+concepts/tableflow-iceberg-delta → concepts/tableflow-changelog-mode-immutability : trip-wire on first-materialization mode locking
+concepts/tableflow-iceberg-delta → patterns/cdc-tableflow-flink-decode-required : trip-wire elaborating the decode requirement
+concepts/tableflow-iceberg-delta → concepts/schema-registry-best-practices : SR compatibility drives Tableflow's schema-evolution behavior
+concepts/tableflow-iceberg-delta → patterns/fsi-l1-reference-architecture : Cluster Linking → CC Tableflow → Databricks analytical bridge
+concepts/tableflow-iceberg-delta → concepts/network-connectivity-by-tier : PrivateLink context for source CC clusters
+
+# Inbound (existing wiki → new concept) — backfill to satisfy ≥1 inbound graph rule
+patterns/cdc-to-tableflow-flink-decode → concepts/tableflow-iceberg-delta : framework-level concept for the destination of the decode pattern
+concepts/tableflow-changelog-mode-immutability → concepts/tableflow-iceberg-delta : framework-level concept underpinning the trip-wire
+patterns/fsi-l1-reference-architecture → concepts/tableflow-iceberg-delta : Tableflow is the operational→analytical bridge in the L1 architecture
+
+## confluent-cloud-gateway concept (2026-05-18)
+
+# Outbound (concept article → wiki articles it depends on)
+concepts/confluent-cloud-gateway → concepts/private-networking : disambiguation — CC PrivateLink Gateway is a networking resource, not a protocol proxy
+concepts/confluent-cloud-gateway → patterns/dr-cluster-linking : data-plane replication paired with gateway for client-side switchover
+concepts/confluent-cloud-gateway → patterns/dr-mirrormaker2 : alternative replication backend for CFK/CP topologies fronted by the gateway
+concepts/confluent-cloud-gateway → concepts/cluster-linking-topology : CL topology determines which switchover model applies
+concepts/confluent-cloud-gateway → concepts/network-connectivity-by-tier : where the gateway sits relative to CC tier networking
+concepts/confluent-cloud-gateway → patterns/audit-log-siem-integration : forward gateway audit events alongside broker audit logs
+
+# Inbound (existing wiki → new concept) — backfill to satisfy ≥1 inbound graph rule
+concepts/private-networking → concepts/confluent-cloud-gateway : sibling — protocol-proxy gateway distinct from PrivateLink Gateway
+patterns/dr-cluster-linking → concepts/confluent-cloud-gateway : client-side switchover companion for sub-minute RTO
+patterns/dr-mirrormaker2 → concepts/confluent-cloud-gateway : client-side switchover companion for CFK/CP DR
+
+## dr-application-routing pattern (2026-05-18)
+
+# Outbound (pattern article → wiki articles it depends on)
+patterns/dr-application-routing → concepts/confluent-cloud-gateway : Solution 2 product (protocol-aware proxy)
+patterns/dr-application-routing → patterns/dr-cluster-linking : data-plane replication this pattern routes clients across
+patterns/dr-application-routing → patterns/dr-mirrormaker2 : alternative data-plane backend for CFK/CP
+patterns/dr-application-routing → patterns/dr-multi-region-cluster : RPO=0 alternative when stateful correctness is non-negotiable
+patterns/dr-application-routing → concepts/cluster-linking-topology : CL topology determines which routing model applies
+patterns/dr-application-routing → concepts/sla-tiers : tier-based RTO targets drive routing-solution choice
+
+# Inbound (existing wiki → new pattern) — backfill to satisfy ≥1 inbound graph rule
+concepts/confluent-cloud-gateway → patterns/dr-application-routing : routing-pattern view of the gateway's DR use case
+patterns/dr-cluster-linking → patterns/dr-application-routing : client-plane companion to CL data-plane DR
+patterns/dr-mirrormaker2 → patterns/dr-application-routing : client-plane companion to MM2 data-plane DR
+
+## kafka-connect-deployment-models concept (2026-05-18)
+
+# Outbound (concept article → wiki articles it depends on)
+concepts/kafka-connect-deployment-models → patterns/connect-deployment-models : operational counterpart pattern (decision matrix, tuning, triage)
+concepts/kafka-connect-deployment-models → patterns/dead-letter-queue-design : DLQ topic design
+concepts/kafka-connect-deployment-models → concepts/exactly-once-semantics : KIP-618 source EOS at the framework boundary
+concepts/kafka-connect-deployment-models → concepts/schema-registry-best-practices : converter pipeline integrates SR
+concepts/kafka-connect-deployment-models → concepts/cdc-source-connector-setup : source-connector lifecycle context for CDC
+concepts/kafka-connect-deployment-models → concepts/network-connectivity-by-tier : Custom Connector + PrivateLink interaction
+concepts/kafka-connect-deployment-models → patterns/fsi-canon-overlay-for-confluent-skills : vendor-consolidation rule driving fully-managed FSI default
+
+# Inbound (existing wiki → new concept) — backfill to satisfy ≥1 inbound graph rule
+patterns/connect-deployment-models → concepts/kafka-connect-deployment-models : framework-level concept underpinning the pattern
+concepts/cdc-source-connector-setup → concepts/kafka-connect-deployment-models : source-connector framework architecture
+concepts/exactly-once-semantics → concepts/kafka-connect-deployment-models : KIP-618 source EOS context
+
+## oic-kafka-integration concept (2026-05-18)
+
+# Outbound (concept article → wiki articles it depends on)
+concepts/oic-kafka-integration → concepts/producer-batching-config : linger/batch/compression internals for cross-cloud overrides
+concepts/oic-kafka-integration → concepts/azure-connection-management : ILB silent-kill applies to OIC Connectivity Agent socket
+concepts/oic-kafka-integration → patterns/producer-config-fsi : canon producer baseline that OIC overrides extend
+concepts/oic-kafka-integration → patterns/fsi-exactly-once : EOS implications when OIC adapter transactional support is uncertain
+concepts/oic-kafka-integration → concepts/cc-cluster-tiers : per-tier capacity bounds OIC throughput
+concepts/oic-kafka-integration → concepts/exactly-once-semantics : idempotent producer mechanics + ProducerFenced surface
+concepts/oic-kafka-integration → concepts/private-networking : PrivateLink as architectural bypass for ILB hop
+
+# Inbound (existing wiki → new concept) — backfill to satisfy ≥1 inbound graph rule
+concepts/azure-connection-management → concepts/oic-kafka-integration : cross-cloud iPaaS instance of the ILB silent-kill problem
+patterns/producer-config-fsi → concepts/oic-kafka-integration : OIC-specific cross-cloud overrides on the FSI producer baseline
+concepts/producer-batching-config → concepts/oic-kafka-integration : cross-cloud RTT instance of the timeout-chain trade-off
+
+## confluent-cloud-cluster-sku-selection concept (2026-05-18)
+
+# Outbound (concept article → wiki articles it depends on)
+concepts/confluent-cloud-cluster-sku-selection → concepts/cc-cluster-tiers : tier matrix this selection workflow routes into
+concepts/confluent-cloud-cluster-sku-selection → concepts/network-connectivity-by-tier : networking axis orthogonal to SKU
+concepts/confluent-cloud-cluster-sku-selection → concepts/private-networking : PrivateLink Gateway / PSC / PNI provisioning workflow
+concepts/confluent-cloud-cluster-sku-selection → concepts/fsi-data-streaming-platform : six deployment models context
+concepts/confluent-cloud-cluster-sku-selection → concepts/sla-tiers : multi-zone and RPO/RTO posture driven by FSI SLA tier
+concepts/confluent-cloud-cluster-sku-selection → patterns/dr-cluster-linking : SKU constraints on CL source vs destination
+
+# Inbound (existing wiki → new concept) — backfill to satisfy ≥1 inbound graph rule
+concepts/cc-cluster-tiers → concepts/confluent-cloud-cluster-sku-selection : selection workflow on top of the tier matrix
+concepts/network-connectivity-by-tier → concepts/confluent-cloud-cluster-sku-selection : SKU/networking orthogonality
+concepts/fsi-data-streaming-platform → concepts/confluent-cloud-cluster-sku-selection : CC SKU selection within the platform's six deployment models
+
+## flink-event-routing pattern (2026-05-18)
+
+# Outbound (pattern article → wiki articles it depends on)
+patterns/flink-event-routing → patterns/flink-runtime-models : runtime context, state-TTL gotcha, watermark idleness
+patterns/flink-event-routing → concepts/flink-confluent-cloud-setup : CC compute pools, statement lifecycle, autopilot
+patterns/flink-event-routing → patterns/cdc-to-tableflow-flink-decode : specific CDC instance of the routing pattern
+patterns/flink-event-routing → patterns/connect-deployment-models : where SMT routing lives in the alternative (anti-pattern) architecture
+patterns/flink-event-routing → patterns/topic-naming : raw vs derived topic naming convention
+patterns/flink-event-routing → concepts/schema-registry-best-practices : CI-time registration, CSFLE, derived-topic compatibility
+patterns/flink-event-routing → concepts/schema-evolution-strategies : derived-topic compatibility selection
+patterns/flink-event-routing → concepts/exactly-once-semantics : EOS across the producer → Flink → consumer chain
+patterns/flink-event-routing → concepts/flink-checkpointing : two-phase commit for the hop
+
+# Inbound (existing wiki → new pattern) — backfill to satisfy ≥1 inbound graph rule
+patterns/flink-runtime-models → patterns/flink-event-routing : routing pattern that runs stateless on every runtime
+patterns/cdc-to-tableflow-flink-decode → patterns/flink-event-routing : framework-level pattern this CDC decode specializes
+patterns/connect-deployment-models → patterns/flink-event-routing : routing belongs in Flink, not in Connect SMTs

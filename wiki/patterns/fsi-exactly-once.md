@@ -4,8 +4,8 @@ tags: [kafka fsi exactly-once transactions compliance]
 sources: []
 related: [concepts/exactly-once-semantics, concepts/sla-tiers, concepts/fsi-data-streaming-platform, patterns/dead-letter-queue-design]
 confidence: medium
-last_updated: 2026-04-11
-last_validated: 2026-05-14
+last_updated: 2026-05-18
+last_validated: 2026-05-18
 ---
 
 # FSI Exactly-Once Pattern
@@ -283,9 +283,20 @@ z/OS (CICS/IMS) --> IBM MQ --> MQ Source Connector --> Kafka
                                 (exactly-once mode)
 ```
 
-The MQ Source Connector supports exactly-once delivery when configured with Kafka transactions. Combined with `read_committed` consumers downstream, this extends EOS from the mainframe boundary into the streaming platform.
+The MQ Source Connector supports exactly-once delivery when **all** of the following conditions are met (per Confluent's IBM MQ Source Connector documentation):
 
-> ⚠️ unverified -- IBM MQ Source Connector exact EOS configuration properties and version requirements were not confirmed via MCP sources.
+1. All Connect workers in the cluster have `exactly.once.source.support=enabled` (KIP-618 worker-level setting)
+2. Connect cluster is running in **distributed mode** — standalone mode cannot provide EOS
+3. Connect worker principal holds the ACLs required for exactly-once source workers
+4. The connector is configured with `state.topic.name` (set at first create — changing it later reintroduces duplicates)
+5. **Single task only** — EOS mode does not support `tasks.max > 1` or multiple receiver threads
+6. Downstream consumers set `isolation.level=read_committed`
+
+The connector uses a transactional producer to write to Kafka, so combined with `read_committed` consumers this extends EOS from the mainframe boundary into the streaming platform.
+
+**Version requirement:** IBM MQ Source Connector 12.x or later. The 11.x line does not support at-least-once and is no longer supported.
+
+**Priority-queue caveat:** When the connector consumes from an MQ priority queue, MQ may deliver messages out of order; under that condition EOS cannot be guaranteed and the connector may fail. Use FIFO queues for EOS workloads.
 
 ### SLA Tier Mapping
 

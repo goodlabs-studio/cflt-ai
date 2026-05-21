@@ -2,7 +2,7 @@
 title: Schema Registry Best Practices
 tags: [schema-registry, avro, protobuf, compatibility, governance, fsi, csfle]
 sources: [outputs/reports/confluent-best-practices-quickstart.md]
-related: [concepts/schema-evolution-strategies, patterns/fsi-governance-automation, patterns/topic-naming, patterns/producer-config-fsi, concepts/fsi-compliance]
+related: [concepts/schema-evolution-strategies, patterns/fsi-governance-automation, patterns/topic-naming, patterns/producer-config-fsi, concepts/fsi-compliance, patterns/schema-registry-shared-types]
 confidence: high
 last_updated: 2026-05-14
 last_validated: 2026-05-14
@@ -61,4 +61,5 @@ Schema Registry is the data contract authority for Kafka. This article captures 
 - [Topic Naming Convention](../patterns/topic-naming.md) — `<domain>.<application>.<entity>.<event>`, versioned-topic exception
 - [FSI Producer Configuration](../patterns/producer-config-fsi.md) — `auto.register.schemas=false` enforcement
 - [FSI Compliance](fsi-compliance.md) — schema-change audit trail for regulatory frameworks
+- [Schema Registry Shared-Types Library](../patterns/schema-registry-shared-types.md) — pattern for cross-cutting types (Money, MemberId, UsAddress) under a reserved namespace with pinned schema references
 - [Top 20 Confluent Gotchas](../synthesis/confluent-gotchas-top-20.md) — #8 (schema IDs not portable), #9 (`auto.register` bypass), #10 (compatibility direction)
