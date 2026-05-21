@@ -47,7 +47,7 @@ A unified CLI (`fsi-dr.sh`) abstracts backend differences. DR SLA targets are de
 
 ### Observability
 
-Pre-built dashboard templates for six providers (Dynatrace, Datadog, Splunk, Grafana/Prometheus, New Relic, IBM Instana). Each provides cluster health, application view, Connect, and DR readiness dashboards with auto-discovery rules, SLA-tier alert thresholds, and JMX exporter configs.
+Pre-built dashboard templates for six providers (Dynatrace, Datadog, Splunk, Grafana/Prometheus, New Relic, IBM Instana). Each provides cluster health, application view, Connect, and DR readiness dashboards with auto-discovery rules, SLA-tier alert thresholds, and JMX exporter configs. The cross-provider mapping spine — every CC Metrics API metric and self-managed JMX MBean translated to PromQL/DQL/SPL/NRQL/Datadog/Instana query syntax — lives in [Observability Metrics Mapping](observability-metrics-mapping.md). Component-specific deep dives: [Confluent Platform Broker JMX](confluent-platform-broker-jmx.md), [Schema Registry Observability](schema-registry-observability.md), [ksqlDB Observability](ksqldb-observability.md), [CFK Observability Baseline](../patterns/cfk-observability-baseline.md), and [Cluster Linking Observability](../patterns/cluster-linking-observability.md).
 
 ### Reference Implementations
 

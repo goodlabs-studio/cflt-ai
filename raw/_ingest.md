@@ -1,6 +1,6 @@
 ---
 title: Ingest Queue
-last_updated: 2026-05-16
+last_updated: 2026-05-20
 ---
 
 # Ingest Queue
@@ -25,7 +25,140 @@ Run: `python tools/wiki-compile.py --delta` to process.
 # All 19 H.1 entries processed (10 parents in H.1-02 + 9 trip-wires in H.1-03);
 # entries moved to ## Processed below. Only the 2 pre-H.1 April-2026 entries remain in Pending.
 
+# === Observability Expansion (2026-05-20): 6 articles closing CC-vs-self-managed gap ===
+# Sequenced per /Users/jhogan/.claude/plans/make-a-plan-to-snuggly-giraffe.md
+# All 6 articles processed 2026-05-20.
+
 ## Processed
+
+- path: <none — MCP-only ingest, no rich raw source>
+  source_url: |
+    https://docs.confluent.io/cloud/current/monitoring/metrics-api.html (10 ksqlDB metrics confirmed)
+    https://docs.confluent.io/platform/current/ksqldb/operate-and-deploy/monitoring.html
+    https://docs.confluent.io/platform/current/streams/monitoring.html
+  added: 2026-05-20
+  notes: |
+    /wiki:ingest invoked with target wiki/concepts/ksqldb-observability.md (concept template).
+    Article 6 (final) of the observability expansion. CC + self-managed ksqlDB observability.
+    Closes the only fully-uncovered component gap from the audit (ksqlDB had zero coverage).
+    MCP validation: 10 CC ksqlDB metrics MCP-confirmed (io.confluent.kafka.ksql/{committed_offset_lag,
+    consumed_total_bytes, offsets_processed_total, processing_errors_total, produced_total_bytes,
+    query_restarts, query_saturation, storage_utilization, streaming_unit_count, task_stored_bytes}).
+    Self-managed ksqlDB-specific JMX MBean tree (io.confluent.ksql.metrics:type=*) and underlying
+    Kafka Streams MBeans documented from upstream docs. One ⚠️ unverified marker on exact
+    attribute names. confidence: medium.
+  compiled: 2026-05-20
+  wiki_articles:
+    - wiki/concepts/ksqldb-observability.md
+
+- path: raw/repos/fsi-dsp/observability/grafana/dashboard-dr-readiness.json
+  source_url: |
+    raw/repos/fsi-dsp/observability/grafana/dashboard-dr-readiness.json
+    https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/dr-failover.html
+    https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/index.html
+  added: 2026-05-20
+  notes: |
+    /wiki:ingest invoked with target wiki/patterns/cluster-linking-observability.md (pattern template).
+    Article 5 of the observability expansion. DR/RPO/RTO observability for CL deployments. Covers
+    mirror lag (CC Metrics API + CLI PartitionMirrorLag + CP JMX), time-based lag derivation,
+    mirror topic state machine (PENDING_STOPPED/STOPPED/SOURCE_UNAVAILABLE), per-SLA-tier
+    alert thresholds aligned to ADR-008, failover-readiness checklist. MCP-validated mirror
+    state machine + cluster_link_destination_response_bytes; 2 ⚠️ unverified markers on exact
+    mirror-lag metric ID and CP self-managed CL JMX MBean. confidence: medium.
+  compiled: 2026-05-20
+  wiki_articles:
+    - wiki/patterns/cluster-linking-observability.md
+
+- path: raw/repos/fsi-dsp/observability/grafana/README.md
+  source_url: |
+    raw/repos/fsi-dsp/observability/grafana/README.md
+    raw/repos/fsi-dsp/observability/grafana/jmx-exporter-config.yaml
+    https://docs.confluent.io/operator/current/co-monitor-cp.html
+    https://docs.confluent.io/operator/current/co-deploy-cfk.html
+    https://github.com/confluentinc/jmx-monitoring-stacks/tree/main/jmxexporter-prometheus-grafana/cfk
+  added: 2026-05-20
+  notes: |
+    /wiki:ingest invoked with target wiki/patterns/cfk-observability-baseline.md (pattern template).
+    Article 4 of the observability expansion. Canonical Prometheus + JMX exporter + Grafana wiring
+    for CFK deployments. Covers spec.metrics CR fields, Vault-injected JMX credentials with file
+    permissions (0600/0644), ServiceMonitor scrape with mTLS, JMX exporter rule set, Grafana
+    dashboard provisioning, log aggregation patterns, FSI-tier hardening overlay. MCP validation
+    confirmed CFK Helm install pattern, bundled confluentinc/cp-enterprise-prometheus:2.0.0 sidecar,
+    Vault sidecar JMX injection with annotation set + file permissions, spec.metrics CRD fields.
+    confidence: high.
+  compiled: 2026-05-20
+  wiki_articles:
+    - wiki/patterns/cfk-observability-baseline.md
+
+- path: <none — MCP-only ingest, no rich raw source>
+  source_url: |
+    https://docs.confluent.io/platform/current/schema-registry/monitoring.html
+    https://docs.confluent.io/cloud/current/monitoring/metrics-api.html
+  added: 2026-05-20
+  notes: |
+    /wiki:ingest invoked with target wiki/concepts/schema-registry-observability.md (concept template).
+    Article 3 of the observability expansion. CC + self-managed SR observability. MCP-validated
+    via confluent-docs schema-registry/monitoring.html: confirmed three SR MBeans
+    (kafka.schema.registry:type={jetty-metrics, master-slave-role, jersey-metrics}) and full
+    attribute sets. CC SR via Metrics API: io.confluent.kafka.schema_registry/schema_count.
+    Article documents the deployment-model gap explicitly and includes a client-side wrapper
+    pattern as the compensating signal for CC tenants. One ⚠️ unverified marker on CC managed
+    SR per-tenant API rate-limit thresholds. confidence: high.
+  compiled: 2026-05-20
+  wiki_articles:
+    - wiki/concepts/schema-registry-observability.md
+
+- path: raw/repos/fsi-dsp/observability/grafana/jmx-exporter-config.yaml
+  source_url: |
+    raw/repos/fsi-dsp/observability/grafana/jmx-exporter-config.yaml
+    https://kafka.apache.org/documentation/#monitoring
+    https://docs.confluent.io/platform/current/kafka/monitoring.html
+  added: 2026-05-20
+  notes: |
+    /wiki:ingest invoked with target wiki/concepts/confluent-platform-broker-jmx.md (concept template).
+    Article 2 of the observability expansion. Canonical broker JMX MBean reference for self-managed
+    deployments. Expands the 9 MBeans verified in the fsi-dsp Grafana JMX exporter config into the
+    full canonical broker MBean tree organized by subsystem (Replication+ISR, Throughput, Network
+    request-stages, FetcherLag, Controller, Storage). Includes per-tier alert threshold matrix and
+    Prometheus JMX exporter rule excerpt. The 9 source MBeans production-validated; extended set
+    well-established in upstream Apache Kafka monitoring docs but not re-MCP-validated. Two
+    ⚠️ unverified markers on MessageConversionsTimeMs and KRaft-only controller MBeans.
+    confidence: medium.
+  compiled: 2026-05-20
+  wiki_articles:
+    - wiki/concepts/confluent-platform-broker-jmx.md
+
+- path: raw/repos/fsi-dsp/observability/metrics-mapping.md
+  source_url: |
+    raw/repos/fsi-dsp/observability/metrics-mapping.md
+    https://docs.confluent.io/cloud/current/monitoring/metrics-api.html
+    https://docs.confluent.io/cloud/current/monitoring/metrics-reference.html
+  added: 2026-05-20
+  notes: |
+    /wiki:ingest invoked with target wiki/concepts/observability-metrics-mapping.md (concept template).
+    Article 1 (the spine) of the observability expansion. Cross-provider mapping table (CC Metrics
+    API + JMX MBean → PromQL / DQL / SPL / NRQL / Datadog / Instana) grouped by Cluster Health,
+    Consumer Lag, Connect Status, DR Readiness, Flink Jobs, plus SR and ksqlDB metric families.
+    Provider decision matrix and per-provider ingestion endpoints. Acts as the spine for the
+    five follow-on articles.
+
+    MCP validation (confluent-docs metrics-api.html, fetched 2026-05-20): confirmed CC Metrics
+    API namespace structure (io.confluent.kafka.server/*, io.confluent.flink/*,
+    io.confluent.kafka.connect/*, io.confluent.kafka.ksql/*, io.confluent.kafka.schema_registry/*)
+    and the following metric names: active_connection_count, request_count, consumer_lag_offsets,
+    received_bytes, sent_bytes, retained_bytes, num_records_in, num_records_out, pending_records,
+    compute_pool_utilization, statement_status, received_records (Connect), schema_count (SR),
+    full ksqlDB metric family.
+
+    Three ⚠️ unverified markers: (1) cluster_link_mirror_topic_offset_lag exact name (CL family
+    confirmed but exact mirror-lag identifier needs revalidation), (2) partition_count and
+    successful_authentication_count CC names (may have moved namespace), (3) current_cfu / max_cfu
+    likely consolidated into compute_pool_utilization. Provider-specific query syntax sourced
+    verbatim from the fsi-dsp repo, not re-validated against current provider docs.
+    confidence: medium.
+  compiled: 2026-05-20
+  wiki_articles:
+    - wiki/concepts/observability-metrics-mapping.md
 
 - path: <none — MCP-only ingest, fulfills auto-stub from /review>
   source_url: |

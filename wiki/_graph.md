@@ -489,6 +489,104 @@ concepts/cc-cluster-tiers → concepts/confluent-cloud-cluster-sku-selection : s
 concepts/network-connectivity-by-tier → concepts/confluent-cloud-cluster-sku-selection : SKU/networking orthogonality
 concepts/fsi-data-streaming-platform → concepts/confluent-cloud-cluster-sku-selection : CC SKU selection within the platform's six deployment models
 
+## ksqldb-observability concept (2026-05-20)
+
+# Outbound (concept article → wiki articles it depends on)
+concepts/ksqldb-observability → concepts/observability-metrics-mapping : cross-provider query syntax for ksqlDB metrics
+concepts/ksqldb-observability → concepts/fsi-data-streaming-platform : ksqlDB as a platform component
+concepts/ksqldb-observability → concepts/consumer-lag-monitoring : ksqlDB queries are consumers; commit lag overlaps
+concepts/ksqldb-observability → concepts/kafka-streams-architecture : runtime model under every persistent query
+concepts/ksqldb-observability → concepts/kafka-streams-debugging : diagnostic counterpart for stuck queries
+concepts/ksqldb-observability → patterns/dead-letter-queue-design : deserialization-error DLQ pattern
+concepts/ksqldb-observability → concepts/sla-tiers : alert thresholds per FSI tier
+concepts/ksqldb-observability → patterns/producer-config-fsi : sink write reliability config
+
+# Inbound (existing wiki → ksqldb-observability)
+concepts/observability-metrics-mapping → concepts/ksqldb-observability : ksqlDB-specific column in the cross-provider spine
+concepts/kafka-streams-architecture → concepts/ksqldb-observability : ksqlDB runs on Streams; observability inherits the MBean tree
+concepts/consumer-lag-monitoring → concepts/ksqldb-observability : ksqlDB committed_offset_lag is a specialized consumer-lag instance
+
+## cluster-linking-observability pattern (2026-05-20)
+
+# Outbound (pattern article → wiki articles it depends on)
+patterns/cluster-linking-observability → patterns/dr-cluster-linking : operational CL pattern that this article instruments
+patterns/cluster-linking-observability → patterns/dr-mirrormaker2 : alternative replication backend (different obs surface)
+patterns/cluster-linking-observability → patterns/cfk-observability-baseline : host platform for self-managed CL observability
+patterns/cluster-linking-observability → concepts/confluent-platform-broker-jmx : JMX reference for CP self-managed CL fetcher lag
+patterns/cluster-linking-observability → concepts/observability-metrics-mapping : cross-provider query syntax for CL metrics
+patterns/cluster-linking-observability → concepts/sla-tiers : tier-to-RPO/RTO threshold mapping
+patterns/cluster-linking-observability → concepts/exactly-once-semantics : EOS-on-CL caveat
+patterns/cluster-linking-observability → patterns/fsi-l1-reference-architecture : DR consumed by CL → CC Tableflow → Databricks bridge
+
+# Inbound (existing wiki → CL observability)
+patterns/dr-cluster-linking → patterns/cluster-linking-observability : observability companion to the DR operational pattern
+patterns/dr-mirrormaker2 → patterns/cluster-linking-observability : comparison anchor for the MM2 obs alternative
+patterns/cfk-observability-baseline → patterns/cluster-linking-observability : DR-specific extension of the K8s observability stack
+concepts/observability-metrics-mapping → patterns/cluster-linking-observability : DR-tier consumer of the cross-provider mirror lag query
+concepts/cluster-linking-topology → patterns/cluster-linking-observability : topology choices the dashboards visualize
+
+## cfk-observability-baseline pattern (2026-05-20)
+
+# Outbound (pattern article → wiki articles it depends on)
+patterns/cfk-observability-baseline → patterns/aks-kafka-tuning : Azure-specific broker tuning monitored by this stack
+patterns/cfk-observability-baseline → concepts/confluent-platform-broker-jmx : MBean reference behind the JMX exporter rules
+patterns/cfk-observability-baseline → concepts/observability-metrics-mapping : cross-provider query syntax once Prometheus is producing metrics
+patterns/cfk-observability-baseline → concepts/schema-registry-observability : SR JMX MBeans the baseline scrapes
+patterns/cfk-observability-baseline → patterns/flink-runtime-models : CMF on CFK rides this same Prometheus pipeline
+patterns/cfk-observability-baseline → patterns/audit-log-siem-integration : Splunk routing complement to the metrics pipeline
+patterns/cfk-observability-baseline → concepts/sla-tiers : tier-aware Grafana alert thresholds
+
+# Inbound (existing wiki → cfk-observability-baseline)
+patterns/aks-kafka-tuning → patterns/cfk-observability-baseline : Azure-specific instance of the CFK Prometheus pattern
+concepts/confluent-platform-broker-jmx → patterns/cfk-observability-baseline : K8s deployment instance of broker JMX monitoring
+concepts/observability-metrics-mapping → patterns/cfk-observability-baseline : implementation pattern for the self-managed K8s column
+concepts/schema-registry-observability → patterns/cfk-observability-baseline : CFK deployment for SR observability
+
+## schema-registry-observability concept (2026-05-20)
+
+# Outbound (concept article → wiki articles it depends on)
+concepts/schema-registry-observability → concepts/schema-registry-best-practices : operational surface the alerts govern
+concepts/schema-registry-observability → concepts/schema-evolution-strategies : compatibility-check failure-mode signal source
+concepts/schema-registry-observability → concepts/observability-metrics-mapping : cross-provider query syntax for SR metrics
+concepts/schema-registry-observability → patterns/fsi-governance-automation : Terraform module enforces Compatibility per tier
+concepts/schema-registry-observability → concepts/fsi-compliance : SR observability requirements for FSI audit reporting
+concepts/schema-registry-observability → patterns/audit-log-siem-integration : CC compatibility-failure signal lives in audit log
+
+# Inbound (existing wiki → SR observability)
+concepts/schema-registry-best-practices → concepts/schema-registry-observability : observability surface for the operational practices
+concepts/schema-evolution-strategies → concepts/schema-registry-observability : monitoring counterpart for compatibility policy
+concepts/observability-metrics-mapping → concepts/schema-registry-observability : SR JMX reference for the self-managed column
+patterns/fsi-governance-automation → concepts/schema-registry-observability : observability for the governance-as-code SR settings
+
+## confluent-platform-broker-jmx concept (2026-05-20)
+
+# Outbound (concept article → wiki articles it depends on)
+concepts/confluent-platform-broker-jmx → concepts/observability-metrics-mapping : cross-provider spine that consumes these JMX MBeans
+concepts/confluent-platform-broker-jmx → concepts/sla-tiers : alert thresholds per FSI tier
+concepts/confluent-platform-broker-jmx → concepts/consumer-lag-monitoring : client-side lag deep dive (FetcherLag is the broker-side equivalent)
+concepts/confluent-platform-broker-jmx → patterns/aks-kafka-tuning : Azure-specific tuning with JMX exporter overlap
+concepts/confluent-platform-broker-jmx → patterns/dr-cluster-linking : DR-side MBean considerations
+
+# Inbound (existing wiki → broker-jmx) — backfill ≥1 inbound
+concepts/observability-metrics-mapping → concepts/confluent-platform-broker-jmx : JMX MBean reference for the self-managed column
+concepts/consumer-lag-monitoring → concepts/confluent-platform-broker-jmx : broker-side FetcherLagMetrics complement to client-side lag
+patterns/aks-kafka-tuning → concepts/confluent-platform-broker-jmx : JMX exporter rule reference for the broker tuning pattern
+
+## observability-metrics-mapping concept (2026-05-20) — spine for observability expansion
+
+# Outbound (spine → wiki articles it depends on)
+concepts/observability-metrics-mapping → concepts/fsi-data-streaming-platform : provides observability templates context across six deployment models
+concepts/observability-metrics-mapping → concepts/sla-tiers : alert thresholds map to FSI SLA tiers
+concepts/observability-metrics-mapping → concepts/consumer-lag-monitoring : provider-specific lag deep dive
+concepts/observability-metrics-mapping → patterns/audit-log-siem-integration : security-side observability complement
+concepts/observability-metrics-mapping → patterns/dr-cluster-linking : consumes CL mirror lag metrics from this spine
+
+# Inbound (existing wiki → spine) — backfill so the spine has ≥1 inbound
+concepts/fsi-data-streaming-platform → concepts/observability-metrics-mapping : cross-provider mapping spine (canonical reference for the observability templates)
+concepts/consumer-lag-monitoring → concepts/observability-metrics-mapping : cross-provider lag query reference
+patterns/audit-log-siem-integration → concepts/observability-metrics-mapping : operational metrics spine paired with the audit-log security surface
+patterns/dr-cluster-linking → concepts/observability-metrics-mapping : mirror lag metric reference for DR dashboards
+
 ## flink-event-routing pattern (2026-05-18)
 
 # Outbound (pattern article → wiki articles it depends on)
