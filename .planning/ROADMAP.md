@@ -111,8 +111,8 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
   4. `/review` against a fixture customer LinuxONE deployment doc flags any claim that contradicts the auditor-readonly payload-isolation pattern (e.g., a claim that `DeveloperRead` on the cluster is sufficient for auditor isolation is flagged with the topic-scoped binding workaround as the canonical correction); golden review case ships at the EVAL-02 floor.
   5. Golden eval harness gains ≥15 new cases (≥10 each across `/ask` and `/review` per EVAL-02 floor) covering the 6 articles + auditor-readonly pattern + at least 5 trip-wire facts encoded as `expectations[]` lines; harness passes at the H.2 90% CI threshold on the new cases.
 
-**Plans:** 1/4 plans executed
-- [ ] 12-01-PLAN.md — 6 wiki articles + _index/_graph wiring (WIKI-04)
+**Plans:** 2/4 plans executed
+- [x] 12-01-PLAN.md — 6 wiki articles + _index/_graph wiring (WIKI-04)
 - [x] 12-02-PLAN.md — 13 KNOWN-GAPS trip-wires + wiki-lint --full extension (WIKI-02)
 - [ ] 12-03-PLAN.md — /review auditor-readonly Step 4.1 + 5 review cases + 10 ask cases (WIKI-01, WIKI-03, WIKI-05)
 - [ ] 12-04-PLAN.md — Carry-forward fix: 4 observability articles raw-path → fsi-dsp:// (closes Phase 09 deferred-items)
@@ -170,7 +170,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward (see above). Detailed
 | 9. Submodule sync + canon-parity unblock | v2.1 | 0/2 | Not started | - |
 | 10. Accelerator artifact-type registration | v2.1 | 2/3 | Complete    | 2026-05-23 |
 | 11. Act-rail wiring for accelerator dispatch | v2.1 | 4/4 | Complete    | 2026-05-23 |
-| 12. Wiki ingest of LinuxONE accelerator | v2.1 | 1/4 | In Progress|  |
+| 12. Wiki ingest of LinuxONE accelerator | v2.1 | 2/4 | In Progress|  |
 | G.2a. mcp-confluent tool-call executor | backlog | 0/1 | Not started | - |
 | G.2b. Composite scenario executor | backlog | 0/1 | Not started | - |
 | G.2d. GitOps apply mode | backlog | 0/1 | Not started | - |

@@ -27,7 +27,7 @@
 - [ ] **WIKI-01**: User can run `/ask "How do I deploy Confluent Platform on IBM LinuxONE for FSI?"` and the answer cites the new accelerator wiki article with `confidence: high` and provenance to upstream `DESIGN.md` at the pinned SHA.
 - [x] **WIKI-02**: All 13 `KNOWN-GAPS.md` entries (G-01..G-13) are encoded as `tools/vendor-sources.json` trip-wires (status, workaround, FSI impact); `/wiki:lint --full` surfaces drift when upstream gap status changes.
 - [ ] **WIKI-03**: User can run `/review` against a customer LinuxONE deployment doc and the review flags any claim that contradicts the auditor-readonly payload-isolation pattern (DeveloperRead is consume-granting → topic-scoped binding required for true `payments.*` isolation).
-- [ ] **WIKI-04**: ≥6 wiki articles ship covering: LinuxONE-on-CFK reference architecture, x86→LinuxONE Cluster Linking migration with regulatory evidence checklist, FIPS-at-install OCP requirement, auditor-readonly RBAC payload-isolation pattern, custom s390x image build pipeline (Connect + Flink SQL-runner), Flink-on-CFK FSI example jobs (tumbling-window + temporal join).
+- [x] **WIKI-04**: ≥6 wiki articles ship covering: LinuxONE-on-CFK reference architecture, x86→LinuxONE Cluster Linking migration with regulatory evidence checklist, FIPS-at-install OCP requirement, auditor-readonly RBAC payload-isolation pattern, custom s390x image build pipeline (Connect + Flink SQL-runner), Flink-on-CFK FSI example jobs (tumbling-window + temporal join).
 - [ ] **WIKI-05**: Golden eval harness gains ≥15 cases covering the new articles at the H.2 `EVAL-02` floor (10 cases/skill minimum across `/ask` and `/review`); harness passes at 90% CI threshold.
 
 ---
