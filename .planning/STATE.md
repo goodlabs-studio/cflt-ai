@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: — LinuxONE Accelerator Integration
 status: executing
-stopped_at: Completed 10-01-PLAN.md — accelerator/confluent-on-linuxone registered in fsi-dsp MANIFEST.yaml (submodule branch feat/manifest-accelerator-type, commit b117f3f)
-last_updated: "2026-05-23T15:50:39.897Z"
+stopped_at: "Completed 10-02-PLAN.md — atomic commit ad2304f landed: submodule pointer b117f3f + check_manifest.py validator + 9 TestManifestSchemaValidator tests + 2 fixtures + tools/manifest-schema.md + CONTRIBUTING.md cross-link"
+last_updated: "2026-05-23T15:58:15.302Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-23)
 ## Current Position
 
 Phase: 10 (accelerator-artifact-type-registration) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-05-23
 
@@ -112,6 +112,7 @@ Tag: `v1.0`
 | Phase 09-submodule-sync-canon-parity-unblock P01 | 4min | 3 tasks | 2 files |
 | Phase 09-submodule-sync-canon-parity-unblock P02 | 4min | 3 tasks | 3 files |
 | Phase 10-accelerator-artifact-type-registration P01 | 3min | 1 tasks | 1 files |
+| Phase 10-accelerator-artifact-type-registration P02 | 4min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -239,6 +240,10 @@ Recent decisions affecting current work:
 - [Phase 10-accelerator-artifact-type-registration]: type: accelerator schema landed verbatim from CONTEXT.md decisions (apply_sequence + per-layer canon_key + 3 explicit build/dry-run/apply commands); per-layer canon_key co-located in MANIFEST is the single source of truth (Phase 11 MODULE_TO_CANON_KEY derives FROM this, not declared independently — G.2c cleanup lesson)
 - [Phase 10-accelerator-artifact-type-registration]: fsi-dsp/CLAUDE.md NOT edited — auto-generated file, schema docs land in cflt-ai's CONTRIBUTING.md / tools/manifest-schema.md (10-02 Task 4) and upstream PR body (10-03) instead
 - [Phase 10-accelerator-artifact-type-registration]: Submodule parent-pointer bump deliberately left unstaged in this plan — 10-02 picks it up atomically alongside the validator commit (single rollback unit if Phase 11 surfaces issues)
+- [Phase 10-accelerator-artifact-type-registration]: Pure-Python validator (no jsonschema/pydantic) — matches tools/check-canon-parity.py + tools/check_submodule_drift.py shape; KNOWN_TYPES locked via test_known_types_constant_shape for lock-step doc/code drift discipline
+- [Phase 10-accelerator-artifact-type-registration]: Schema-shape vs path-existence kept orthogonal — validate_capability() skips path-on-disk check; that's TestManifestPathsExist's job; lets validator run as fast pre-commit gate without submodule checkout
+- [Phase 10-accelerator-artifact-type-registration]: Atomic commit ad2304f bundles submodule pointer + validator + tests + fixtures + docs — single git revert returns repo to pre-MAN-01 baseline; mirrors Phase 9 atomic-landing discipline
+- [Phase 10-accelerator-artifact-type-registration]: 9-test coverage matrix for new type (2 positive + 4 negative-space + 1 cross-type regression + 1 enum-gate + 1 constant-shape lock) — reusable template for future type additions
 
 ### Pending Todos
 
@@ -250,6 +255,6 @@ None yet — note that 10 may require an upstream fsi-dsp PR merge before 11 can
 
 ## Session Continuity
 
-Last session: 2026-05-23T15:50:39.894Z
-Stopped at: Completed 10-01-PLAN.md — accelerator/confluent-on-linuxone registered in fsi-dsp MANIFEST.yaml (submodule branch feat/manifest-accelerator-type, commit b117f3f)
+Last session: 2026-05-23T15:58:04.090Z
+Stopped at: Completed 10-02-PLAN.md — atomic commit ad2304f landed: submodule pointer b117f3f + check_manifest.py validator + 9 TestManifestSchemaValidator tests + 2 fixtures + tools/manifest-schema.md + CONTRIBUTING.md cross-link
 Resume file: None
