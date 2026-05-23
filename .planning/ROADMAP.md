@@ -164,7 +164,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward (see above). Detailed
 | H.3c. /dsp:scaffold wrapper | v2.0 | 1/1 | Complete | 2026-05-17 |
 | 9. Submodule sync + canon-parity unblock | v2.1 | 0/2 | Not started | - |
 | 10. Accelerator artifact-type registration | v2.1 | 2/3 | Complete    | 2026-05-23 |
-| 11. Act-rail wiring for accelerator dispatch | v2.1 | 4/4 | Complete   | 2026-05-23 |
+| 11. Act-rail wiring for accelerator dispatch | v2.1 | 4/4 | Complete    | 2026-05-23 |
 | 12. Wiki ingest of LinuxONE accelerator | v2.1 | 0/? | Not started | - |
 | G.2a. mcp-confluent tool-call executor | backlog | 0/1 | Not started | - |
 | G.2b. Composite scenario executor | backlog | 0/1 | Not started | - |

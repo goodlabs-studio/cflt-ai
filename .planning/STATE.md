@@ -4,7 +4,7 @@ milestone: v2.1
 milestone_name: — LinuxONE Accelerator Integration
 status: executing
 stopped_at: Completed 11-04-PLAN.md — Phase 11 complete (all 4 plans landed; MAN-02..05 verified)
-last_updated: "2026-05-23T17:24:05.075Z"
+last_updated: "2026-05-23T17:28:06.905Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 4
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-05-23)
 
 ## Current Position
 
-Phase: 11 (act-rail-wiring-for-accelerator-dispatch) — EXECUTING
-Plan: 4 of 4
+Phase: 12
+Plan: Not started
 Status: Ready to execute
 Last activity: 2026-05-23
 
