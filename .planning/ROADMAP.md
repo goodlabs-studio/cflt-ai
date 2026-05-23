@@ -45,7 +45,7 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
 ### 🚧 v2.1 — LinuxONE Accelerator Integration
 
 - [ ] **Phase 9: Submodule sync + canon-parity unblock** — Bump `raw/repos/fsi-dsp` submodule pointer to upstream `main` (23+ commits ahead, includes the LinuxONE accelerator + 2989473 merge); clear the two pre-existing canon-parity / manifest test failures from the v2.0 audit; add a stale-submodule CI guard. Foundational; nothing else in v2.1 can land cleanly until the submodule reflects the accelerator's existence on disk.
-- [ ] **Phase 10: Accelerator artifact-type registration** — Land `type: accelerator` in upstream fsi-dsp `MANIFEST.yaml` (separate PR) and accept the new type in cflt-ai's manifest schema validator without regressing on `ansible-role`, `terraform-module`, `scenario`, `adr`, or `reference`. The type contract MUST exist before downstream consumers (11) wire to it.
+- [x] **Phase 10: Accelerator artifact-type registration** — Land `type: accelerator` in upstream fsi-dsp `MANIFEST.yaml` (separate PR) and accept the new type in cflt-ai's manifest schema validator without regressing on `ansible-role`, `terraform-module`, `scenario`, `adr`, or `reference`. The type contract MUST exist before downstream consumers (11) wire to it. (completed 2026-05-23)
 - [ ] **Phase 11: Act-rail wiring for accelerator dispatch** — Extend `/dsp:plan` Gate 1 (canon compliance) and `/dsp:apply` Step 7 (executor) to handle accelerator artifacts: 5-layer MODULE_TO_CANON_KEY map (`01-rbac` → `fsi.security.mds-rbac`, `02-tls` → `fsi.security.tls-fips`, `03-schema-governance` → `fsi.schema.compatibility-full-transitive`, `04-audit` → `fsi.audit.events-retention`, `05-flink` → `fsi.flink.environment-mtls`); layer-aware kustomize apply_sequence (build → `oc apply --dry-run=server` → `oc apply`); per-layer activity-log entries; bidirectional canon-parity CI extended to accelerator MANIFEST entries (G.2c CI pattern). Largest phase.
 - [ ] **Phase 12: Wiki ingest of LinuxONE accelerator** — Mirror the H.1 ingest pattern for the LinuxONE accelerator: ≥6 articles covering reference architecture / x86→LinuxONE Cluster Linking migration / FIPS-at-install / auditor-readonly RBAC isolation / custom s390x image build / Flink-on-CFK example jobs; 13 KNOWN-GAPS entries (G-01..G-13) encoded as `tools/vendor-sources.json` trip-wires; ≥15 golden eval cases across `/ask` and `/review`; `/review` flags claims contradicting the auditor-readonly payload-isolation pattern.
 
@@ -77,7 +77,7 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
   2. cflt-ai's manifest schema validator (`tools/check_manifest.py` or equivalent) accepts `type: accelerator` entries; the validator's enum/dispatch is extended without breaking validation of existing `ansible-role`, `terraform-module`, `scenario`, `adr`, or `reference` entries (proven via the existing test_manifest suite passing post-change).
   3. A new positive-coverage unit test asserts that an `accelerator`-typed fixture entry validates cleanly; a corresponding negative-space test asserts that a malformed accelerator entry (missing `apply_sequence`, unknown layer name, etc.) fails validation with a clear error.
   4. The new type is documented in cflt-ai's MANIFEST contract reference (CONTRIBUTING.md or `tools/manifest-schema.md`) so future contributors know `accelerator` is a recognized artifact-type alongside the v1.0/v2.0 types.
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 - [x] 10-01-PLAN.md — Register accelerator MANIFEST entry inside fsi-dsp submodule (feature branch)
 - [x] 10-02-PLAN.md — cflt-ai validator + 9 tests + 2 fixtures + schema docs (atomic commit with submodule pointer bump)
 - [ ] 10-03-PLAN.md — Human-action checkpoint: upstream PR-open + post-merge pointer follow-up
@@ -156,7 +156,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward (see above). Detailed
 | H.3b. Version pin + CI drift gate | v2.0 | 1/1 | Complete | 2026-05-17 |
 | H.3c. /dsp:scaffold wrapper | v2.0 | 1/1 | Complete | 2026-05-17 |
 | 9. Submodule sync + canon-parity unblock | v2.1 | 0/2 | Not started | - |
-| 10. Accelerator artifact-type registration | v2.1 | 2/3 | In Progress|  |
+| 10. Accelerator artifact-type registration | v2.1 | 2/3 | Complete    | 2026-05-23 |
 | 11. Act-rail wiring for accelerator dispatch | v2.1 | 0/? | Not started | - |
 | 12. Wiki ingest of LinuxONE accelerator | v2.1 | 0/? | Not started | - |
 | G.2a. mcp-confluent tool-call executor | backlog | 0/1 | Not started | - |
