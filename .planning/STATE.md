@@ -1,35 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: — Developer Persona + Quality Gates
-status: Milestone shipped
-stopped_at: v2.0 milestone CLOSED — 8 phases, 13 plans, 16/16 requirements, audit passed, tag v2.0 created
-last_updated: "2026-05-17T18:45:00.000Z"
-last_activity: 2026-05-17
+milestone: v2.1
+milestone_name: — LinuxONE Accelerator Integration
+status: Defining requirements
+stopped_at: v2.1 milestone scoped — pending REQUIREMENTS.md + ROADMAP.md
+last_updated: "2026-05-23T00:00:00.000Z"
+last_activity: 2026-05-23
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 13
-  completed_plans: 13
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-17)
+See: .planning/PROJECT.md (updated 2026-05-23)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Planning v2.1 — run `/gsd:new-milestone`
+**Current focus:** v2.1 — LinuxONE Accelerator Integration (defining requirements)
 
 ## Current Position
 
-Milestone: v2.0 SHIPPED 2026-05-17
-Next: v2.1 (TBD — run `/gsd:new-milestone` to scope)
-Last activity: 2026-05-17
+Phase:    Not started (defining requirements)
+Plan:     —
+Status:   Defining requirements
+Last activity: 2026-05-23 — Milestone v2.1 started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## v2.0 Reference
 

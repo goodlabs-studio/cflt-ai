@@ -47,14 +47,20 @@ The canon overlay stack works — customers can fork and override safely. Base (
 - ✓ Phase H.4b: tools/profiles/developer/sandbox.json + canon/industry/fsi/developer-sandbox/ overlay + per-family negative-space test matrix — v2.0
 - ✓ Phase H.4c: canon/customer/acme-bank/profiles/developer/sandbox.json + 3 differential gating decisions vs base FSI dev canon (ACTG-04 mirror) — v2.0
 
-### Active (v2.1 — TBD)
+### Active (v2.1 — LinuxONE Accelerator Integration)
 
-Run `/gsd:new-milestone` to scope. Candidate items from v2.0 tech debt:
-- [ ] Extend `/dsp:scaffold` to remaining 4 artifact-types (consumer, kafka-streams-app, schema, cdc-pipeline)
-- [ ] `scaffolded-producer` executor inside `raw/repos/fsi-dsp/` (separate PR) so /dsp:plan + /dsp:apply consume scaffolded artifacts
-- [ ] Promote `canon/industry/fsi/developer-sandbox/` CONTEXT-sourced override decisions to formal ADRs after first customer engagement uses developer profile
-- [ ] G.2 carry-forward: G.2a (mcp-confluent tool-call executor), G.2b (composite scenario executor), G.2d (GitOps apply mode), G.2e (ansible-role executor)
-- [ ] Resolve 2 pre-existing test failures (test_check_canon_parity.py, test_manifest.py — fsi-dsp submodule version drift)
+**Goal:** Integrate the new `accelerators/confluent-on-linuxone/` tier from upstream fsi-dsp into cflt-ai's canon, wiki, and act rail — so /ask, /review, /dsp:plan, and /dsp:apply can reason about and dispatch accelerator artifacts with full provenance.
+
+**Target features:**
+- [ ] Submodule pointer bump + canon-parity drift resolution (local on `feat/module-cc-cluster-basic@2989473`; upstream main at `5a86fd2` — 23+ commits ahead, includes accelerator + 2989473's own merge into main; clears 2 pre-existing test failures)
+- [ ] Register `type: accelerator` in MANIFEST.yaml (fsi-dsp PR) + cflt-ai canon-mapping + MODULE_TO_CANON_KEY wiring for the 5 layers (RBAC, mTLS, schema-governance, audit, Flink); /dsp:plan gate 1 + /dsp:apply layer-aware dispatch
+- [ ] Wiki ingest of LinuxONE accelerator: DESIGN.md, KNOWN-GAPS.md (G-01..G-13), MIGRATION.md (x86→LinuxONE Cluster Linking with regulatory evidence checklist), auditor-readonly RBAC payload-isolation pattern; trip-wires + golden eval cases per H.1 model
+
+**Carry-forward (backlog, NOT v2.1):**
+- Extend `/dsp:scaffold` to remaining 4 artifact-types (consumer, kafka-streams-app, schema, cdc-pipeline)
+- `scaffolded-producer` executor inside `raw/repos/fsi-dsp/`
+- Promote `canon/industry/fsi/developer-sandbox/` CONTEXT-sourced override decisions to formal ADRs after first customer engagement
+- G.2 carry-forward: G.2a (mcp-confluent tool-call executor), G.2b (composite scenario executor — composes with accelerator dispatch), G.2d (GitOps apply mode), G.2e (ansible-role executor)
 
 ### Out of Scope
 
@@ -115,6 +121,9 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
+*Last updated: 2026-05-23 — v2.1 (LinuxONE Accelerator Integration) scoped*
+
+---
 *Last updated: 2026-05-17 after v2.0 milestone (Developer Persona + Quality Gates)*
 
 ---
