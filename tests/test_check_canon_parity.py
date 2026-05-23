@@ -38,8 +38,38 @@ def _make_manifest(modules: list) -> dict:
 
 
 def _make_defaults(keys: list) -> dict:
-    """Build a minimal defaults.yaml with the given top-level keys."""
+    """Build a minimal defaults.yaml with the given top-level keys.
+
+    Tests treat defaults.yaml as the union set for canon-key resolution:
+    production splits across canon/base/defaults.yaml + canon/industry/fsi/overrides.yaml,
+    but check_parity() unions both into one canon_keys set. For test fixtures we
+    write all required keys into one defaults file and skip overrides — same effect.
+    """
     return {k: {"_placeholder": True} for k in keys}
+
+
+def _make_accelerator_manifest(acc_id: str, layers: list) -> dict:
+    """Build a MANIFEST.yaml with one accelerator entry whose apply_sequence has the given layers.
+
+    Each layer is a dict: {"layer": str, "canon_key": str}.
+    """
+    return {
+        "version": "1.1.0",
+        "capabilities": [{
+            "id": acc_id,
+            "type": "accelerator",
+            "name": acc_id.split("/")[-1],
+            "path": f"accelerators/{acc_id.split('/')[-1]}",
+            "apply_sequence": [
+                {
+                    "layer": layer["layer"],
+                    "path": f"layers/{layer['layer']}",
+                    "canon_key": layer["canon_key"],
+                }
+                for layer in layers
+            ],
+        }],
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -77,7 +107,8 @@ class TestCheckParity:
                 _make_defaults(["flink_sql", "schema_registry", "producer", "consumer"]),
             )
 
-            drift = check_parity(manifest_path, defaults_path)
+            # Skip the real fsi overrides so the synthetic fixture is the only canon source.
+            drift = check_parity(manifest_path, defaults_path, tmp / "no-overrides.yaml")
 
             # Must report drift for module/topic -> topic_design
             assert len(drift) >= 1
@@ -109,7 +140,7 @@ class TestCheckParity:
                 _make_defaults(["topic_design", "flink_sql", "schema_registry"]),
             )
 
-            drift = check_parity(manifest_path, defaults_path)
+            drift = check_parity(manifest_path, defaults_path, tmp / "no-overrides.yaml")
 
             # No terraform-modules -> no DRIFT-1 violations
             drift_1_items = [d for d in drift if "[DRIFT-1]" in d]
@@ -133,7 +164,7 @@ class TestCheckParity:
                 _make_defaults(["schema_registry", "producer", "consumer", "security"]),
             )
 
-            drift = check_parity(manifest_path, defaults_path)
+            drift = check_parity(manifest_path, defaults_path, tmp / "no-overrides.yaml")
             drift_text = "\n".join(drift)
 
             # Both modules should be flagged
@@ -150,7 +181,7 @@ class TestCheckParity:
             )
             missing_manifest = tmp / "NONEXISTENT.yaml"
 
-            drift = check_parity(missing_manifest, defaults_path)
+            drift = check_parity(missing_manifest, defaults_path, tmp / "no-overrides.yaml")
             assert len(drift) >= 1
             assert any("not found" in d or "MANIFEST" in d for d in drift)
 
@@ -217,3 +248,190 @@ class TestParityScript:
                 f"MODULE_TO_CANON_KEY['{module_id}'] = '{canon_key}' "
                 f"but '{canon_key}' is not in defaults.yaml or fsi/overrides.yaml"
             )
+
+
+# ---------------------------------------------------------------------------
+# TestAcceleratorParity (Phase 11)
+# ---------------------------------------------------------------------------
+
+class TestAcceleratorParity:
+    """Positive-path tests: each of the 5 accelerator layers maps to its canon key with no drift."""
+
+    @staticmethod
+    def _run_layer_parity(tmpdir: str, layer: str, canon_key: str) -> list:
+        """Helper: write a single-layer accelerator manifest + matching defaults, return drift.
+
+        Includes the 2 terraform-modules in the MANIFEST + their canon keys in defaults
+        so WARN-2 reverse-lookup noise does not pollute the positive-path assertion.
+        """
+        tmp = Path(tmpdir)
+        manifest_data = {
+            "version": "1.1.0",
+            "capabilities": [
+                {
+                    "id": "module/topic",
+                    "type": "terraform-module",
+                    "name": "topic",
+                    "path": "modules/topic",
+                    "description": "Topic module",
+                },
+                {
+                    "id": "module/flink",
+                    "type": "terraform-module",
+                    "name": "flink",
+                    "path": "modules/flink",
+                    "description": "Flink module",
+                },
+                {
+                    "id": "accelerator/confluent-on-linuxone",
+                    "type": "accelerator",
+                    "name": "confluent-on-linuxone",
+                    "path": "accelerators/confluent-on-linuxone",
+                    "apply_sequence": [
+                        {
+                            "layer": layer,
+                            "path": f"layers/{layer}",
+                            "canon_key": canon_key,
+                        },
+                    ],
+                },
+            ],
+        }
+        manifest_path = _write_yaml(tmp / "MANIFEST.yaml", manifest_data)
+        defaults_path = _write_yaml(
+            tmp / "defaults.yaml",
+            _make_defaults([canon_key, "topic_design", "flink_sql"]),
+        )
+        # Skip the real fsi overrides — defaults fixture above is the union source.
+        return check_parity(manifest_path, defaults_path, tmp / "no-overrides.yaml")
+
+    def test_layer_01_rbac_maps_to_fsi_security_mds_rbac(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            drift = self._run_layer_parity(tmpdir, "01-rbac", "fsi.security.mds-rbac")
+            assert drift == [], f"Expected no drift for 01-rbac, got: {drift}"
+
+    def test_layer_02_tls_maps_to_fsi_security_tls_fips(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            drift = self._run_layer_parity(tmpdir, "02-tls", "fsi.security.tls-fips")
+            assert drift == [], f"Expected no drift for 02-tls, got: {drift}"
+
+    def test_layer_03_schema_governance_maps_to_fsi_schema_compatibility_full_transitive(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            drift = self._run_layer_parity(
+                tmpdir, "03-schema-governance", "fsi.schema.compatibility-full-transitive"
+            )
+            assert drift == [], f"Expected no drift for 03-schema-governance, got: {drift}"
+
+    def test_layer_04_audit_maps_to_fsi_audit_events_retention(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            drift = self._run_layer_parity(tmpdir, "04-audit", "fsi.audit.events-retention")
+            assert drift == [], f"Expected no drift for 04-audit, got: {drift}"
+
+    def test_layer_05_flink_maps_to_fsi_flink_environment_mtls(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            drift = self._run_layer_parity(tmpdir, "05-flink", "fsi.flink.environment-mtls")
+            assert drift == [], f"Expected no drift for 05-flink, got: {drift}"
+
+
+# ---------------------------------------------------------------------------
+# TestAcceleratorNegativeSpace (Phase 11)
+# ---------------------------------------------------------------------------
+
+class TestAcceleratorNegativeSpace:
+    """Negative-path tests: unknown layer, canon_key mismatch, terraform-module regression."""
+
+    def test_unknown_layer_produces_drift_1(self):
+        """A layer whose composite key is not in MODULE_TO_CANON_KEY produces a blocking DRIFT-1."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            manifest_path = _write_yaml(
+                tmp / "MANIFEST.yaml",
+                _make_accelerator_manifest(
+                    "accelerator/confluent-on-linuxone",
+                    [{"layer": "99-unknown", "canon_key": "fsi.unknown.key"}],
+                ),
+            )
+            defaults_path = _write_yaml(
+                tmp / "defaults.yaml",
+                _make_defaults(["fsi.unknown.key"]),
+            )
+
+            drift = check_parity(manifest_path, defaults_path, tmp / "no-overrides.yaml")
+            drift_text = "\n".join(drift)
+
+            assert "[DRIFT-1]" in drift_text
+            assert "accelerator/confluent-on-linuxone:99-unknown" in drift_text
+            assert "no entry in MODULE_TO_CANON_KEY" in drift_text
+
+    def test_canon_key_mismatch_produces_drift_1(self):
+        """A layer whose MANIFEST canon_key disagrees with MODULE_TO_CANON_KEY produces a DRIFT-1
+        mentioning both keys for unambiguous CI output."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            manifest_path = _write_yaml(
+                tmp / "MANIFEST.yaml",
+                _make_accelerator_manifest(
+                    "accelerator/confluent-on-linuxone",
+                    [{"layer": "01-rbac", "canon_key": "wrong.key"}],
+                ),
+            )
+            defaults_path = _write_yaml(
+                tmp / "defaults.yaml",
+                _make_defaults(["fsi.security.mds-rbac", "wrong.key"]),
+            )
+
+            drift = check_parity(manifest_path, defaults_path, tmp / "no-overrides.yaml")
+            drift_text = "\n".join(drift)
+
+            assert "[DRIFT-1]" in drift_text
+            assert "'wrong.key'" in drift_text
+            assert "'fsi.security.mds-rbac'" in drift_text
+
+    def test_terraform_module_parity_unchanged(self):
+        """Regression: terraform-module DRIFT-1 still fires when canon key missing,
+        even with a clean accelerator entry present in the same MANIFEST."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            # MANIFEST with module/topic (canon key missing) + accelerator (clean)
+            manifest_data = {
+                "version": "1.1.0",
+                "capabilities": [
+                    {
+                        "id": "module/topic",
+                        "type": "terraform-module",
+                        "name": "topic",
+                        "path": "modules/topic",
+                        "description": "Test topic module",
+                    },
+                    {
+                        "id": "accelerator/confluent-on-linuxone",
+                        "type": "accelerator",
+                        "name": "confluent-on-linuxone",
+                        "path": "accelerators/confluent-on-linuxone",
+                        "apply_sequence": [
+                            {
+                                "layer": "01-rbac",
+                                "path": "layers/01-rbac",
+                                "canon_key": "fsi.security.mds-rbac",
+                            },
+                        ],
+                    },
+                ],
+            }
+            manifest_path = _write_yaml(tmp / "MANIFEST.yaml", manifest_data)
+            # defaults has the accelerator key but NOT topic_design — terraform-module
+            # drift should fire; accelerator drift should NOT.
+            defaults_path = _write_yaml(
+                tmp / "defaults.yaml",
+                _make_defaults(["fsi.security.mds-rbac", "schema_registry"]),
+            )
+
+            drift = check_parity(manifest_path, defaults_path, tmp / "no-overrides.yaml")
+            drift_text = "\n".join(drift)
+
+            # Terraform-module drift fires
+            assert "module/topic" in drift_text
+            assert "topic_design" in drift_text
+            assert "[DRIFT-1]" in drift_text
+            # No accidental accelerator-related drift
+            assert "accelerator/confluent-on-linuxone:01-rbac" not in drift_text
