@@ -46,22 +46,23 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| SUBM-01 | TBD | Active |
-| SUBM-02 | TBD | Active |
-| SUBM-03 | TBD | Active |
-| MAN-01 | TBD | Active |
-| MAN-02 | TBD | Active |
-| MAN-03 | TBD | Active |
-| MAN-04 | TBD | Active |
-| MAN-05 | TBD | Active |
-| WIKI-01 | TBD | Active |
-| WIKI-02 | TBD | Active |
-| WIKI-03 | TBD | Active |
-| WIKI-04 | TBD | Active |
-| WIKI-05 | TBD | Active |
+| SUBM-01 | I.1 | Active |
+| SUBM-02 | I.1 | Active |
+| SUBM-03 | I.1 | Active |
+| MAN-01 | I.2 | Active |
+| MAN-02 | I.3 | Active |
+| MAN-03 | I.3 | Active |
+| MAN-04 | I.3 | Active |
+| MAN-05 | I.3 | Active |
+| WIKI-01 | I.4 | Active |
+| WIKI-02 | I.4 | Active |
+| WIKI-03 | I.4 | Active |
+| WIKI-04 | I.4 | Active |
+| WIKI-05 | I.4 | Active |
 
-*Filled by gsd-roadmapper at roadmap creation.*
+**Coverage:** 13/13 v2.1 requirements mapped across 4 phases. No orphans, no duplicates.
 
 ---
 
 *Created: 2026-05-23 — Milestone v2.1 (LinuxONE Accelerator Integration) started*
+*Updated: 2026-05-23 — Traceability filled by gsd-roadmapper at roadmap creation (I.1–I.4)*

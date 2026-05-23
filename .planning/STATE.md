@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: — LinuxONE Accelerator Integration
-status: Defining requirements
-stopped_at: v2.1 milestone scoped — pending REQUIREMENTS.md + ROADMAP.md
+status: Roadmap drafted — awaiting plan-phase
+stopped_at: v2.1 ROADMAP.md + REQUIREMENTS.md traceability written — ready for /gsd:plan-phase I.1
 last_updated: "2026-05-23T00:00:00.000Z"
 last_activity: 2026-05-23
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,16 +21,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** v2.1 — LinuxONE Accelerator Integration (defining requirements)
+**Current focus:** v2.1 — LinuxONE Accelerator Integration (roadmap drafted, 4 phases)
 
 ## Current Position
 
-Phase:    Not started (defining requirements)
+Phase:    I.1 — Submodule sync + canon-parity unblock (next)
 Plan:     —
-Status:   Defining requirements
-Last activity: 2026-05-23 — Milestone v2.1 started
+Status:   Roadmap drafted — awaiting `/gsd:plan-phase I.1`
+Last activity: 2026-05-23 — v2.1 ROADMAP + REQUIREMENTS traceability written (I.1–I.4)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [░░░░░░░░░░] 0%  (0/4 phases complete)
+
+## v2.1 Reference
+
+Active milestone — 4 phases planned, 13 requirements mapped.
+Roadmap: `.planning/ROADMAP.md` (v2.1 section)
+Requirements: `.planning/REQUIREMENTS.md` (13/13 mapped across I.1–I.4)
+
+**Phase sequence:** I.1 (submodule) → I.2 (type contract) → I.3 (act rail dispatch) → I.4 (wiki ingest).
 
 ## v2.0 Reference
 
@@ -224,10 +232,10 @@ None yet.
 
 ### Blockers/Concerns
 
-None yet.
+None yet — note that I.2 may require an upstream fsi-dsp PR merge before I.3 can land cleanly; sequence accordingly when planning.
 
 ## Session Continuity
 
-Last session: 2026-05-17T18:19:34.554Z
-Stopped at: Completed H.3c-01-PLAN.md — v2.0 milestone CLOSED
+Last session: 2026-05-23T00:00:00.000Z
+Stopped at: v2.1 ROADMAP.md + REQUIREMENTS.md traceability written (I.1–I.4); awaiting /gsd:plan-phase I.1
 Resume file: None
