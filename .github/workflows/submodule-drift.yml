@@ -1,0 +1,62 @@
+name: Submodule Drift
+
+# Stale-submodule drift gate (Phase 9 / SUBM-03): fails the workflow when
+# raw/repos/fsi-dsp falls more than 14 days behind upstream main HEAD.
+#
+# Mirrors .github/workflows/streaming-skills-drift.yml (H.3b) shape:
+# pure shell + git ls-remote, no Node.js, no API auth. The drift window is
+# defined by DRIFT_WINDOW_DAYS in tools/check_submodule_drift.py.
+#
+# Triggers scoped to changes that could affect alignment:
+#   - submodule pointer bumps (raw/repos/fsi-dsp)
+#   - the drift-check script itself (CLI changes, exit-code changes)
+#   - this workflow file
+
+on:
+  pull_request:
+    paths:
+      - 'raw/repos/fsi-dsp'
+      - 'tools/check_submodule_drift.py'
+      - '.github/workflows/submodule-drift.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'raw/repos/fsi-dsp'
+      - 'tools/check_submodule_drift.py'
+      - '.github/workflows/submodule-drift.yml'
+
+jobs:
+  check-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # raw/repos/fsi-dsp is a submodule — required so the gate can resolve
+          # the recorded SHA (git rev-parse HEAD:raw/repos/fsi-dsp) and run
+          # git ls-remote against the submodule's origin.
+          submodules: true
+
+      - name: Setup Python
+        # Python 3.12 matches the other FSI CI workflows
+        # (streaming-skills-drift.yml, tool-classification-drift.yml,
+        # canon-parity.yml, wiki-lint.yml).
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify git is on PATH
+        # Fail fast with a clear message if git is missing — the gate uses
+        # `git ls-remote` to fetch upstream HEAD. ubuntu-latest always has
+        # git, but the defensive verb-step makes failures legible.
+        run: git --version
+
+      - name: Check raw/repos/fsi-dsp drift against upstream main HEAD
+        # Exit codes:
+        #   0 = within drift window;
+        #   1 = stale (>14 days behind) — PR fails with remediation message;
+        #   2 = config error (submodule not registered);
+        #   3 = transient/git error (ls-remote failed) — fail-closed.
+        # All non-zero outcomes are CI failures because they all indicate the
+        # pin cannot be safely trusted as the authoritative reference.
+        run: python tools/check_submodule_drift.py --check
