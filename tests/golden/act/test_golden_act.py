@@ -36,6 +36,9 @@ VALID_ARTIFACT_TYPES = {
     "script/mirror-failback",
     "script/fsi-dr",
     "script/validate-fips",
+    # Phase 11: LinuxONE accelerator artifact (kustomize-layered, dispatched
+    # by execute_accelerator() in tools/apply_engine.py)
+    "accelerator/confluent-on-linuxone",
     None,  # negative-space cases have no artifact
 }
 
@@ -303,3 +306,134 @@ class TestGoldenApplyHarnessStructure:
         assert len(ALL_CASES) >= 32, (
             f"Need >= 32 total golden cases (22 plan + 10 apply), found {len(ALL_CASES)}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Accelerator-specific cases (Phase 11 — LinuxONE kustomize-layered artifact)
+# ---------------------------------------------------------------------------
+
+# Canonical layer → canon_key mapping for accelerator/confluent-on-linuxone.
+# Source of truth: raw/repos/fsi-dsp/MANIFEST.yaml apply_sequence entries +
+# tools/check-canon-parity.py MODULE_TO_CANON_KEY composite keys (Plan 11-01).
+# Any divergence here against either source is a DRIFT-1 blocking violation.
+ACCELERATOR_LAYER_TO_CANON_KEY = {
+    "01-rbac": "fsi.security.mds-rbac",
+    "02-tls": "fsi.security.tls-fips",
+    "03-schema-governance": "fsi.schema.compatibility-full-transitive",
+    "04-audit": "fsi.audit.events-retention",
+    "05-flink": "fsi.flink.environment-mtls",
+}
+
+
+class TestAcceleratorCases:
+    """Phase 11 — coverage assertion for the 5 accelerator-layer golden cases.
+
+    Asserts that the golden harness gains >= 5 accelerator cases (one per
+    kustomize layer of accelerator/confluent-on-linuxone), each referencing
+    the artifact by MANIFEST ID and carrying the layer's canonical canon_key
+    in required_claims. Cross-validates against Plan 11-01's
+    MODULE_TO_CANON_KEY mapping via shared layer→canon_key dict.
+    """
+
+    def test_at_least_5_accelerator_cases_exist(self):
+        """Phase 11 success criterion 1 — golden harness gains >= 5 accelerator cases."""
+        accel_cases = list(CASES_DIR.glob("accelerator-*.md"))
+        assert len(accel_cases) >= 5, (
+            f"Expected >= 5 accelerator-* cases, found {len(accel_cases)}: "
+            f"{[c.name for c in accel_cases]}"
+        )
+
+    @pytest.mark.parametrize(
+        "layer,canon_key",
+        list(ACCELERATOR_LAYER_TO_CANON_KEY.items()),
+        ids=list(ACCELERATOR_LAYER_TO_CANON_KEY.keys()),
+    )
+    def test_each_layer_has_a_case(self, layer, canon_key):
+        """One case per kustomize layer; each references the canonical canon_key."""
+        matches = [
+            c for c in CASES_DIR.glob("accelerator-*.md")
+            if f"--layer {layer}" in c.read_text()
+        ]
+        assert len(matches) >= 1, f"No accelerator case for layer {layer}"
+        for c in matches:
+            content = c.read_text()
+            # Each case must reference (a) the accelerator artifact ID,
+            # (b) the layer name, (c) the canonical canon_key value.
+            assert "accelerator/confluent-on-linuxone" in content, (
+                f"Case {c.name} missing accelerator artifact ID reference"
+            )
+            assert layer in content, (
+                f"Case {c.name} for layer {layer} missing layer name"
+            )
+            assert canon_key in content, (
+                f"Case {c.name} for layer {layer} missing canonical canon_key {canon_key}"
+            )
+
+    def test_accelerator_cases_satisfy_required_fields(self):
+        """REQUIRED_FIELDS check (8 fields) from Phase 03A applies to accelerator cases."""
+        for c in CASES_DIR.glob("accelerator-*.md"):
+            fm = load_case(c)
+            missing = REQUIRED_FIELDS - set(fm.keys())
+            assert not missing, f"{c.name} missing required fields: {missing}"
+
+    def test_accelerator_cases_forbid_inline_terraform(self):
+        """ACT-06 defense-in-depth — even positive accelerator cases guard against
+        inline Terraform leakage (accelerator dispatches kustomize, not Terraform)."""
+        for c in CASES_DIR.glob("accelerator-*.md"):
+            fm = load_case(c)
+            forbidden = fm.get("forbidden_claims", [])
+            assert any('resource "confluent_' in str(claim) for claim in forbidden), (
+                f"{c.name} forbidden_claims missing inline-Terraform guard. "
+                f"Got: {forbidden}"
+            )
+
+    def test_accelerator_cases_target_correct_artifact(self):
+        """All 5 accelerator cases must target accelerator/confluent-on-linuxone
+        (same artifact, different layer scope)."""
+        accel_cases = list(CASES_DIR.glob("accelerator-*.md"))
+        for c in accel_cases:
+            fm = load_case(c)
+            assert fm.get("expected_artifact") == "accelerator/confluent-on-linuxone", (
+                f"{c.name}: expected_artifact must be "
+                f"'accelerator/confluent-on-linuxone', got '{fm.get('expected_artifact')}'"
+            )
+
+    def test_accelerator_cases_are_positive_space(self):
+        """All 5 accelerator cases are positive (negative_space: false) —
+        wrong-layer / unknown-canon-key negative cases are covered by Plan 11-01's
+        DRIFT-1 unit tests, not by the act-harness golden cross-section."""
+        for c in CASES_DIR.glob("accelerator-*.md"):
+            fm = load_case(c)
+            assert fm.get("negative_space") is False, (
+                f"{c.name}: accelerator cases must be positive-space "
+                f"(negative_space: false), got {fm.get('negative_space')}"
+            )
+
+    def test_accelerator_canon_keys_align_with_module_to_canon_key(self):
+        """Cross-plan integration test — accelerator case canon_keys MUST match
+        Plan 11-01's MODULE_TO_CANON_KEY composite-key values. Catches drift
+        between act-harness layer/canon_key mapping and the parity walker's
+        ground truth.
+        """
+        import importlib.util
+        # tools/check-canon-parity.py has a hyphen → load via importlib spec
+        parity_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "tools" / "check-canon-parity.py"
+        )
+        if not parity_path.exists():
+            pytest.skip(f"tools/check-canon-parity.py not found at {parity_path}")
+        spec = importlib.util.spec_from_file_location("check_canon_parity", parity_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        mtck = module.MODULE_TO_CANON_KEY
+        for layer, canon_key in ACCELERATOR_LAYER_TO_CANON_KEY.items():
+            composite = f"accelerator/confluent-on-linuxone:{layer}"
+            assert composite in mtck, (
+                f"MODULE_TO_CANON_KEY missing composite key {composite!r}; "
+                f"Plan 11-01 should have added it"
+            )
+            assert mtck[composite] == canon_key, (
+                f"MODULE_TO_CANON_KEY[{composite!r}] = {mtck[composite]!r}, "
+                f"but act-harness layer→canon_key map says {canon_key!r}"
+            )
