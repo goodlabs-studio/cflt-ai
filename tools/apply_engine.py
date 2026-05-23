@@ -404,6 +404,7 @@ def execute_artifact(
     elif artifact_type == "accelerator":
         return execute_accelerator(
             artifact, args, plan_slug, dry_run=dry_run,
+            profile_name=args.get("profile_name"),
             layer_filter=args.get("layer"),
         )
     return ExecutionResult(
@@ -521,6 +522,7 @@ def execute_accelerator(
     args: Dict[str, str],
     plan_slug: str,
     dry_run: bool = False,
+    profile_name: Optional[str] = None,
     layer_filter: Optional[str] = None,
 ) -> ExecutionResult:
     """Walk an accelerator artifact's apply_sequence layer-by-layer (Phase 11.2).
@@ -558,16 +560,68 @@ def execute_accelerator(
                       'confirmation_source' (str), 'confirmation_status' (str).
         plan_slug:    Workspace key (per-plan + per-layer subdirectory isolation).
         dry_run:      If True, run kustomize+oc-dry-run only, skip real oc-apply.
+        profile_name: Phase 11.4 pre-flight gate. When supplied, the executor
+                      loads the named profile and calls check_profile_permits()
+                      BEFORE any subprocess invocation or per-layer ACTA-04
+                      emission. On deny: emits a single blocked-by-profile
+                      ACTA-04 entry (execution_result="refused", no layer_id)
+                      and returns ExecutionResult(status="refused", ...).
+                      When None (default): the gate is SKIPPED — back-compat
+                      with Plan 11-02 tests that don't supply the kwarg.
+                      Unknown profile names are caught (ValueError from
+                      load_profile) and converted to status="refused" with
+                      the offending name in stderr_tail (no raise).
         layer_filter: If set, run only the matching layer; absent walks full sequence.
 
     Returns:
-        ExecutionResult with status in {"success", "failure", "dry-run"}.
-        failed_layer is None on success/dry-run; set to the layer name on failure.
+        ExecutionResult with status in {"success", "failure", "dry-run", "refused"}.
+        failed_layer is None on success/dry-run/refused; set to the layer name
+        only on per-layer execution failure.
     """
     started = time.monotonic()
     per_phase: List[Dict[str, str]] = []
     stdout_chunks: List[str] = []
     stderr_chunks: List[str] = []
+
+    # ---------------------------------------------------------------------
+    # Phase 11.4 pre-flight profile gate. Runs BEFORE apply_sequence
+    # validation so refused operations never produce per-layer ACTA-04
+    # entries or touch kustomize/oc. Skipped when profile_name=None
+    # (back-compat with Plan 11-02 callers).
+    # ---------------------------------------------------------------------
+    artifact_id = artifact.get("id", "")
+    if profile_name is not None:
+        try:
+            profile = load_profile(profile_name, customer=args.get("overlay"))
+        except (ValueError, FileNotFoundError, OSError) as exc:
+            return ExecutionResult(
+                status="refused",
+                duration_seconds=0.0,
+                stderr_tail=f"Unknown or unreadable profile {profile_name!r}: {exc}",
+            )
+        if not check_profile_permits(profile, artifact_id):
+            # Single ACTA-04 entry (blocked-by-profile) — no layer_id,
+            # no per-layer entries. confirmation_status="blocked" mirrors
+            # the /dsp:apply Step 5 "blocked-by-profile" log shape.
+            emit_activity_log_apply(
+                overlay=args.get("overlay", "base"),
+                plan_path=args.get("plan_path", ""),
+                artifact_id=artifact_id,
+                profile_name=profile_name,
+                confirmation_status="blocked",
+                execution_result="refused",
+                duration_seconds=0.0,
+                gate_results=args.get("gate_results", []) or [],
+                operator=args.get("operator", "unknown"),
+            )
+            return ExecutionResult(
+                status="refused",
+                duration_seconds=0.0,
+                stderr_tail=(
+                    f"Profile {profile_name!r} does not permit operation on "
+                    f"{artifact_id!r}"
+                ),
+            )
 
     apply_sequence = artifact.get("apply_sequence", [])
     if not apply_sequence:
@@ -610,7 +664,7 @@ def execute_accelerator(
             stderr_tail="`oc` not on PATH — install OpenShift CLI",
         )
 
-    artifact_id = artifact.get("id", "")
+    # artifact_id was already set at the top of the function (pre-flight gate)
     for layer_entry in apply_sequence:
         layer_name = layer_entry.get("layer", "")
         layer_path = layer_entry.get("path", "")
