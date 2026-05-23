@@ -1,5 +1,26 @@
 # Milestones
 
+## v2.1 LinuxONE Accelerator Integration (Shipped: 2026-05-23)
+
+**Phases completed:** 4 phases, 13 plans, 22 tasks
+
+**Key accomplishments:**
+
+- Bumped fsi-dsp submodule from feat/module-cc-cluster-basic@2989473 to upstream main@5a86fd2 (LinuxONE accelerator + 30 commits ahead) and cleared the two v2.0-audit test failures (test_no_drift_on_current_state, test_version_is_1_0_0) in a single atomic commit.
+- Added a stale-submodule CI guard (`tools/check_submodule_drift.py` + `.github/workflows/submodule-drift.yml` + 6 unit tests) that fails the workflow when `raw/repos/fsi-dsp` falls more than 14 days behind upstream main HEAD, mirroring the H.3b pattern (pure Python + `git ls-remote`, no Node.js, no API auth).
+- Registered `type: accelerator` as a first-class MANIFEST.yaml capability with a 5-layer `apply_sequence` schema (RBAC → TLS → SR → audit → Flink), per-layer `canon_key` co-location, and explicit kustomize build/dry-run/apply commands — committed inside the fsi-dsp submodule on `feat/manifest-accelerator-type` (b117f3f); cflt-ai parent pointer ready for 10-02 to atomically bump.
+- Authored cflt-ai's first standalone MANIFEST schema validator (`tools/check_manifest.py`) gating a closed 8-type enum + per-type required-field discipline for `type: accelerator`; extended `tests/test_manifest.py` with 9 new TestManifestSchemaValidator tests (2 positive + 4 negative-space + 1 regression + 1 enum-gate + 1 constant-shape lock); authored `tools/manifest-schema.md` covering all 8 types and the adding-a-new-type runbook; cross-linked from CONTRIBUTING.md; bumped the fsi-dsp submodule pointer 5a86fd2 -> b117f3f all in a single atomic commit (`ad2304f`) so MAN-01 lands as one rollback unit.
+- Plan:
+- MODULE_TO_CANON_KEY grew from 2 → 7 entries with 5 composite accelerator/confluent-on-linuxone:<layer> keys; check_parity() walker now traverses apply_sequence and emits [DRIFT-1] on three distinct failure modes; 19 tests pass against post-Phase-10 MANIFEST.
+- `execute_accelerator()` walks 5 LinuxONE layers via kustomize-build → oc dry-run → oc apply, emits per-layer ACTA-04 entries with the new `layer_id` field, halts cleanly on any non-zero exit with `failed_layer` populated — 17 new tests, zero regressions.
+- /dsp:plan gained --layer flag with layer-aware provenance hashing; 5 golden act-harness cases (one per LinuxONE kustomize layer) land at v1.0 90% threshold (actually 100%); cross-plan integration test enforces MODULE_TO_CANON_KEY parity with act-harness layer map.
+- `execute_accelerator()` gains an additive `profile_name` kwarg that performs a pre-flight `check_profile_permits()` before any kustomize/oc invocation; read-only refuses, engineer permits, break-glass permits (two-step UI lives at /dsp:apply Step 6c) — 20 new parameterized test scenarios in 6 methods, all green, zero regressions.
+- `wiki/_index.md`
+- 13 LinuxONE KNOWN-GAPS (G-01..G-13) encoded as vendor-sources.json trip-wires; tools/wiki-lint.py --full now surfaces DRIFT-GAP / MISSING-GAP / MALFORMED-GAP findings non-fatally per H.1 D-09.
+- Converted 6 raw `raw/repos/fsi-dsp/...` source paths across 4 observability wiki articles to stable `fsi-dsp://` URIs (deduped to 4 distinct citations via folder-level MANIFEST IDs), closing the test failure carried since commit `bd7f967`.
+
+---
+
 ## v2.0 Developer Persona + Quality Gates (Shipped: 2026-05-17)
 
 **Phases completed:** 0 phases, 0 plans, 0 tasks

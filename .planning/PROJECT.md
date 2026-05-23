@@ -47,20 +47,22 @@ The canon overlay stack works — customers can fork and override safely. Base (
 - ✓ Phase H.4b: tools/profiles/developer/sandbox.json + canon/industry/fsi/developer-sandbox/ overlay + per-family negative-space test matrix — v2.0
 - ✓ Phase H.4c: canon/customer/acme-bank/profiles/developer/sandbox.json + 3 differential gating decisions vs base FSI dev canon (ACTG-04 mirror) — v2.0
 
-### Active (v2.1 — LinuxONE Accelerator Integration)
+### Validated (v2.1 — shipped 2026-05-23)
 
-**Goal:** Integrate the new `accelerators/confluent-on-linuxone/` tier from upstream fsi-dsp into cflt-ai's canon, wiki, and act rail — so /ask, /review, /dsp:plan, and /dsp:apply can reason about and dispatch accelerator artifacts with full provenance.
+- ✓ Phase 9: Submodule sync + canon-parity unblock — bumped `raw/repos/fsi-dsp` to upstream main HEAD; cleared 2 v2.0-audit test failures; added 14-day stale-submodule CI guard mirroring H.3b — v2.1
+- ✓ Phase 10: Accelerator artifact-type registration — `type: accelerator` registered in MANIFEST.yaml (fsi-dsp PR #3 OPEN); cflt-ai authored first standalone manifest schema validator + 9 tests + manifest-schema.md — v2.1
+- ✓ Phase 11: Act-rail wiring for accelerator dispatch — 5-layer MODULE_TO_CANON_KEY + accelerator-walking canon-parity + `execute_accelerator()` with per-layer ACTA-04 + 5 golden act cases + profile gating across read-only/engineer/break-glass — v2.1
+- ✓ Phase 12: Wiki ingest of LinuxONE accelerator — 6 articles + 13 KNOWN-GAPS trip-wires + /review auditor-readonly Step 4.1 + 15 golden eval cases; bonus: closed Phase 9 carry-forward (`test_wiki_citations`) — v2.1
 
-**Target features:**
-- [ ] Submodule pointer bump + canon-parity drift resolution (local on `feat/module-cc-cluster-basic@2989473`; upstream main at `5a86fd2` — 23+ commits ahead, includes accelerator + 2989473's own merge into main; clears 2 pre-existing test failures)
-- [ ] Register `type: accelerator` in MANIFEST.yaml (fsi-dsp PR) + cflt-ai canon-mapping + MODULE_TO_CANON_KEY wiring for the 5 layers (RBAC, mTLS, schema-governance, audit, Flink); /dsp:plan gate 1 + /dsp:apply layer-aware dispatch
-- [ ] Wiki ingest of LinuxONE accelerator: DESIGN.md, KNOWN-GAPS.md (G-01..G-13), MIGRATION.md (x86→LinuxONE Cluster Linking with regulatory evidence checklist), auditor-readonly RBAC payload-isolation pattern; trip-wires + golden eval cases per H.1 model
+### Active (v2.2 — TBD)
 
-**Carry-forward (backlog, NOT v2.1):**
-- Extend `/dsp:scaffold` to remaining 4 artifact-types (consumer, kafka-streams-app, schema, cdc-pipeline)
-- `scaffolded-producer` executor inside `raw/repos/fsi-dsp/`
-- Promote `canon/industry/fsi/developer-sandbox/` CONTEXT-sourced override decisions to formal ADRs after first customer engagement
-- G.2 carry-forward: G.2a (mcp-confluent tool-call executor), G.2b (composite scenario executor — composes with accelerator dispatch), G.2d (GitOps apply mode), G.2e (ansible-role executor)
+Run `/gsd:new-milestone` to scope. Candidate items from v2.1 follow-up + carry-forward:
+
+- [ ] fsi-dsp PR #3 post-merge pointer bump (bookkeeping — when upstream merges, fast-forward submodule and let 14-day drift CI clear)
+- [ ] G.2 carry-forward: G.2a (mcp-confluent tool-call executor), G.2b (composite scenario executor — natural follow-on to v2.1 Phase 11 accelerator dispatch), G.2d (GitOps apply mode), G.2e (ansible-role executor)
+- [ ] Extend `/dsp:scaffold` to remaining 4 artifact-types (consumer, kafka-streams-app, schema, cdc-pipeline)
+- [ ] `scaffolded-producer` executor inside `raw/repos/fsi-dsp/`
+- [ ] Promote `canon/industry/fsi/developer-sandbox/` CONTEXT-sourced override decisions to formal ADRs after first customer engagement
 
 ### Out of Scope
 
@@ -121,6 +123,9 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
+*Last updated: 2026-05-23 after v2.1 milestone (LinuxONE Accelerator Integration) shipped — 4 phases, 13 plans, 13/13 requirements validated; fsi-dsp PR #3 awaiting upstream merge*
+
+---
 *Last updated: 2026-05-23 — v2.1 (LinuxONE Accelerator Integration) scoped*
 
 ---

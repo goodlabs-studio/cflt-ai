@@ -4,7 +4,7 @@ milestone: v2.1
 milestone_name: — LinuxONE Accelerator Integration
 status: executing
 stopped_at: Completed 12-04-PLAN.md (Phase 12 close)
-last_updated: "2026-05-23T18:13:15.150Z"
+last_updated: "2026-05-23T18:18:01.382Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 4
