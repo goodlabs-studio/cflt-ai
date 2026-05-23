@@ -10,8 +10,8 @@
 
 ### Submodule Sync — `SUBM-*`
 
-- [ ] **SUBM-01**: User can run `git submodule update --remote raw/repos/fsi-dsp` and the local pointer advances to upstream `main` HEAD; no manual conflict resolution required.
-- [ ] **SUBM-02**: After the bump, `pytest tests/test_check_canon_parity.py tests/test_manifest.py` passes — the two pre-existing test failures from the v2.0 audit are resolved.
+- [x] **SUBM-01**: User can run `git submodule update --remote raw/repos/fsi-dsp` and the local pointer advances to upstream `main` HEAD; no manual conflict resolution required.
+- [x] **SUBM-02**: After the bump, `pytest tests/test_check_canon_parity.py tests/test_manifest.py` passes — the two pre-existing test failures from the v2.0 audit are resolved.
 - [ ] **SUBM-03**: A CI guard asserts the submodule tracks upstream `main` and is within an allowed drift window (e.g., ≤14 days behind HEAD); workflow fails on stale-submodule drift with a clear remediation message.
 
 ### Accelerator Artifact-Type — `MAN-*`

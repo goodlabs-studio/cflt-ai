@@ -65,7 +65,7 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
   3. `.github/workflows/submodule-drift.yml` (or equivalent) exists, runs on PR + push:main, and fails when the submodule is >14 days behind upstream `main` HEAD with a clear remediation message (`git submodule update --remote raw/repos/fsi-dsp && git add raw/repos/fsi-dsp && git commit`).
   4. Full repo test suite (`pytest tests/`) passes at the bumped submodule pointer — no regressions in any v1.0/v2.0 phase introduced by the submodule advance.
 **Plans:** 2 plans
-- [ ] 09-01-PLAN.md — Bump submodule + clear two v2.0-audit test failures (atomic commit)
+- [x] 09-01-PLAN.md — Bump submodule + clear two v2.0-audit test failures (atomic commit)
 - [ ] 09-02-PLAN.md — Stale-submodule CI guard (14-day drift window, mirrors H.3b)
 
 ### Phase 10: Accelerator artifact-type registration
