@@ -1,16 +1,30 @@
 #!/usr/bin/env python3
-"""Check parity between canon/base/defaults.yaml keys and MANIFEST.yaml terraform-module capabilities.
+"""Check parity between canon keys and MANIFEST.yaml capabilities (terraform-module + accelerator).
 
 Bidirectional drift detection:
-- MANIFEST has terraform-module capability with no corresponding canon config category -> drift (blocking)
-- Canon has config category with no corresponding terraform-module -> drift (warning only)
+- MANIFEST has terraform-module or accelerator capability with no corresponding canon
+  config key -> drift (blocking)
+- Canon has infrastructure config key with no corresponding terraform-module -> drift
+  (warning only)
 
-The mapping from terraform-module IDs to canon config keys:
-  module/topic  -> topic_design   (topics need topic_design canon config)
-  module/flink  -> flink_sql      (flink modules need flink_sql canon config)
+The mapping from capability IDs to canon config keys:
+  Terraform modules (top-level canon keys in canon/base/defaults.yaml):
+    module/topic  -> topic_design   (topics need topic_design canon config)
+    module/flink  -> flink_sql      (flink modules need flink_sql canon config)
 
-This mapping is intentionally explicit rather than heuristic — each new module
-requires a conscious decision about which canon config category governs it.
+  Accelerator layers (composite key <id>:<layer-name> -> dotted-path canon key in
+  canon/industry/fsi/overrides.yaml; Phase 11):
+    accelerator/confluent-on-linuxone:01-rbac              -> fsi.security.mds-rbac
+    accelerator/confluent-on-linuxone:02-tls               -> fsi.security.tls-fips
+    accelerator/confluent-on-linuxone:03-schema-governance -> fsi.schema.compatibility-full-transitive
+    accelerator/confluent-on-linuxone:04-audit             -> fsi.audit.events-retention
+    accelerator/confluent-on-linuxone:05-flink             -> fsi.flink.environment-mtls
+
+This mapping is intentionally explicit rather than heuristic — each new module or
+accelerator layer requires a conscious decision about which canon config key
+governs it. For accelerator entries, MODULE_TO_CANON_KEY mirrors the per-layer
+`canon_key` field on the upstream MANIFEST apply_sequence; drift between them
+produces a blocking [DRIFT-1] violation.
 
 Exit 0 = parity confirmed. Exit 1 = drift detected (blocks CI merge).
 """
@@ -24,17 +38,27 @@ import yaml
 # Match the pattern used by review-to-docx.py and act_gates.py
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# Explicit mapping: terraform-module ID -> canon defaults top-level key
-# This is the source of truth for parity enforcement. Update when adding new modules.
+# Explicit mapping: capability ID -> canon key.
+# Terraform-module entries (no ':' in key) map to top-level canon/base/defaults.yaml keys.
+# Accelerator-layer entries (composite '<id>:<layer-name>') map to dotted-path keys
+# in canon/industry/fsi/overrides.yaml. Source of truth for parity enforcement.
 MODULE_TO_CANON_KEY = {
     "module/topic": "topic_design",
     "module/flink": "flink_sql",
+    "accelerator/confluent-on-linuxone:01-rbac": "fsi.security.mds-rbac",
+    "accelerator/confluent-on-linuxone:02-tls": "fsi.security.tls-fips",
+    "accelerator/confluent-on-linuxone:03-schema-governance": "fsi.schema.compatibility-full-transitive",
+    "accelerator/confluent-on-linuxone:04-audit": "fsi.audit.events-retention",
+    "accelerator/confluent-on-linuxone:05-flink": "fsi.flink.environment-mtls",
 }
 
 # Canon keys that map to infrastructure modules (used for direction-2 warning check).
+# Only includes terraform-module canon keys (composite accelerator keys are walked
+# separately via apply_sequence; their reverse direction is enforced by the per-layer
+# canon_key field on the MANIFEST, not by the existence of a top-level canon key).
 # Keys NOT in this set are cross-cutting (security, producer, consumer, etc.) and
 # are exempt from "no module found" warnings because they apply across all artifacts.
-CANON_INFRA_KEYS = set(MODULE_TO_CANON_KEY.values())  # {"topic_design", "flink_sql"}
+CANON_INFRA_KEYS = {v for k, v in MODULE_TO_CANON_KEY.items() if ":" not in k}  # {"topic_design", "flink_sql"}
 
 
 def check_parity(manifest_path: Path, defaults_path: Path) -> List[str]:

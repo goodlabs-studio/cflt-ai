@@ -32,3 +32,23 @@ mainframe_integration:
   bridge_pattern: "IBM MQ Source Connector -> Kafka"
   compute: "IBM LinuxONE preferred for z/OS offload"
   linuxone_source: "fsi-dsp://adr/009"       # ADR-009: LinuxONE for z/OS Kafka offload
+
+# Phase 11: Canon keys for the LinuxONE accelerator's 5 kustomize layers.
+# Flat dotted-path keys (intentional — composite map in tools/check-canon-parity.py
+# uses literal string keys, not nested traversal). Source-of-truth ties each key
+# back to the upstream MANIFEST.yaml apply_sequence entry.
+fsi.security.mds-rbac:
+  _source: "fsi-dsp://accelerator/confluent-on-linuxone/01-rbac"
+  description: "MDS RBAC role bindings for Confluent Platform on LinuxONE"
+fsi.security.tls-fips:
+  _source: "fsi-dsp://accelerator/confluent-on-linuxone/02-tls"
+  description: "FIPS 140-2 mTLS configuration baseline for LinuxONE deployments"
+fsi.schema.compatibility-full-transitive:
+  _source: "fsi-dsp://accelerator/confluent-on-linuxone/03-schema-governance"
+  description: "FULL_TRANSITIVE compatibility mode for FSI critical-tier subjects"
+fsi.audit.events-retention:
+  _source: "fsi-dsp://accelerator/confluent-on-linuxone/04-audit"
+  description: "7-year audit-event retention (OFAC/AML regulatory)"
+fsi.flink.environment-mtls:
+  _source: "fsi-dsp://accelerator/confluent-on-linuxone/05-flink"
+  description: "mTLS-authenticated Flink environment for FSI workloads"

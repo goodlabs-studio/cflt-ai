@@ -174,14 +174,46 @@ class TestParityScript:
         assert MODULE_TO_CANON_KEY["module/topic"] == "topic_design"
         assert MODULE_TO_CANON_KEY["module/flink"] == "flink_sql"
 
+    def test_module_to_canon_key_contains_accelerator_layers(self):
+        """MODULE_TO_CANON_KEY includes all 5 accelerator/confluent-on-linuxone composite entries (Phase 11)."""
+        assert len(MODULE_TO_CANON_KEY) >= 7, (
+            f"Expected >= 7 entries (2 terraform-module + 5 accelerator layers), "
+            f"got {len(MODULE_TO_CANON_KEY)}"
+        )
+        assert MODULE_TO_CANON_KEY["accelerator/confluent-on-linuxone:01-rbac"] == "fsi.security.mds-rbac"
+        assert MODULE_TO_CANON_KEY["accelerator/confluent-on-linuxone:02-tls"] == "fsi.security.tls-fips"
+        assert MODULE_TO_CANON_KEY["accelerator/confluent-on-linuxone:03-schema-governance"] == "fsi.schema.compatibility-full-transitive"
+        assert MODULE_TO_CANON_KEY["accelerator/confluent-on-linuxone:04-audit"] == "fsi.audit.events-retention"
+        assert MODULE_TO_CANON_KEY["accelerator/confluent-on-linuxone:05-flink"] == "fsi.flink.environment-mtls"
+
+    def test_fsi_overrides_contains_accelerator_canon_keys(self):
+        """canon/industry/fsi/overrides.yaml contains the 5 dotted-path keys consumed by accelerator parity."""
+        overrides_path = PROJECT_ROOT / "canon" / "industry" / "fsi" / "overrides.yaml"
+        overrides_data = yaml.safe_load(overrides_path.read_text())
+        for key in [
+            "fsi.security.mds-rbac",
+            "fsi.security.tls-fips",
+            "fsi.schema.compatibility-full-transitive",
+            "fsi.audit.events-retention",
+            "fsi.flink.environment-mtls",
+        ]:
+            assert key in overrides_data, (
+                f"Expected '{key}' as a top-level key in canon/industry/fsi/overrides.yaml, "
+                f"got: {list(overrides_data.keys())}"
+            )
+
     def test_module_to_canon_key_values_present_in_defaults(self):
-        """Every value in MODULE_TO_CANON_KEY exists as a top-level key in defaults.yaml."""
+        """Every value in MODULE_TO_CANON_KEY exists as a top-level key in either
+        canon/base/defaults.yaml (terraform-module canon keys) or
+        canon/industry/fsi/overrides.yaml (accelerator dotted-path keys; Phase 11)."""
         defaults_path = PROJECT_ROOT / "canon" / "base" / "defaults.yaml"
+        overrides_path = PROJECT_ROOT / "canon" / "industry" / "fsi" / "overrides.yaml"
         defaults_data = yaml.safe_load(defaults_path.read_text())
-        canon_keys = set(defaults_data.keys())
+        overrides_data = yaml.safe_load(overrides_path.read_text()) or {}
+        canon_keys = set(defaults_data.keys()) | set(overrides_data.keys())
 
         for module_id, canon_key in MODULE_TO_CANON_KEY.items():
             assert canon_key in canon_keys, (
                 f"MODULE_TO_CANON_KEY['{module_id}'] = '{canon_key}' "
-                f"but '{canon_key}' is not in defaults.yaml"
+                f"but '{canon_key}' is not in defaults.yaml or fsi/overrides.yaml"
             )
