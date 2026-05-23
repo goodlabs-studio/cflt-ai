@@ -127,6 +127,66 @@ def check_vendor_drift(article_path: Path, fm: dict, vendor_pins) -> list:
     return []
 
 
+def check_gap_drift(repo_root: Path, vendor_pins) -> dict:
+    """Surface drift between declared trip-wires and upstream KNOWN-GAPS.md.
+
+    Per H.1 D-09 passive posture: findings are surfaced but lint exits 0.
+    Returns dict with three keys: gap_drift, missing_gap, malformed_gap (each a list of strings).
+    Silently returns empty dict if 'linuxone-accelerator-gaps' key absent (back-compat).
+
+    Findings emitted:
+    - DRIFT-GAP {id}: declared={declared!r}, upstream={upstream!r}
+    - MISSING-GAP {id}: no matching row in upstream KNOWN-GAPS.md
+    - MALFORMED-GAP {id}: missing field(s) {fields}
+
+    Status comparison is case-insensitive and whitespace-stripped.
+    """
+    findings = {"gap_drift": [], "missing_gap": [], "malformed_gap": []}
+    if vendor_pins is None:
+        return findings
+    gaps_entry = vendor_pins.get("linuxone-accelerator-gaps")
+    if not gaps_entry:
+        return findings  # back-compat: silent skip when key absent
+
+    known_gaps_path = repo_root / "raw/repos/fsi-dsp/accelerators/confluent-on-linuxone/KNOWN-GAPS.md"
+    if not known_gaps_path.exists():
+        return findings  # submodule not checked out — passive skip
+    upstream_content = known_gaps_path.read_text(errors="replace")
+
+    required_fields = {"id", "title", "status", "workaround", "fsi_impact", "source", "source_id"}
+    for tw in gaps_entry.get("trip_wires", []):
+        missing = required_fields - set(tw.keys())
+        if missing:
+            findings["malformed_gap"].append(
+                f"MALFORMED-GAP {tw.get('id', '<no-id>')}: missing field(s) {sorted(missing)}"
+            )
+            continue
+
+        gap_id = tw["id"]
+        declared_status = str(tw["status"]).strip().lower()
+
+        # Match the table row: | G-NN | <title> | <impact> | <workaround> | <STATUS> |
+        # Anchor on the trailing pipe; capture the final pipe-delimited cell.
+        row_re = re.compile(
+            rf"^\|\s*{re.escape(gap_id)}\s*\|.*\|\s*([^|]+?)\s*\|\s*$",
+            re.MULTILINE,
+        )
+        match = row_re.search(upstream_content)
+        if not match:
+            findings["missing_gap"].append(
+                f"MISSING-GAP {gap_id}: no matching row in upstream KNOWN-GAPS.md"
+            )
+            continue
+
+        upstream_status_raw = match.group(1).strip()
+        upstream_status = upstream_status_raw.lower()
+        if declared_status != upstream_status:
+            findings["gap_drift"].append(
+                f"DRIFT-GAP {gap_id}: declared={tw['status']!r}, upstream={upstream_status_raw!r}"
+            )
+    return findings
+
+
 def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
     wiki = root / "wiki"
     findings = {
@@ -140,6 +200,9 @@ def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
         "drift": [],
         "malformed_source": [],
         "unknown_vendor": [],
+        "gap_drift": [],
+        "missing_gap": [],
+        "malformed_gap": [],
     }
     vendor_pins = load_vendor_pins(root)
 
@@ -211,6 +274,12 @@ def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
                 if rel_wiki not in index_content:
                     findings["orphans"].append(str(md.relative_to(root)))
 
+        # 12-02: KNOWN-GAPS trip-wire drift (passive surface, non-fatal per H.1 D-09)
+        gap_findings = check_gap_drift(root, vendor_pins)
+        findings["gap_drift"].extend(gap_findings["gap_drift"])
+        findings["missing_gap"].extend(gap_findings["missing_gap"])
+        findings["malformed_gap"].extend(gap_findings["malformed_gap"])
+
     return findings
 
 
@@ -243,6 +312,9 @@ def main():
         "drift": "Vendor-source DRIFT (article SHA doesn't match tools/vendor-sources.json pin)",
         "malformed_source": "MALFORMED source field (vendor@<sha> shape required)",
         "unknown_vendor": "UNKNOWN VENDOR (source: references a vendor not pinned in vendor-sources.json)",
+        "gap_drift": "KNOWN-GAPS DRIFT (declared trip-wire status doesn't match upstream KNOWN-GAPS.md)",
+        "missing_gap": "MISSING-GAP (trip-wire ID has no matching row in upstream KNOWN-GAPS.md — gap removed?)",
+        "malformed_gap": "MALFORMED-GAP (trip-wire JSON missing required field)",
     }
     for key, items in findings.items():
         if items:

@@ -18,5 +18,130 @@
     "kind": "claude-plugin",
     "license": "Apache-2.0",
     "drift_check": "tools/check_streaming_skills_drift.py"
+  },
+  "linuxone-accelerator-gaps": {
+    "upstream": "https://github.com/goodlabs-studio/fsi-dsp",
+    "vendored_path": "raw/repos/fsi-dsp/accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+    "ingested_at": "2026-05-23",
+    "kind": "gap-register",
+    "trip_wires": [
+      {
+        "id": "G-01",
+        "title": "Fetch-by-SHA requires network access at activation",
+        "status": "Open",
+        "workaround": "Pre-fetch + artifact-cache OR mirror upstream OR OCP egress NetworkPolicy allowing github.com",
+        "fsi_impact": "Air-gapped FSI environments not directly supported — operator must mitigate",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-02",
+        "title": "FIPS only effective on FIPS-at-install OCP cluster",
+        "status": "Open",
+        "workaround": "OCP must be installed with fips: true in install-config.yaml; post-install FIPS not supported by Red Hat",
+        "fsi_impact": "Silent FSI compliance failure if spec.tls.fips.enabled set on non-FIPS OCP — verify before applying layer 02",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-03",
+        "title": "No native Dynatrace Kafka Connector",
+        "status": "Workaround in place",
+        "workaround": "HTTP Sink connector (confluentinc/kafka-connect-http) POSTing to Dynatrace generic log ingest API v2; see layers/04-audit/connect-cr.yaml",
+        "fsi_impact": "DT log processing pipelines must parse Confluent audit event schema manually (no first-party connector)",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-04",
+        "title": "Control Center next-gen s390x image availability unverified",
+        "status": "Needs verification",
+        "workaround": "Use Control Center classic (included in CP 8.2.0 s390x images) until next-gen image is verified via docker manifest inspect",
+        "fsi_impact": "FSI operators may need to fall back to C3 classic UI until verification completes",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-05",
+        "title": "SR bootstrap Job base image must be s390x",
+        "status": "Workaround in place",
+        "workaround": "Use registry.access.redhat.com/ubi9/ubi-minimal:latest — UBI9 has s390x multi-arch manifests; verify with docker manifest inspect",
+        "fsi_impact": "Air-gapped clusters need a verified s390x base image mirror",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-06",
+        "title": "x86 node-agent sidecars (Splunk/DT) have QEMU overhead",
+        "status": "Mitigated by design",
+        "workaround": "Route audit events via Kafka Connect (Connect-based SIEM shipping) instead of node-agent sidecars; layers/04-audit/connect-cr.yaml implements this",
+        "fsi_impact": "2-5x CPU penalty avoided by design — do not add x86 sidecars to CP pods",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-07",
+        "title": "Flox manifest.lock stub must be regenerated",
+        "status": "Open",
+        "workaround": "On a machine with Flox installed, run flox activate in accelerators/confluent-on-linuxone/ to generate a real lock file; commit the result",
+        "fsi_impact": "First-run developer experience requires manual lock-file generation; not blocking but breaks zero-friction onboarding",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-08",
+        "title": "Custom s390x Connect image required",
+        "status": "Open",
+        "workaround": "docker buildx build --platform linux/s390x with Splunk Sink + HTTP Sink JARs pre-installed; base = confluentinc/confluent-kafka-connect:8.2.0",
+        "fsi_impact": "FSI operator must own a private registry for s390x Connect image; cannot use upstream confluentinc registry directly",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-09",
+        "title": "Cluster Linking schema sync (CP 8.2+) needs verification",
+        "status": "Needs verification",
+        "workaround": "Test schema sync in a staging environment; fall back to manual SR migration tool if needed; see MIGRATION.md §2.4",
+        "fsi_impact": "Schema migration during x86→LinuxONE cutover may require manual SR migration tool until sync feature validated",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-10",
+        "title": "FKO + CMF are parallel Helm operators outside the kustomize build",
+        "status": "Mitigated by design",
+        "workaround": "Install via RUNBOOK Step 1b: ansible-playbook ansible/playbooks/flink_operators.yml (readiness-gated); --check mode for audit-only",
+        "fsi_impact": "kustomize build | oc apply is no longer self-sufficient — operators must be installed first or FlinkApplication CRs are rejected",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-11",
+        "title": "CFK 3.2.0+ on s390x officially supports only Flink Applications",
+        "status": "Informational",
+        "workaround": "Layer 05 (Flink) is the officially supported s390x CFK use case; layers 01-04 are run-at-your-own-risk per Confluent's statement",
+        "fsi_impact": "FSI operators must understand support boundary — layers 01-04 (Kafka, SR, Connect, C3) are not officially supported by Confluent on s390x in CFK 3.2.x",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-12",
+        "title": "Custom s390x SQL-runner image required before FlinkApplications start",
+        "status": "Open",
+        "workaround": "docker buildx build --platform linux/s390x per layers/05-flink/sql-runner/README.md; replace all <PLACEHOLDER_CP_FLINK_SQL_RUNNER_IMAGE> references",
+        "fsi_impact": "Pods fail image pull until SQL-runner image is built and pushed to FSI's private registry; layer 05 dead-letter without it",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      },
+      {
+        "id": "G-13",
+        "title": "Flink checkpoint state encryption — cluster-dependent",
+        "status": "Open",
+        "workaround": "Use an OCP StorageClass with encryption: true OR S3-compatible endpoint with SSE-KMS; replace placeholder in layers/05-flink/flink-environment.yaml",
+        "fsi_impact": "Regulatory finding under PCI-DSS 3.4 + GLBA if checkpoints unencrypted — sensitive in-flight data (transaction amounts, account numbers) at risk",
+        "source": "accelerators/confluent-on-linuxone/KNOWN-GAPS.md",
+        "source_id": "fsi-dsp://accelerator/confluent-on-linuxone"
+      }
+    ]
   }
 }
