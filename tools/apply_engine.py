@@ -355,8 +355,12 @@ class ExecutionResult:
       - "skipped"  — artifact type isn't supported by any executor in this
                      version (e.g. scenario/* in G.1); equivalent to the
                      historical "deferred-to-mcp-runtime" stub
-      - "refused"  — RESERVED for Plan 11-04 (profile gating);
-                     not produced in 11-02.
+      - "refused"  — profile gating denied the operation BEFORE any execution
+                     attempt (Phase 11.4 — accelerator + read-only profile).
+                     Distinct from "skipped" (no executor exists for this
+                     artifact type) and "failure" (executor ran but errored).
+                     Emits exactly one ACTA-04 entry with
+                     execution_result="refused" and no layer_id.
 
     `failed_layer` is populated only by the accelerator executor when an
     apply_sequence layer aborts the walk (kustomize / oc dry-run / oc apply

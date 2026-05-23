@@ -1,6 +1,6 @@
 {
   "name": "engineer",
-  "description": "Plan + apply standard non-destructive modules (topics, schemas, RBAC, Flink) and Confluent Cloud starter-kit scenarios that compose those modules with DR cluster-linking.",
+  "description": "Plan + apply standard non-destructive modules (topics, schemas, RBAC, Flink), Confluent Cloud starter-kit scenarios with DR cluster-linking, and FSI-hardened accelerators (LinuxONE).",
   "family": "operator",
   "allowed_operations": [
     "module/topic",
@@ -10,6 +10,7 @@
     "role/cp_connect",
     "scenario/cc-aws",
     "scenario/cc-azure",
-    "scenario/cc-gcp"
+    "scenario/cc-gcp",
+    "accelerator/confluent-on-linuxone"
   ]
 }

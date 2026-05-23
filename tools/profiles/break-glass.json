@@ -1,6 +1,6 @@
 {
   "name": "break-glass",
-  "description": "All operations including destructive (DR failover, cluster reconfig, deletion).",
+  "description": "All operations including destructive (DR failover, cluster reconfig, deletion, FSI-hardened accelerator dispatch). Two-step confirmation required.",
   "family": "operator",
   "allowed_operations": [
     "module/topic",
@@ -11,6 +11,7 @@
     "script/fsi-dr",
     "scenario/cc-aws",
     "scenario/cc-azure",
-    "scenario/cc-gcp"
+    "scenario/cc-gcp",
+    "accelerator/confluent-on-linuxone"
   ]
 }
