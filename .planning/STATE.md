@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: — LinuxONE Accelerator Integration
-status: executing
-stopped_at: Completed 09-01-PLAN.md — fsi-dsp submodule bumped to upstream main 5a86fd2; v2.0-audit test debt cleared
-last_updated: "2026-05-23T15:22:30.325Z"
+status: verifying
+stopped_at: Completed 09-02-PLAN.md — submodule drift CI gate landed (14d window, H.3b pattern, 3 commits)
+last_updated: "2026-05-23T15:29:59.753Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-23)
 
 Phase: 09 (submodule-sync-canon-parity-unblock) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-05-23
 
 Progress: [░░░░░░░░░░] 0%  (0/4 phases complete)
@@ -110,6 +110,7 @@ Tag: `v1.0`
 | Phase H.3b-version-pin-ci-drift-gate P01 | 10m | 5 tasks | 4 files |
 | Phase H.3c-dsp-scaffold-wrapper P01 | 6m | 6 tasks | 6 files |
 | Phase 09-submodule-sync-canon-parity-unblock P01 | 4min | 3 tasks | 2 files |
+| Phase 09-submodule-sync-canon-parity-unblock P02 | 4min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -230,6 +231,10 @@ Recent decisions affecting current work:
 - [Phase 09-submodule-sync-canon-parity-unblock]: No tools/check-canon-parity.py edit needed — DRIFT-1 violation resolved purely by submodule bump (module/cc-cluster-basic never reached upstream main)
 - [Phase 09-submodule-sync-canon-parity-unblock]: Explicit fetch+checkout origin/main over git submodule update --remote (.gitmodules has no branch= field, --remote would no-op or chase wrong branch)
 - [Phase 09-submodule-sync-canon-parity-unblock]: Pre-existing test_wiki_citations failure (6 observability articles use raw paths in sources:) deferred — confirmed not caused by Phase 09 via git stash repro on pre-bump tree; logged to deferred-items.md
+- [Phase 09-submodule-sync-canon-parity-unblock]: Mirror H.3b shape exactly (not G.2c) for submodule drift gate: pure Python + git ls-remote, no Node.js, no API auth
+- [Phase 09-submodule-sync-canon-parity-unblock]: Comparison axis: SHA-match early-return → timestamp-delta fallback; pure SHA equality (H.3b's check) would falsely report drift on any upstream advance within window
+- [Phase 09-submodule-sync-canon-parity-unblock]: 14-day drift window (DRIFT_WINDOW_DAYS=14) — absorbs normal review-and-merge cycle on upstream main; narrow enough to catch silent rot before downstream v2.1 phases regress
+- [Phase 09-submodule-sync-canon-parity-unblock]: Fail-closed on transient errors (EXIT_TRANSIENT_ERR=3) — ls-remote failure / timestamp-unresolvable never treated as 'no drift'; auto-fetch deliberately avoided (would hide drift behind side effect)
 
 ### Pending Todos
 
@@ -241,6 +246,6 @@ None yet — note that 10 may require an upstream fsi-dsp PR merge before 11 can
 
 ## Session Continuity
 
-Last session: 2026-05-23T15:22:17.160Z
-Stopped at: Completed 09-01-PLAN.md — fsi-dsp submodule bumped to upstream main 5a86fd2; v2.0-audit test debt cleared
+Last session: 2026-05-23T15:29:47.722Z
+Stopped at: Completed 09-02-PLAN.md — submodule drift CI gate landed (14d window, H.3b pattern, 3 commits)
 Resume file: None

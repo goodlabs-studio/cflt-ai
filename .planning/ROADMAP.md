@@ -66,7 +66,7 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
   4. Full repo test suite (`pytest tests/`) passes at the bumped submodule pointer — no regressions in any v1.0/v2.0 phase introduced by the submodule advance.
 **Plans:** 2 plans
 - [x] 09-01-PLAN.md — Bump submodule + clear two v2.0-audit test failures (atomic commit)
-- [ ] 09-02-PLAN.md — Stale-submodule CI guard (14-day drift window, mirrors H.3b)
+- [x] 09-02-PLAN.md — Stale-submodule CI guard (14-day drift window, mirrors H.3b)
 
 ### Phase 10: Accelerator artifact-type registration
 **Goal:** Land `type: accelerator` as a first-class MANIFEST.yaml artifact type in upstream fsi-dsp (separate PR; mirrors the 999.2 cc-cluster-basic upstream-PR pattern) and extend cflt-ai's manifest schema validator to accept the new type without regressing on existing types. After 10, the type contract exists end-to-end and downstream consumers in 11 can wire to a stable artifact shape.
