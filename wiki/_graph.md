@@ -604,3 +604,58 @@ patterns/flink-event-routing → concepts/flink-checkpointing : two-phase commit
 patterns/flink-runtime-models → patterns/flink-event-routing : routing pattern that runs stateless on every runtime
 patterns/cdc-to-tableflow-flink-decode → patterns/flink-event-routing : framework-level pattern this CDC decode specializes
 patterns/connect-deployment-models → patterns/flink-event-routing : routing belongs in Flink, not in Connect SMTs
+
+## Phase 12 — LinuxONE Accelerator ingest (2026-05-23)
+
+# Outbound — patterns/linuxone-on-cfk-reference-architecture
+patterns/linuxone-on-cfk-reference-architecture → concepts/fsi-data-streaming-platform : platform context the accelerator targets
+patterns/linuxone-on-cfk-reference-architecture → concepts/linuxone-kafka-integration : LinuxONE Kafka offload context
+patterns/linuxone-on-cfk-reference-architecture → concepts/linuxone-platform-foundations : s390x platform foundations
+patterns/linuxone-on-cfk-reference-architecture → patterns/auditor-readonly-rbac-payload-isolation : layer 01 canonical RBAC pattern
+patterns/linuxone-on-cfk-reference-architecture → patterns/flink-on-cfk-fsi-example-jobs : layer 05 canonical Flink pattern
+patterns/linuxone-on-cfk-reference-architecture → concepts/fips-at-install-ocp-requirement : layer 02 OCP install dependency
+patterns/linuxone-on-cfk-reference-architecture → concepts/s390x-custom-image-build-pipeline : layer 04 / layer 05 image build pipeline
+patterns/linuxone-on-cfk-reference-architecture → synthesis/adr-index : ADR-009 LinuxONE deployment guidance
+
+# Outbound — patterns/x86-to-linuxone-cluster-linking-migration
+patterns/x86-to-linuxone-cluster-linking-migration → concepts/cluster-linking-topology : CL mechanism underlying the migration
+patterns/x86-to-linuxone-cluster-linking-migration → patterns/dr-cluster-linking : DR pattern using same CL primitive
+patterns/x86-to-linuxone-cluster-linking-migration → patterns/dr-mirrormaker2 : alternative replication backend (ADR-005 prefers CL)
+patterns/x86-to-linuxone-cluster-linking-migration → patterns/linuxone-on-cfk-reference-architecture : destination architecture
+patterns/x86-to-linuxone-cluster-linking-migration → synthesis/adr-index : ADR-005 CL-over-MRC decision
+
+# Outbound — concepts/fips-at-install-ocp-requirement
+concepts/fips-at-install-ocp-requirement → patterns/linuxone-on-cfk-reference-architecture : layer 02 TLS+FIPS context
+concepts/fips-at-install-ocp-requirement → concepts/fsi-compliance : PCI-DSS / FFIEC encryption-in-transit context
+concepts/fips-at-install-ocp-requirement → patterns/auditor-readonly-rbac-payload-isolation : layer 01 RBAC pattern that mTLS principals into
+
+# Outbound — patterns/auditor-readonly-rbac-payload-isolation
+patterns/auditor-readonly-rbac-payload-isolation → patterns/fsi-canon-overlay-for-confluent-skills : FSI RBAC overlay on upstream skills
+patterns/auditor-readonly-rbac-payload-isolation → concepts/fsi-compliance : SOX/FFIEC/PCI-DSS least-privilege
+patterns/auditor-readonly-rbac-payload-isolation → patterns/linuxone-on-cfk-reference-architecture : layer 01 RBAC source
+patterns/auditor-readonly-rbac-payload-isolation → patterns/topic-naming : PREFIXED bindings × domain naming convention
+
+# Outbound — concepts/s390x-custom-image-build-pipeline
+concepts/s390x-custom-image-build-pipeline → concepts/linuxone-kafka-integration : LinuxONE Kafka context
+concepts/s390x-custom-image-build-pipeline → concepts/linuxone-platform-foundations : s390x platform foundations
+concepts/s390x-custom-image-build-pipeline → patterns/linuxone-on-cfk-reference-architecture : layer 04 Connect + layer 05 SQL-runner image consumers
+concepts/s390x-custom-image-build-pipeline → patterns/flink-on-cfk-fsi-example-jobs : layer 05 SQL-runner image consumer
+
+# Outbound — patterns/flink-on-cfk-fsi-example-jobs
+patterns/flink-on-cfk-fsi-example-jobs → patterns/flink-runtime-models : CMF is one of three Flink runtime options
+patterns/flink-on-cfk-fsi-example-jobs → concepts/flink-checkpointing : checkpoint encryption context (G-13)
+patterns/flink-on-cfk-fsi-example-jobs → concepts/linuxone-platform-foundations : s390x foundations
+patterns/flink-on-cfk-fsi-example-jobs → patterns/linuxone-on-cfk-reference-architecture : layer 05 in the 5-layer composition
+patterns/flink-on-cfk-fsi-example-jobs → concepts/s390x-custom-image-build-pipeline : SQL-runner image build dependency
+patterns/flink-on-cfk-fsi-example-jobs → patterns/auditor-readonly-rbac-payload-isolation : audit-trail consumer of Flink access events
+
+# Inbound (existing wiki → new Phase 12 articles) — ≥1 inbound per H.1 STATE rule
+concepts/fsi-data-streaming-platform → patterns/linuxone-on-cfk-reference-architecture : LinuxONE deployment model
+concepts/linuxone-kafka-integration → patterns/linuxone-on-cfk-reference-architecture : CFK-on-OCP-on-LinuxONE pattern instance
+concepts/linuxone-platform-foundations → concepts/s390x-custom-image-build-pipeline : image build for s390x compute
+patterns/dr-cluster-linking → patterns/x86-to-linuxone-cluster-linking-migration : migration variant of CL
+patterns/fsi-canon-overlay-for-confluent-skills → patterns/auditor-readonly-rbac-payload-isolation : RBAC payload-isolation rule
+patterns/flink-runtime-models → patterns/flink-on-cfk-fsi-example-jobs : CMF FSI examples
+patterns/linuxone-on-cfk-reference-architecture → concepts/fips-at-install-ocp-requirement : layer 02 inbound (parent → trip-wire concept)
+concepts/cluster-linking-topology → patterns/x86-to-linuxone-cluster-linking-migration : migration use case of CL topology
+concepts/fsi-compliance → patterns/auditor-readonly-rbac-payload-isolation : canonical FSI RBAC payload-isolation pattern
