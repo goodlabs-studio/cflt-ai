@@ -628,3 +628,175 @@ class TestEmitActivityLogLayerIdBackCompat:
         layer_idx = content.index("**Layer:**")
         plan_idx = content.index("**Plan:**")
         assert artifact_idx < layer_idx < plan_idx, content
+
+
+# ---------------------------------------------------------------------------
+# Phase 11.4 — accelerator profile gating
+# ---------------------------------------------------------------------------
+
+
+class TestAcceleratorProfileGating:
+    """Phase 11 Plan 11-04 — profile gating for accelerator dispatch.
+
+    18-scenario matrix (5 layers x 3 profiles + 3-profile negative + 2 standalone)
+    collapsed to 6 parameterized test methods per CONTEXT.md (`<=10 actual test
+    methods`). Reuses the module-level accelerator_artifact / fake_binaries /
+    apply_args fixtures placed by Plan 11-02.
+    """
+
+    LAYERS = ["01-rbac", "02-tls", "03-schema-governance", "04-audit", "05-flink"]
+    ACCEL_ID = "accelerator/confluent-on-linuxone"
+
+    @pytest.mark.parametrize("layer", LAYERS)
+    def test_read_only_refuses_every_layer(
+        self, accelerator_artifact, apply_args, layer
+    ):
+        """Read-only profile refuses ALL 5 layers regardless of layer_filter.
+
+        Asserts (a) status=='refused', (b) zero subprocess.run calls
+        (no kustomize / oc invocation), (c) exactly one ACTA-04 entry with
+        execution_result='refused' and NO layer_id field.
+        """
+        from tools.apply_engine import execute_accelerator
+        with patch("tools.apply_engine.subprocess.run") as mock_run, \
+             patch("tools.apply_engine.emit_activity_log_apply") as mock_emit:
+            result = execute_accelerator(
+                accelerator_artifact,
+                {**apply_args, "profile_name": "read-only"},
+                f"p-ro-{layer}",
+                profile_name="read-only",
+                layer_filter=layer,
+            )
+        assert result.status == "refused", (
+            f"layer={layer} should be refused for read-only; got {result.status}"
+        )
+        assert mock_run.call_count == 0, (
+            "subprocess.run must NOT execute when refused (pre-flight gate)"
+        )
+        assert mock_emit.call_count == 1, (
+            f"refused dispatch must emit exactly 1 ACTA-04 entry; got {mock_emit.call_count}"
+        )
+        call_kwargs = mock_emit.call_args.kwargs
+        assert call_kwargs["execution_result"] == "refused"
+        # Single blocked-by-profile entry must NOT include layer_id (no layer iterated)
+        assert call_kwargs.get("layer_id") is None, (
+            "refused entry must NOT include layer_id (no layer was iterated)"
+        )
+        assert "read-only" in result.stderr_tail
+        assert self.ACCEL_ID in result.stderr_tail
+
+    @pytest.mark.parametrize("layer", LAYERS)
+    def test_engineer_permits_every_layer(
+        self, accelerator_artifact, apply_args, fake_binaries, layer
+    ):
+        """Engineer profile permits ALL 5 layers — pre-flight gate passes through
+        and execute_accelerator() proceeds to walk the (filtered) apply_sequence."""
+        from tools.apply_engine import execute_accelerator
+        ok = MagicMock(returncode=0, stdout="kind: Namespace\n", stderr="")
+        with patch("tools.apply_engine.subprocess.run", return_value=ok), \
+             patch("tools.apply_engine.emit_activity_log_apply") as mock_emit:
+            result = execute_accelerator(
+                accelerator_artifact,
+                {**apply_args, "profile_name": "engineer"},
+                f"p-eng-{layer}",
+                profile_name="engineer",
+                layer_filter=layer,
+            )
+        assert result.status == "success", (
+            f"layer={layer} should succeed for engineer; got {result.status}: "
+            f"{result.stderr_tail}"
+        )
+        # One ACTA-04 entry per layer iterated; with layer_filter, exactly 1
+        assert mock_emit.call_count == 1
+        assert mock_emit.call_args.kwargs["layer_id"] == layer
+
+    @pytest.mark.parametrize("layer", LAYERS)
+    def test_break_glass_permits_every_layer(
+        self, accelerator_artifact, apply_args, fake_binaries, layer
+    ):
+        """Break-glass profile permits at the profile level. The two-step
+        confirmation UI lives in /dsp:apply Step 6c (CONFIRM BREAK-GLASS) — out
+        of scope for execute_accelerator(). Separation of concerns: the executor
+        trusts the caller has captured break-glass confirmation upstream."""
+        from tools.apply_engine import execute_accelerator
+        ok = MagicMock(returncode=0, stdout="kind: Namespace\n", stderr="")
+        with patch("tools.apply_engine.subprocess.run", return_value=ok), \
+             patch("tools.apply_engine.emit_activity_log_apply"):
+            result = execute_accelerator(
+                accelerator_artifact,
+                {**apply_args, "profile_name": "break-glass"},
+                f"p-bg-{layer}",
+                profile_name="break-glass",
+                layer_filter=layer,
+            )
+        assert result.status == "success", (
+            f"layer={layer} should succeed for break-glass; got {result.status}: "
+            f"{result.stderr_tail}"
+        )
+
+    @pytest.mark.parametrize("profile", ["read-only", "engineer", "break-glass"])
+    def test_unknown_accelerator_id_refused_by_every_profile(
+        self, apply_args, profile
+    ):
+        """Negative-space (fail-closed): unknown accelerator IDs are denied by
+        ALL 3 profiles. None of read-only/engineer/break-glass has
+        accelerator/does-not-exist in allowed_operations."""
+        from tools.apply_engine import execute_accelerator
+        unknown = {
+            "id": "accelerator/does-not-exist",
+            "type": "accelerator",
+            "apply_sequence": [{"layer": "x", "path": "p", "canon_key": "k"}],
+        }
+        with patch("tools.apply_engine.subprocess.run") as mock_run, \
+             patch("tools.apply_engine.emit_activity_log_apply"):
+            result = execute_accelerator(
+                unknown,
+                {**apply_args, "profile_name": profile},
+                "p-neg",
+                profile_name=profile,
+            )
+        assert result.status == "refused", (
+            f"unknown accelerator MUST be refused by profile {profile}"
+        )
+        assert mock_run.call_count == 0
+        assert "accelerator/does-not-exist" in result.stderr_tail
+
+    def test_profile_name_none_skips_preflight_gate(
+        self, accelerator_artifact, apply_args, fake_binaries
+    ):
+        """Back-compat: profile_name=None bypasses the gate entirely. Plan 11-02
+        tests construct execute_accelerator() calls without profile_name and
+        must continue to pass unchanged after 11-04 adds the parameter."""
+        from tools.apply_engine import execute_accelerator
+        ok = MagicMock(returncode=0, stdout="kind: Namespace\n", stderr="")
+        with patch("tools.apply_engine.subprocess.run", return_value=ok), \
+             patch("tools.apply_engine.emit_activity_log_apply"):
+            result = execute_accelerator(
+                accelerator_artifact,
+                apply_args,
+                "p-nogate",
+                profile_name=None,
+            )
+        assert result.status == "success", (
+            "profile_name=None must skip gate (back-compat with 11-02 tests)"
+        )
+
+    def test_unknown_profile_name_refused(
+        self, accelerator_artifact, apply_args
+    ):
+        """Defensive: an unknown profile_name string returns status='refused'
+        with the offending name surfaced in stderr_tail. Does NOT raise
+        (ValueError from load_profile is caught and converted to refused)."""
+        from tools.apply_engine import execute_accelerator
+        with patch("tools.apply_engine.subprocess.run") as mock_run, \
+             patch("tools.apply_engine.emit_activity_log_apply"):
+            result = execute_accelerator(
+                accelerator_artifact,
+                {**apply_args, "profile_name": "nonexistent-profile"},
+                "p-unk",
+                profile_name="nonexistent-profile",
+            )
+        assert result.status == "refused"
+        assert "nonexistent-profile" in result.stderr_tail
+        assert mock_run.call_count == 0
+
