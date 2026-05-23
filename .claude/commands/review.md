@@ -129,6 +129,24 @@ For claims where wiki coverage is absent or where the claim is particularly impo
 - Use `context7` MCP for architecture patterns and best practices
 - Record the validation result (Confirmed / Corrected / Unverifiable) for each claim checked
 
+#### Step 4.1: Auditor-readonly payload-isolation claim flag (WIKI-03)
+
+If a claim or paraphrase matches ANY of the following patterns (case-insensitive,
+whitespace-normalized), flag it as `Corrected` with the canonical correction text below:
+
+**Trigger patterns:**
+1. "DeveloperRead on the cluster is sufficient for auditor isolation" (and paraphrases: "cluster-scoped DeveloperRead suffices", "cluster-wide read-only role for auditors")
+2. "auditor binding can be at cluster scope" (and paraphrases: "auditor role at cluster level", "cluster-bound auditor role")
+3. "any read-only role can be used for audit access" (and paraphrases: "generic read role for compliance", "DeveloperRead is fine for auditors")
+
+**Canonical correction text (use verbatim):**
+
+> DeveloperRead is consume-granting at the topic-prefix scope it's bound to; auditor isolation requires topic-scoped binding to `confluent-audit-log-events` + SR subjects ONLY, explicitly NOT to `payments.*` business topics (per layer-01 RBAC pattern). See `wiki/patterns/auditor-readonly-rbac-payload-isolation.md`.
+
+This rule grounds the WIKI-03 requirement: `/review` MUST flag any cluster-scoped DeveloperRead claim
+for auditor roles as a payload-isolation violation, with the topic-scoped binding workaround as the
+correction.
+
 ### Step 5: Check canon compliance
 
 Compare the document's recommendations against the active canon config:
