@@ -23,8 +23,11 @@ def manifest_ids(manifest):
 class TestManifestStructure:
     """CNTR-01: MANIFEST.yaml has correct schema."""
 
-    def test_version_is_1_0_0(self, manifest):
-        assert manifest["version"] == "1.0.0"
+    def test_version_is_1_1_0(self, manifest):
+        # Bumped to 1.1.0 in Phase 9 — upstream fsi-dsp main introduced
+        # the confluent-on-linuxone accelerator + reference/*-low-latency-azure
+        # additions; MANIFEST is a non-breaking 1.0.0 -> 1.1.0 minor bump.
+        assert manifest["version"] == "1.1.0"
 
     def test_schema_is_v1(self, manifest):
         assert manifest["schema"] == "fsi-dsp/manifest/v1"
