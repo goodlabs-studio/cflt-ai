@@ -4,8 +4,7 @@ tags: [observability cfk kubernetes prometheus grafana jmx helm servicemonitor c
 sources:
   - https://docs.confluent.io/operator/current/co-monitor-cp.html
   - https://docs.confluent.io/operator/current/co-deploy-cfk.html
-  - raw/repos/fsi-dsp/observability/grafana/jmx-exporter-config.yaml
-  - raw/repos/fsi-dsp/observability/grafana/README.md
+  - fsi-dsp://observability/grafana
   - https://github.com/confluentinc/jmx-monitoring-stacks/tree/main/jmxexporter-prometheus-grafana/cfk
 related:
   - patterns/aks-kafka-tuning

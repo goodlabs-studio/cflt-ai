@@ -2,7 +2,7 @@
 title: Observability Metrics Mapping — CC Cloud, JMX, and Six Providers
 tags: [observability metrics-api jmx prometheus dynatrace splunk datadog newrelic instana cross-provider fsi]
 sources:
-  - raw/repos/fsi-dsp/observability/metrics-mapping.md
+  - fsi-dsp://observability/metrics-mapping
   - https://docs.confluent.io/cloud/current/monitoring/metrics-api.html
   - https://docs.confluent.io/cloud/current/monitoring/metrics-reference.html
 related:

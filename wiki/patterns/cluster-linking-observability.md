@@ -5,8 +5,7 @@ sources:
   - https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/dr-failover.html
   - https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/index.html
   - https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/metrics-cc.html
-  - raw/repos/fsi-dsp/observability/grafana/dashboard-dr-readiness.json
-  - raw/repos/fsi-dsp/observability/grafana/README.md
+  - fsi-dsp://observability/grafana
 related:
   - patterns/dr-cluster-linking
   - patterns/dr-mirrormaker2

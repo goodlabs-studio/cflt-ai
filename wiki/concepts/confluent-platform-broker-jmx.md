@@ -2,7 +2,7 @@
 title: Confluent Platform Broker JMX — Canonical MBean Reference
 tags: [observability jmx mbean broker confluent-platform cfk kafka monitoring prometheus fsi]
 sources:
-  - raw/repos/fsi-dsp/observability/grafana/jmx-exporter-config.yaml
+  - fsi-dsp://observability/grafana
   - https://kafka.apache.org/documentation/#monitoring
   - https://docs.confluent.io/platform/current/kafka/monitoring.html
 related:
