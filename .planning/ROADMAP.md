@@ -47,7 +47,7 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
 - [ ] **Phase 9: Submodule sync + canon-parity unblock** — Bump `raw/repos/fsi-dsp` submodule pointer to upstream `main` (23+ commits ahead, includes the LinuxONE accelerator + 2989473 merge); clear the two pre-existing canon-parity / manifest test failures from the v2.0 audit; add a stale-submodule CI guard. Foundational; nothing else in v2.1 can land cleanly until the submodule reflects the accelerator's existence on disk.
 - [x] **Phase 10: Accelerator artifact-type registration** — Land `type: accelerator` in upstream fsi-dsp `MANIFEST.yaml` (separate PR) and accept the new type in cflt-ai's manifest schema validator without regressing on `ansible-role`, `terraform-module`, `scenario`, `adr`, or `reference`. The type contract MUST exist before downstream consumers (11) wire to it. (completed 2026-05-23)
 - [x] **Phase 11: Act-rail wiring for accelerator dispatch** — Extend `/dsp:plan` Gate 1 (canon compliance) and `/dsp:apply` Step 7 (executor) to handle accelerator artifacts: 5-layer MODULE_TO_CANON_KEY map (`01-rbac` → `fsi.security.mds-rbac`, `02-tls` → `fsi.security.tls-fips`, `03-schema-governance` → `fsi.schema.compatibility-full-transitive`, `04-audit` → `fsi.audit.events-retention`, `05-flink` → `fsi.flink.environment-mtls`); layer-aware kustomize apply_sequence (build → `oc apply --dry-run=server` → `oc apply`); per-layer activity-log entries; bidirectional canon-parity CI extended to accelerator MANIFEST entries (G.2c CI pattern). Largest phase. (completed 2026-05-23)
-- [ ] **Phase 12: Wiki ingest of LinuxONE accelerator** — Mirror the H.1 ingest pattern for the LinuxONE accelerator: ≥6 articles covering reference architecture / x86→LinuxONE Cluster Linking migration / FIPS-at-install / auditor-readonly RBAC isolation / custom s390x image build / Flink-on-CFK example jobs; 13 KNOWN-GAPS entries (G-01..G-13) encoded as `tools/vendor-sources.json` trip-wires; ≥15 golden eval cases across `/ask` and `/review`; `/review` flags claims contradicting the auditor-readonly payload-isolation pattern.
+- [x] **Phase 12: Wiki ingest of LinuxONE accelerator** — Mirror the H.1 ingest pattern for the LinuxONE accelerator: ≥6 articles covering reference architecture / x86→LinuxONE Cluster Linking migration / FIPS-at-install / auditor-readonly RBAC isolation / custom s390x image build / Flink-on-CFK example jobs; 13 KNOWN-GAPS entries (G-01..G-13) encoded as `tools/vendor-sources.json` trip-wires; ≥15 golden eval cases across `/ask` and `/review`; `/review` flags claims contradicting the auditor-readonly payload-isolation pattern. (completed 2026-05-23)
 
 ## Phase Details
 
@@ -111,11 +111,11 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
   4. `/review` against a fixture customer LinuxONE deployment doc flags any claim that contradicts the auditor-readonly payload-isolation pattern (e.g., a claim that `DeveloperRead` on the cluster is sufficient for auditor isolation is flagged with the topic-scoped binding workaround as the canonical correction); golden review case ships at the EVAL-02 floor.
   5. Golden eval harness gains ≥15 new cases (≥10 each across `/ask` and `/review` per EVAL-02 floor) covering the 6 articles + auditor-readonly pattern + at least 5 trip-wire facts encoded as `expectations[]` lines; harness passes at the H.2 90% CI threshold on the new cases.
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 - [x] 12-01-PLAN.md — 6 wiki articles + _index/_graph wiring (WIKI-04)
 - [x] 12-02-PLAN.md — 13 KNOWN-GAPS trip-wires + wiki-lint --full extension (WIKI-02)
 - [x] 12-03-PLAN.md — /review auditor-readonly Step 4.1 + 5 review cases + 10 ask cases (WIKI-01, WIKI-03, WIKI-05)
-- [ ] 12-04-PLAN.md — Carry-forward fix: 4 observability articles raw-path → fsi-dsp:// (closes Phase 09 deferred-items)
+- [x] 12-04-PLAN.md — Carry-forward fix: 4 observability articles raw-path → fsi-dsp:// (closes Phase 09 deferred-items)
 
 ## Backlog (999.x — parking lot)
 
@@ -170,7 +170,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward (see above). Detailed
 | 9. Submodule sync + canon-parity unblock | v2.1 | 0/2 | Not started | - |
 | 10. Accelerator artifact-type registration | v2.1 | 2/3 | Complete    | 2026-05-23 |
 | 11. Act-rail wiring for accelerator dispatch | v2.1 | 4/4 | Complete    | 2026-05-23 |
-| 12. Wiki ingest of LinuxONE accelerator | v2.1 | 3/4 | In Progress|  |
+| 12. Wiki ingest of LinuxONE accelerator | v2.1 | 4/4 | Complete   | 2026-05-23 |
 | G.2a. mcp-confluent tool-call executor | backlog | 0/1 | Not started | - |
 | G.2b. Composite scenario executor | backlog | 0/1 | Not started | - |
 | G.2d. GitOps apply mode | backlog | 0/1 | Not started | - |
