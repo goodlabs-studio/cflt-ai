@@ -64,6 +64,9 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
   2. `pytest tests/test_check_canon_parity.py tests/test_manifest.py` passes — the two pre-existing failures from the v2.0 audit are resolved at the same commit that bumps the pointer.
   3. `.github/workflows/submodule-drift.yml` (or equivalent) exists, runs on PR + push:main, and fails when the submodule is >14 days behind upstream `main` HEAD with a clear remediation message (`git submodule update --remote raw/repos/fsi-dsp && git add raw/repos/fsi-dsp && git commit`).
   4. Full repo test suite (`pytest tests/`) passes at the bumped submodule pointer — no regressions in any v1.0/v2.0 phase introduced by the submodule advance.
+**Plans:** 2 plans
+- [ ] 09-01-PLAN.md — Bump submodule + clear two v2.0-audit test failures (atomic commit)
+- [ ] 09-02-PLAN.md — Stale-submodule CI guard (14-day drift window, mirrors H.3b)
 
 ### Phase 10: Accelerator artifact-type registration
 **Goal:** Land `type: accelerator` as a first-class MANIFEST.yaml artifact type in upstream fsi-dsp (separate PR; mirrors the 999.2 cc-cluster-basic upstream-PR pattern) and extend cflt-ai's manifest schema validator to accept the new type without regressing on existing types. After 10, the type contract exists end-to-end and downstream consumers in 11 can wire to a stable artifact shape.
@@ -148,7 +151,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward (see above). Detailed
 | H.4c. acme-bank developer overlay | v2.0 | 1/1 | Complete | 2026-05-17 |
 | H.3b. Version pin + CI drift gate | v2.0 | 1/1 | Complete | 2026-05-17 |
 | H.3c. /dsp:scaffold wrapper | v2.0 | 1/1 | Complete | 2026-05-17 |
-| 9. Submodule sync + canon-parity unblock | v2.1 | 0/? | Not started | - |
+| 9. Submodule sync + canon-parity unblock | v2.1 | 0/2 | Not started | - |
 | 10. Accelerator artifact-type registration | v2.1 | 0/? | Not started | - |
 | 11. Act-rail wiring for accelerator dispatch | v2.1 | 0/? | Not started | - |
 | 12. Wiki ingest of LinuxONE accelerator | v2.1 | 0/? | Not started | - |
