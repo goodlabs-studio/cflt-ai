@@ -77,6 +77,10 @@ class TestManifestCompleteness:
         "script/validate-fips",
     ]
 
+    # MAN-01: type: accelerator landed in Phase 10. List grows with each new accelerator.
+    # All IDs MUST start with the "accelerator/" prefix (see test_ids_have_type_prefix).
+    EXPECTED_ACCELERATORS = ["accelerator/confluent-on-linuxone"]
+
     def test_all_roles_present(self, manifest_ids):
         for role_id in self.EXPECTED_ROLES:
             assert role_id in manifest_ids, f"Missing role: {role_id}"
@@ -101,13 +105,20 @@ class TestManifestCompleteness:
         for script_id in self.EXPECTED_SCRIPTS:
             assert script_id in manifest_ids, f"Missing script: {script_id}"
 
+    def test_all_accelerators_present(self, manifest_ids):
+        for acc_id in self.EXPECTED_ACCELERATORS:
+            assert acc_id in manifest_ids, f"Missing accelerator: {acc_id}"
+
     def test_ids_are_unique(self, manifest):
         ids = [cap["id"] for cap in manifest["capabilities"]]
         assert len(ids) == len(set(ids)), f"Duplicate IDs found: {[i for i in ids if ids.count(i) > 1]}"
 
     def test_ids_have_type_prefix(self, manifest):
         """IDs must include type prefix to avoid ambiguity (Pitfall 2)."""
-        valid_prefixes = {"role/", "module/", "scenario/", "adr/", "reference/", "script/", "observability/"}
+        valid_prefixes = {
+            "role/", "module/", "scenario/", "adr/", "reference/",
+            "script/", "observability/", "accelerator/",
+        }
         for cap in manifest["capabilities"]:
             has_prefix = any(cap["id"].startswith(p) for p in valid_prefixes)
             assert has_prefix, f"ID '{cap['id']}' missing type prefix"
@@ -146,3 +157,108 @@ class TestCIWorkflowsExist:
     def test_check_stability_script(self, fsi_dsp_root):
         script = fsi_dsp_root / "scripts" / "check-manifest-stability.py"
         assert script.is_file(), "check-manifest-stability.py missing"
+
+
+class TestManifestSchemaValidator:
+    """MAN-01: tools/check_manifest.py validates the v1 schema including the accelerator type.
+
+    Coverage:
+      - 2 positive (real MANIFEST, synthetic fixture)
+      - 4 negative-space (each invariant from 10-CONTEXT.md locked decisions)
+      - 1 regression (existing types unchanged by accelerator branch)
+      - 1 type-enum gate (unknown type rejected with clear error)
+      - 1 KNOWN_TYPES constant-shape lock (drift fails fast, forces doc+code lockstep)
+    """
+
+    def test_validator_accepts_real_manifest(self, fsi_dsp_root):
+        """Positive: the live post-Phase-10 MANIFEST has zero schema errors."""
+        from tools.check_manifest import validate_manifest
+        errors = validate_manifest(fsi_dsp_root / "MANIFEST.yaml")
+        assert errors == [], f"Real MANIFEST produced schema errors: {errors}"
+
+    def test_validator_accepts_accelerator_fixture(self, project_root):
+        """Positive: a well-formed accelerator fixture validates cleanly."""
+        from tools.check_manifest import validate_manifest
+        fixture = project_root / "tests" / "fixtures" / "manifest_accelerator_valid.yaml"
+        errors = validate_manifest(fixture)
+        assert errors == [], f"Valid accelerator fixture rejected: {errors}"
+
+    @pytest.fixture
+    def invalid_fixtures(self, project_root):
+        path = project_root / "tests" / "fixtures" / "manifest_accelerator_invalid.yaml"
+        return yaml.safe_load(path.read_text())
+
+    def test_validator_rejects_accelerator_missing_apply_sequence(self, invalid_fixtures):
+        from tools.check_manifest import validate_capability
+        errors = validate_capability(invalid_fixtures["missing_apply_sequence"])
+        assert any("apply_sequence" in e for e in errors), (
+            f"Expected apply_sequence error, got {errors}"
+        )
+
+    def test_validator_rejects_accelerator_empty_apply_sequence(self, invalid_fixtures):
+        from tools.check_manifest import validate_capability
+        errors = validate_capability(invalid_fixtures["empty_apply_sequence"])
+        assert any("empty" in e for e in errors), (
+            f"Expected 'empty' error, got {errors}"
+        )
+
+    def test_validator_rejects_accelerator_layer_missing_canon_key(self, invalid_fixtures):
+        from tools.check_manifest import validate_capability
+        errors = validate_capability(invalid_fixtures["layer_missing_canon_key"])
+        assert any("canon_key" in e for e in errors), (
+            f"Expected canon_key error, got {errors}"
+        )
+
+    def test_validator_rejects_accelerator_missing_apply_command(self, invalid_fixtures):
+        from tools.check_manifest import validate_capability
+        errors = validate_capability(invalid_fixtures["missing_apply_command"])
+        assert any("apply_command" in e for e in errors), (
+            f"Expected apply_command error, got {errors}"
+        )
+
+    def test_validator_accepts_all_existing_types(self):
+        """Regression: every pre-accelerator type validates with just base fields.
+
+        Locks the no-bleed property: the accelerator branch must not impose
+        accelerator-specific fields on other types. If a future change adds
+        per-type required fields, this test will start failing for that type
+        and the relevant fixture must be updated explicitly.
+        """
+        from tools.check_manifest import validate_capability
+        for type_name, id_prefix in [
+            ("ansible-role", "role/"),
+            ("terraform-module", "module/"),
+            ("scenario", "scenario/"),
+            ("adr", "adr/"),
+            ("reference", "reference/"),
+            ("script", "script/"),
+            ("observability", "observability/"),
+        ]:
+            cap = {
+                "id": f"{id_prefix}fixture",
+                "type": type_name,
+                "name": "fixture",
+                "path": f"{id_prefix}fixture",
+            }
+            errors = validate_capability(cap)
+            assert errors == [], f"Existing type {type_name} regressed: {errors}"
+
+    def test_validator_rejects_unknown_type(self):
+        """Type enum gate: any type outside KNOWN_TYPES is rejected with a clear error."""
+        from tools.check_manifest import validate_capability
+        cap = {"id": "x/y", "type": "frobnicator", "name": "y", "path": "x/y"}
+        errors = validate_capability(cap)
+        assert any("unknown type" in e.lower() for e in errors), (
+            f"Expected unknown-type error, got {errors}"
+        )
+
+    def test_known_types_constant_shape(self):
+        """KNOWN_TYPES must match exactly the documented set.
+
+        Drift here forces a tools/manifest-schema.md update in the same PR.
+        """
+        from tools.check_manifest import KNOWN_TYPES
+        assert KNOWN_TYPES == {
+            "ansible-role", "terraform-module", "scenario", "adr",
+            "reference", "script", "observability", "accelerator",
+        }

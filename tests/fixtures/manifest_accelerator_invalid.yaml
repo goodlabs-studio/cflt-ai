@@ -1,0 +1,53 @@
+# Negative-case fixtures for tools/check_manifest.py.
+# Each top-level key is one of the four documented invalid shapes.
+# tests/test_manifest.py::TestManifestSchemaValidator loads this and pulls the named scenario.
+#
+# Scenarios (one per locked invariant from 10-CONTEXT.md):
+#   missing_apply_sequence    — required field absent
+#   empty_apply_sequence      — list present but empty
+#   layer_missing_canon_key   — layer object missing canon_key (single-source-of-truth violation)
+#   missing_apply_command     — required command absent
+missing_apply_sequence:
+  id: "accelerator/missing-seq"
+  type: accelerator
+  name: "missing-seq"
+  path: "accelerators/missing-seq"
+  build_command: "kustomize build overlays/prod"
+  dry_run_command: "kustomize build overlays/prod | oc apply --dry-run=server -f -"
+  apply_command: "kustomize build overlays/prod | oc apply -f -"
+
+empty_apply_sequence:
+  id: "accelerator/empty-seq"
+  type: accelerator
+  name: "empty-seq"
+  path: "accelerators/empty-seq"
+  apply_sequence: []
+  build_command: "kustomize build overlays/prod"
+  dry_run_command: "kustomize build overlays/prod | oc apply --dry-run=server -f -"
+  apply_command: "kustomize build overlays/prod | oc apply -f -"
+
+layer_missing_canon_key:
+  id: "accelerator/no-canon-key"
+  type: accelerator
+  name: "no-canon-key"
+  path: "accelerators/no-canon-key"
+  apply_sequence:
+    - layer: "01-foo"
+      path: "accelerators/no-canon-key/layers/01-foo"
+      # canon_key intentionally absent
+  build_command: "kustomize build overlays/prod"
+  dry_run_command: "kustomize build overlays/prod | oc apply --dry-run=server -f -"
+  apply_command: "kustomize build overlays/prod | oc apply -f -"
+
+missing_apply_command:
+  id: "accelerator/no-apply-cmd"
+  type: accelerator
+  name: "no-apply-cmd"
+  path: "accelerators/no-apply-cmd"
+  apply_sequence:
+    - layer: "01-foo"
+      path: "accelerators/no-apply-cmd/layers/01-foo"
+      canon_key: "fsi.test.foo"
+  build_command: "kustomize build overlays/prod"
+  dry_run_command: "kustomize build overlays/prod | oc apply --dry-run=server -f -"
+  # apply_command intentionally absent

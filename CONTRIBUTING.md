@@ -58,6 +58,24 @@ See `.claude/commands/wiki/references/quality-standards.md` for the full spec. K
 | `/wiki:recommend` | Answer + write back discoveries | Wiki articles |
 | `/wiki:lint` | Health check | Console output |
 
+## Modifying MANIFEST.yaml
+
+`raw/repos/fsi-dsp/MANIFEST.yaml` is the stable contract between fsi-dsp and cflt-ai.
+Before adding entries or types, read [`tools/manifest-schema.md`](tools/manifest-schema.md)
+for the full schema reference (top-level fields, base capability fields, all 8 known types,
+and the per-type required field tables).
+
+Validate locally with:
+
+```bash
+python3 tools/check_manifest.py        # fast schema-only validation
+pytest tests/test_manifest.py          # full suite: schema + path existence + expected IDs
+```
+
+Adding a new type requires lock-step changes in both repos AND the validator + tests +
+schema doc — see the "Adding a new type" runbook in
+[`tools/manifest-schema.md`](tools/manifest-schema.md#adding-a-new-type).
+
 ## PR Guidelines
 
 - Use the PR template (auto-populated)

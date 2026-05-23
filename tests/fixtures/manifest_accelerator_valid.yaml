@@ -1,0 +1,24 @@
+# Positive-case fixture for tools/check_manifest.py.
+# Mirrors the locked accelerator/confluent-on-linuxone shape from
+# .planning/phases/10-accelerator-artifact-type-registration/10-CONTEXT.md
+# but uses a synthetic ID so it doesn't collide with the real MANIFEST entry.
+#
+# Used by tests/test_manifest.py::TestManifestSchemaValidator::test_validator_accepts_accelerator_fixture.
+version: "1.1.0"
+schema: "fsi-dsp/manifest/v1"
+capabilities:
+  - id: "accelerator/test-fixture-valid"
+    type: accelerator
+    name: "test-fixture-valid"
+    path: "accelerators/test-fixture-valid"
+    description: "Synthetic fixture -- proves the validator accepts a well-formed accelerator entry"
+    apply_sequence:
+      - layer: "01-foo"
+        path: "accelerators/test-fixture-valid/layers/01-foo"
+        canon_key: "fsi.test.foo"
+      - layer: "02-bar"
+        path: "accelerators/test-fixture-valid/layers/02-bar"
+        canon_key: "fsi.test.bar"
+    build_command: "kustomize build overlays/prod"
+    dry_run_command: "kustomize build overlays/prod | oc apply --dry-run=server -f -"
+    apply_command: "kustomize build overlays/prod | oc apply -f -"
