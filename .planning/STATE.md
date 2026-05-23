@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: — LinuxONE Accelerator Integration
 status: executing
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-05-23T17:57:31.460Z"
+stopped_at: Completed 12-03-PLAN.md
+last_updated: "2026-05-23T18:05:40.380Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 13
-  completed_plans: 11
+  completed_plans: 12
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-23)
 ## Current Position
 
 Phase: 12 (wiki-ingest-of-linuxone-accelerator) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-05-23
 
@@ -119,6 +119,7 @@ Tag: `v1.0`
 | Phase 11 P04 | 3 min | 2 tasks | 4 files |
 | Phase 12-wiki-ingest-of-linuxone-accelerator P02 | 4min | 2 tasks | 3 files |
 | Phase 12 P01 | 25min | 2 tasks | 9 files |
+| Phase 12 P03 | 5min | 4 tasks | 21 files |
 
 ## Accumulated Context
 
@@ -267,6 +268,9 @@ Recent decisions affecting current work:
 - [Phase 12-wiki-ingest-of-linuxone-accelerator]: 12-02: Case-insensitive + whitespace-stripped status comparison in check_gap_drift; MISSING-GAP naming chosen over MISSING-VENDOR to avoid label collision with H.1's UNKNOWN VENDOR
 - [Phase 12]: Replaced layer-scoped fsi-dsp source IDs (:NN-layer) with top-level accelerator ID; MANIFEST.yaml only indexes capabilities[].id (top-level), not apply_sequence sub-paths.
 - [Phase 12]: Article 4 (auditor-readonly) reformatted bold markdown to keep verbatim grep-target strings contiguous for Plan 12-03 review-engine match.
+- [Phase 12]: 12-03: Step 4.1 injected between Step 4 (MCP validation) and Step 5 (canon compliance) at L132-149; Step 5+ headings unchanged to avoid renumbering breakage
+- [Phase 12]: 12-03: Case 101 query is byte-identical to ROADMAP Phase-12 success criterion 1; WIKI-01 satisfied by verbatim grep equality, not by semantic match
+- [Phase 12]: 12-03: 5 /review fixtures authored as 50-59 line FSI engineer prose with contradicting claim embedded in body sections — not enumerated as bullet lists — so claim extraction tests the realistic claim density
 
 ### Pending Todos
 
@@ -278,6 +282,6 @@ None yet — note that 10 may require an upstream fsi-dsp PR merge before 11 can
 
 ## Session Continuity
 
-Last session: 2026-05-23T17:57:31.458Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-05-23T18:05:30.381Z
+Stopped at: Completed 12-03-PLAN.md
 Resume file: None
