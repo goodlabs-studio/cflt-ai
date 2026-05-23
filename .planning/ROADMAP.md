@@ -93,10 +93,10 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
   4. Bidirectional canon-parity CI (`.github/workflows/canon-parity.yml` or equivalent) is extended to walk accelerator MANIFEST entries; PRs that drift the cflt-ai map from upstream MANIFEST fail in both repos with a clear remediation message (mirrors the G.2c CI shape; same `--check` mode pattern).
   5. `/dsp:apply` respects existing profile gating for accelerator artifacts: `read-only` profile refuses any accelerator apply with explicit error; `engineer` profile permits all 5 layers; `break-glass` enforces the existing two-step confirmation before any real apply. Negative-space tests prove fail-closed for each profile family.
 
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 - [x] 11-01-PLAN.md — MODULE_TO_CANON_KEY extension + parity walker (MAN-04, MAN-05)
 - [x] 11-02-PLAN.md — execute_accelerator() executor + ACTA-04 per-layer (MAN-03)
-- [ ] 11-03-PLAN.md — /dsp:plan act-harness extension + 5 golden cases (MAN-02)
+- [x] 11-03-PLAN.md — /dsp:plan act-harness extension + 5 golden cases (MAN-02)
 - [ ] 11-04-PLAN.md — Profile gating for accelerator dispatch (MAN-03 completion)
 
 
@@ -164,7 +164,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward (see above). Detailed
 | H.3c. /dsp:scaffold wrapper | v2.0 | 1/1 | Complete | 2026-05-17 |
 | 9. Submodule sync + canon-parity unblock | v2.1 | 0/2 | Not started | - |
 | 10. Accelerator artifact-type registration | v2.1 | 2/3 | Complete    | 2026-05-23 |
-| 11. Act-rail wiring for accelerator dispatch | v2.1 | 2/4 | In Progress|  |
+| 11. Act-rail wiring for accelerator dispatch | v2.1 | 3/4 | In Progress|  |
 | 12. Wiki ingest of LinuxONE accelerator | v2.1 | 0/? | Not started | - |
 | G.2a. mcp-confluent tool-call executor | backlog | 0/1 | Not started | - |
 | G.2b. Composite scenario executor | backlog | 0/1 | Not started | - |

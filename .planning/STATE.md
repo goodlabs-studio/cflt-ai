@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: — LinuxONE Accelerator Integration
 status: executing
-stopped_at: Completed 11-02-PLAN.md (execute_accelerator + dispatcher + 17 new tests)
-last_updated: "2026-05-23T17:15:59.194Z"
+stopped_at: Completed 11-03-PLAN.md (parallel with 11-02)
+last_updated: "2026-05-23T17:17:08.122Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -115,6 +115,7 @@ Tag: `v1.0`
 | Phase 10-accelerator-artifact-type-registration P02 | 4min | 3 tasks | 7 files |
 | Phase 11 P01 | 6min | 2 tasks | 3 files |
 | Phase 11 P02 | 7min | 2 tasks | 2 files |
+| Phase 11 P03 | 5min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -254,6 +255,9 @@ Recent decisions affecting current work:
 - [Phase 11]: Per-layer ACTA-04 emission lives inside execute_accelerator() (via _emit_layer_log) — not in /dsp:apply Step 8 caller. Deviates from terraform-module's caller-emits-summary pattern; only viable home since /dsp:apply has no visibility into layer iteration. CONTEXT.md D-03 locked the one-entry-per-layer shape.
 - [Phase 11]: ExecutionResult.failed_layer = None default + emit_activity_log_apply layer_id = None default = back-compat for terraform-module callers. Byte-identical entry shape when layer_id omitted (TestEmitActivityLogLayerIdBackCompat asserts this).
 - [Phase 11]: fake_binaries fixture lives at module scope (not class scope) in tests/test_apply_executor.py — Plan 11-04 TestAcceleratorProfileGating reuses without re-declaration.
+- [Phase 11]: /dsp:plan --layer hash derived at skill-spec level via sha256(stack_hash:canon_key)[:12] — keeps canon/stack.py vendor-agnostic
+- [Phase 11]: Cross-plan integration test imports MODULE_TO_CANON_KEY via importlib.util to assert act-harness layer map equals parity walker's source-of-truth dict
+- [Phase 11]: VALID_ARTIFACT_TYPES extended with single accelerator/confluent-on-linuxone ID (not 5 composites) — composites belong in MODULE_TO_CANON_KEY for per-layer parity, not in the act-harness validator
 
 ### Pending Todos
 
@@ -265,6 +269,6 @@ None yet — note that 10 may require an upstream fsi-dsp PR merge before 11 can
 
 ## Session Continuity
 
-Last session: 2026-05-23T17:15:59.192Z
-Stopped at: Completed 11-02-PLAN.md (execute_accelerator + dispatcher + 17 new tests)
+Last session: 2026-05-23T17:17:03.756Z
+Stopped at: Completed 11-03-PLAN.md (parallel with 11-02)
 Resume file: None
