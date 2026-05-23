@@ -355,6 +355,12 @@ class ExecutionResult:
       - "skipped"  — artifact type isn't supported by any executor in this
                      version (e.g. scenario/* in G.1); equivalent to the
                      historical "deferred-to-mcp-runtime" stub
+      - "refused"  — RESERVED for Plan 11-04 (profile gating);
+                     not produced in 11-02.
+
+    `failed_layer` is populated only by the accelerator executor when an
+    apply_sequence layer aborts the walk (kustomize / oc dry-run / oc apply
+    non-zero exit). None for every other executor and on success.
     """
 
     status: str
@@ -363,6 +369,7 @@ class ExecutionResult:
     stderr_tail: str = ""
     per_phase: List[Dict[str, str]] = field(default_factory=list)
     outputs: Dict[str, str] = field(default_factory=dict)
+    failed_layer: Optional[str] = None
 
     def to_activity_log_string(self) -> str:
         """Compact form for emit_activity_log_apply()'s execution_result field."""
@@ -377,12 +384,24 @@ def execute_artifact(
 ) -> ExecutionResult:
     """Dispatch on artifact.type and execute. Returns ExecutionResult.
 
+    Supported types:
+      - "terraform-module" → execute_terraform_module (Phase G.1)
+      - "accelerator"      → execute_accelerator (Phase 11.2 — LinuxONE
+                             5-layer kustomize/oc dispatch). args.get("layer")
+                             is passed through as layer_filter for single-layer
+                             execution; absence walks the full apply_sequence.
+
     For unsupported types, returns status="skipped" (G.1 backstop until
     G.2 adds mcp-confluent tool-call sequences for scenario/* etc.).
     """
     artifact_type = artifact.get("type", "")
     if artifact_type == "terraform-module":
         return execute_terraform_module(artifact, args, plan_slug, dry_run=dry_run)
+    elif artifact_type == "accelerator":
+        return execute_accelerator(
+            artifact, args, plan_slug, dry_run=dry_run,
+            layer_filter=args.get("layer"),
+        )
     return ExecutionResult(
         status="skipped",
         duration_seconds=0.0,
@@ -493,6 +512,257 @@ def execute_terraform_module(
     return result
 
 
+def execute_accelerator(
+    artifact: Dict,
+    args: Dict[str, str],
+    plan_slug: str,
+    dry_run: bool = False,
+    layer_filter: Optional[str] = None,
+) -> ExecutionResult:
+    """Walk an accelerator artifact's apply_sequence layer-by-layer (Phase 11.2).
+
+    For each layer in `artifact["apply_sequence"]` (or just the single matching
+    layer when `layer_filter` is set):
+
+      1. `kustomize build {layer.path}` — captures rendered manifest on stdout
+      2. `oc apply --dry-run=server -f -` — server-side validation
+      3. `oc apply -f -` — only when dry_run=False AND dry-run passed
+
+    Halts on any non-zero exit before subsequent layers (and before the real
+    apply within the failing layer). ExecutionResult.failed_layer is set to
+    the layer name on failure; None on success.
+
+    Per-layer ACTA-04 emission: this executor calls emit_activity_log_apply()
+    once per layer with the new `layer_id` kwarg (one entry per layer, not one
+    summary entry). This DEVIATES from execute_terraform_module's contract
+    (where the /dsp:apply Step 8 caller emits a single summary entry) because
+    only execute_accelerator knows about the layer iteration. CONTEXT.md D-03
+    locked this as the intended shape ("Reuse ACTA-04 11-field schema + new
+    layer_id field. One entry per layer.").
+
+    Mocking note: tests patch `tools.apply_engine.subprocess.run` and
+    `tools.apply_engine.emit_activity_log_apply` to exercise without a live
+    cluster or kustomize/oc binaries. PATH must still contain placeholder
+    binaries so shutil.which() succeeds — see fake_binaries fixture in
+    tests/test_apply_executor.py.
+
+    Args:
+        artifact:     MANIFEST entry dict; must contain id, path, apply_sequence list.
+        args:         Plan args dict; must contain at least 'overlay', 'profile_name',
+                      'operator', 'plan_path' for per-layer activity-log emission.
+                      Optional 'gate_results' (list), 'override_reason' (str),
+                      'confirmation_source' (str), 'confirmation_status' (str).
+        plan_slug:    Workspace key (per-plan + per-layer subdirectory isolation).
+        dry_run:      If True, run kustomize+oc-dry-run only, skip real oc-apply.
+        layer_filter: If set, run only the matching layer; absent walks full sequence.
+
+    Returns:
+        ExecutionResult with status in {"success", "failure", "dry-run"}.
+        failed_layer is None on success/dry-run; set to the layer name on failure.
+    """
+    started = time.monotonic()
+    per_phase: List[Dict[str, str]] = []
+    stdout_chunks: List[str] = []
+    stderr_chunks: List[str] = []
+
+    apply_sequence = artifact.get("apply_sequence", [])
+    if not apply_sequence:
+        return ExecutionResult(
+            status="failure",
+            duration_seconds=0.0,
+            stderr_tail=(
+                f"artifact {artifact.get('id')!r} has no 'apply_sequence' "
+                "or it is empty"
+            ),
+        )
+
+    if layer_filter:
+        apply_sequence = [
+            layer for layer in apply_sequence
+            if layer.get("layer") == layer_filter
+        ]
+        if not apply_sequence:
+            return ExecutionResult(
+                status="failure",
+                duration_seconds=0.0,
+                stderr_tail=(
+                    f"layer_filter {layer_filter!r} matched no layer in "
+                    "apply_sequence"
+                ),
+            )
+
+    kustomize_bin = shutil.which("kustomize")
+    if not kustomize_bin:
+        return ExecutionResult(
+            status="failure",
+            duration_seconds=round(time.monotonic() - started, 1),
+            stderr_tail="`kustomize` not on PATH — install kustomize >= 5.0",
+        )
+    oc_bin = shutil.which("oc")
+    if not oc_bin:
+        return ExecutionResult(
+            status="failure",
+            duration_seconds=round(time.monotonic() - started, 1),
+            stderr_tail="`oc` not on PATH — install OpenShift CLI",
+        )
+
+    artifact_id = artifact.get("id", "")
+    for layer_entry in apply_sequence:
+        layer_name = layer_entry.get("layer", "")
+        layer_path = layer_entry.get("path", "")
+        layer_abs = (FSI_DSP_ROOT / layer_path).resolve()
+
+        workspace = PROJECT_ROOT / "outputs" / "runs" / plan_slug / layer_name
+        workspace.mkdir(parents=True, exist_ok=True)
+
+        # Phase 1: kustomize build {layer.path} — capture rendered manifest
+        build_proc = subprocess.run(
+            [kustomize_bin, "build", str(layer_abs)],
+            capture_output=True, text=True, timeout=300,
+        )
+        per_phase.append({
+            "phase": f"{layer_name}:kustomize-build",
+            "exit_code": str(build_proc.returncode),
+        })
+        stdout_chunks.append(
+            f"=== {layer_name}:kustomize-build stdout ===\n{build_proc.stdout[:2048]}"
+        )
+        stderr_chunks.append(
+            f"=== {layer_name}:kustomize-build stderr ===\n{build_proc.stderr}"
+        )
+        if build_proc.returncode != 0:
+            _emit_layer_log(
+                args, artifact_id, layer_name, "failure",
+                time.monotonic() - started,
+            )
+            return _finalize_accelerator(
+                "failure", started, stdout_chunks, stderr_chunks, per_phase,
+                failed_layer=layer_name,
+            )
+        kustomize_output = build_proc.stdout
+
+        # Phase 2: oc apply --dry-run=server (always runs)
+        dryrun_proc = subprocess.run(
+            [oc_bin, "apply", "--dry-run=server", "-f", "-"],
+            input=kustomize_output,
+            capture_output=True, text=True, timeout=300,
+        )
+        per_phase.append({
+            "phase": f"{layer_name}:oc-dry-run",
+            "exit_code": str(dryrun_proc.returncode),
+        })
+        stdout_chunks.append(
+            f"=== {layer_name}:oc-dry-run stdout ===\n{dryrun_proc.stdout}"
+        )
+        stderr_chunks.append(
+            f"=== {layer_name}:oc-dry-run stderr ===\n{dryrun_proc.stderr}"
+        )
+        if dryrun_proc.returncode != 0:
+            # Halt sequence BEFORE any real apply runs for this layer.
+            _emit_layer_log(
+                args, artifact_id, layer_name, "failure",
+                time.monotonic() - started,
+            )
+            return _finalize_accelerator(
+                "failure", started, stdout_chunks, stderr_chunks, per_phase,
+                failed_layer=layer_name,
+            )
+
+        # Phase 3: oc apply (real) — skipped when dry_run=True
+        if dry_run:
+            _emit_layer_log(
+                args, artifact_id, layer_name, "dry-run",
+                time.monotonic() - started,
+            )
+            continue
+
+        apply_proc = subprocess.run(
+            [oc_bin, "apply", "-f", "-"],
+            input=kustomize_output,
+            capture_output=True, text=True, timeout=600,
+        )
+        per_phase.append({
+            "phase": f"{layer_name}:oc-apply",
+            "exit_code": str(apply_proc.returncode),
+        })
+        stdout_chunks.append(
+            f"=== {layer_name}:oc-apply stdout ===\n{apply_proc.stdout}"
+        )
+        stderr_chunks.append(
+            f"=== {layer_name}:oc-apply stderr ===\n{apply_proc.stderr}"
+        )
+        if apply_proc.returncode != 0:
+            _emit_layer_log(
+                args, artifact_id, layer_name, "failure",
+                time.monotonic() - started,
+            )
+            return _finalize_accelerator(
+                "failure", started, stdout_chunks, stderr_chunks, per_phase,
+                failed_layer=layer_name,
+            )
+
+        _emit_layer_log(
+            args, artifact_id, layer_name, "success",
+            time.monotonic() - started,
+        )
+
+    final_status = "dry-run" if dry_run else "success"
+    return _finalize_accelerator(
+        final_status, started, stdout_chunks, stderr_chunks, per_phase,
+        failed_layer=None,
+    )
+
+
+def _emit_layer_log(
+    args: Dict[str, str],
+    artifact_id: str,
+    layer_name: str,
+    execution_result: str,
+    duration_seconds: float,
+) -> None:
+    """Per-layer ACTA-04 emission for execute_accelerator (Phase 11.2 D-03).
+
+    Thin wrapper that calls emit_activity_log_apply() with the new layer_id
+    kwarg. Pulls overlay/profile/operator/plan_path from args dict (with safe
+    defaults — these should always be populated by the /dsp:apply caller but
+    we don't want a missing field to crash the executor mid-walk).
+    """
+    emit_activity_log_apply(
+        overlay=args.get("overlay", "base"),
+        plan_path=args.get("plan_path", ""),
+        artifact_id=artifact_id,
+        profile_name=args.get("profile_name", ""),
+        confirmation_status=args.get("confirmation_status", "confirmed"),
+        execution_result=execution_result,
+        duration_seconds=duration_seconds,
+        gate_results=args.get("gate_results", []) or [],
+        operator=args.get("operator", ""),
+        override_reason=args.get("override_reason"),
+        confirmation_source=args.get("confirmation_source"),
+        layer_id=layer_name,
+    )
+
+
+def _finalize_accelerator(
+    status: str,
+    started: float,
+    stdout_chunks: List[str],
+    stderr_chunks: List[str],
+    per_phase: List[Dict[str, str]],
+    failed_layer: Optional[str],
+) -> ExecutionResult:
+    """Mirror of _finalize() that threads failed_layer into the result."""
+    tail = lambda chunks, n: ("\n".join(chunks))[-n:]
+    return ExecutionResult(
+        status=status,
+        duration_seconds=round(time.monotonic() - started, 1),
+        stdout_tail=tail(stdout_chunks, 4096),
+        stderr_tail=tail(stderr_chunks, 4096),
+        per_phase=per_phase,
+        failed_layer=failed_layer,
+    )
+
+
 def _render_root_module(
     workspace: Path,
     module_abs: Path,
@@ -579,6 +849,7 @@ def emit_activity_log_apply(
     operator: str,
     override_reason: Optional[str] = None,
     confirmation_source: Optional[str] = None,
+    layer_id: Optional[str] = None,
 ) -> None:
     """Append a /dsp:apply entry to the overlay-scoped activity log.
 
@@ -601,6 +872,12 @@ def emit_activity_log_apply(
                              AskUserQuestion) or "pre-confirmed" (orchestrator UI modal,
                              e.g. FRANZ). Distinguishes UI-modal confirmations from
                              chat-based ones in audits.
+        layer_id:            Accelerator-only (Phase 11.2 D-03): the layer name from
+                             apply_sequence for per-layer ACTA-04 entries. When non-None,
+                             the entry includes a **Layer:** field between **Artifact:**
+                             and **Plan:**. Terraform-module callers omit this kwarg
+                             and get the byte-identical pre-11 11-field entry shape
+                             (back-compat preserved).
     """
     now = datetime.now(timezone.utc)
     timestamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -626,6 +903,11 @@ def emit_activity_log_apply(
         f"**Overlay:** {overlay}",
         f"**Profile:** {profile_name}",
         f"**Artifact:** {artifact_id}",
+        *(
+            [f"**Layer:** {layer_id}"]
+            if layer_id
+            else []
+        ),
         f"**Plan:** {plan_path}",
         f"**Confirmation status:** {confirmation_status}",
         *(
