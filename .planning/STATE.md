@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: — LinuxONE Accelerator Integration
-status: verifying
-stopped_at: Completed 09-02-PLAN.md — submodule drift CI gate landed (14d window, H.3b pattern, 3 commits)
-last_updated: "2026-05-23T15:34:48.834Z"
+status: executing
+stopped_at: Completed 10-01-PLAN.md — accelerator/confluent-on-linuxone registered in fsi-dsp MANIFEST.yaml (submodule branch feat/manifest-accelerator-type, commit b117f3f)
+last_updated: "2026-05-23T15:50:39.897Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 5
+  completed_plans: 3
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase 09 — submodule-sync-canon-parity-unblock
+**Current focus:** Phase 10 — accelerator-artifact-type-registration
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 10 (accelerator-artifact-type-registration) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-05-23
 
 Progress: [░░░░░░░░░░] 0%  (0/4 phases complete)
@@ -111,6 +111,7 @@ Tag: `v1.0`
 | Phase H.3c-dsp-scaffold-wrapper P01 | 6m | 6 tasks | 6 files |
 | Phase 09-submodule-sync-canon-parity-unblock P01 | 4min | 3 tasks | 2 files |
 | Phase 09-submodule-sync-canon-parity-unblock P02 | 4min | 3 tasks | 3 files |
+| Phase 10-accelerator-artifact-type-registration P01 | 3min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -235,6 +236,9 @@ Recent decisions affecting current work:
 - [Phase 09-submodule-sync-canon-parity-unblock]: Comparison axis: SHA-match early-return → timestamp-delta fallback; pure SHA equality (H.3b's check) would falsely report drift on any upstream advance within window
 - [Phase 09-submodule-sync-canon-parity-unblock]: 14-day drift window (DRIFT_WINDOW_DAYS=14) — absorbs normal review-and-merge cycle on upstream main; narrow enough to catch silent rot before downstream v2.1 phases regress
 - [Phase 09-submodule-sync-canon-parity-unblock]: Fail-closed on transient errors (EXIT_TRANSIENT_ERR=3) — ls-remote failure / timestamp-unresolvable never treated as 'no drift'; auto-fetch deliberately avoided (would hide drift behind side effect)
+- [Phase 10-accelerator-artifact-type-registration]: type: accelerator schema landed verbatim from CONTEXT.md decisions (apply_sequence + per-layer canon_key + 3 explicit build/dry-run/apply commands); per-layer canon_key co-located in MANIFEST is the single source of truth (Phase 11 MODULE_TO_CANON_KEY derives FROM this, not declared independently — G.2c cleanup lesson)
+- [Phase 10-accelerator-artifact-type-registration]: fsi-dsp/CLAUDE.md NOT edited — auto-generated file, schema docs land in cflt-ai's CONTRIBUTING.md / tools/manifest-schema.md (10-02 Task 4) and upstream PR body (10-03) instead
+- [Phase 10-accelerator-artifact-type-registration]: Submodule parent-pointer bump deliberately left unstaged in this plan — 10-02 picks it up atomically alongside the validator commit (single rollback unit if Phase 11 surfaces issues)
 
 ### Pending Todos
 
@@ -246,6 +250,6 @@ None yet — note that 10 may require an upstream fsi-dsp PR merge before 11 can
 
 ## Session Continuity
 
-Last session: 2026-05-23T15:29:47.722Z
-Stopped at: Completed 09-02-PLAN.md — submodule drift CI gate landed (14d window, H.3b pattern, 3 commits)
+Last session: 2026-05-23T15:50:39.894Z
+Stopped at: Completed 10-01-PLAN.md — accelerator/confluent-on-linuxone registered in fsi-dsp MANIFEST.yaml (submodule branch feat/manifest-accelerator-type, commit b117f3f)
 Resume file: None

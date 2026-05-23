@@ -77,8 +77,8 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
   2. cflt-ai's manifest schema validator (`tools/check_manifest.py` or equivalent) accepts `type: accelerator` entries; the validator's enum/dispatch is extended without breaking validation of existing `ansible-role`, `terraform-module`, `scenario`, `adr`, or `reference` entries (proven via the existing test_manifest suite passing post-change).
   3. A new positive-coverage unit test asserts that an `accelerator`-typed fixture entry validates cleanly; a corresponding negative-space test asserts that a malformed accelerator entry (missing `apply_sequence`, unknown layer name, etc.) fails validation with a clear error.
   4. The new type is documented in cflt-ai's MANIFEST contract reference (CONTRIBUTING.md or `tools/manifest-schema.md`) so future contributors know `accelerator` is a recognized artifact-type alongside the v1.0/v2.0 types.
-**Plans:** 3 plans
-- [ ] 10-01-PLAN.md — Register accelerator MANIFEST entry inside fsi-dsp submodule (feature branch)
+**Plans:** 1/3 plans executed
+- [x] 10-01-PLAN.md — Register accelerator MANIFEST entry inside fsi-dsp submodule (feature branch)
 - [ ] 10-02-PLAN.md — cflt-ai validator + 9 tests + 2 fixtures + schema docs (atomic commit with submodule pointer bump)
 - [ ] 10-03-PLAN.md — Human-action checkpoint: upstream PR-open + post-merge pointer follow-up
 
@@ -156,7 +156,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward (see above). Detailed
 | H.3b. Version pin + CI drift gate | v2.0 | 1/1 | Complete | 2026-05-17 |
 | H.3c. /dsp:scaffold wrapper | v2.0 | 1/1 | Complete | 2026-05-17 |
 | 9. Submodule sync + canon-parity unblock | v2.1 | 0/2 | Not started | - |
-| 10. Accelerator artifact-type registration | v2.1 | 0/3 | Not started | - |
+| 10. Accelerator artifact-type registration | v2.1 | 1/3 | In Progress|  |
 | 11. Act-rail wiring for accelerator dispatch | v2.1 | 0/? | Not started | - |
 | 12. Wiki ingest of LinuxONE accelerator | v2.1 | 0/? | Not started | - |
 | G.2a. mcp-confluent tool-call executor | backlog | 0/1 | Not started | - |
