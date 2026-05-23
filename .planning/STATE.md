@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: — LinuxONE Accelerator Integration
 status: executing
-stopped_at: Completed 11-04-PLAN.md — Phase 11 complete (all 4 plans landed; MAN-02..05 verified)
-last_updated: "2026-05-23T17:28:06.905Z"
-last_activity: 2026-05-23
+stopped_at: Completed 12-02-PLAN.md (parallel wave with 12-01)
+last_updated: "2026-05-23T17:53:19.934Z"
+last_activity: 2026-05-23 -- Phase 12 execution started
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 13
+  completed_plans: 10
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase 11 — act-rail-wiring-for-accelerator-dispatch
+**Current focus:** Phase 12 — wiki-ingest-of-linuxone-accelerator
 
 ## Current Position
 
-Phase: 12
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-23
+Phase: 12 (wiki-ingest-of-linuxone-accelerator) — EXECUTING
+Plan: 1 of 4
+Status: Executing Phase 12
+Last activity: 2026-05-23 -- Phase 12 execution started
 
 Progress: [░░░░░░░░░░] 0%  (0/4 phases complete)
 
@@ -117,6 +117,7 @@ Tag: `v1.0`
 | Phase 11 P02 | 7min | 2 tasks | 2 files |
 | Phase 11 P03 | 5min | 2 tasks | 7 files |
 | Phase 11 P04 | 3 min | 2 tasks | 4 files |
+| Phase 12-wiki-ingest-of-linuxone-accelerator P02 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -262,6 +263,7 @@ Recent decisions affecting current work:
 - [Phase 11]: Break-glass two-step confirmation is /dsp:apply Step 6c's responsibility, NOT execute_accelerator()'s — profile-level permission in profile JSON, interactive UI in skill spec (separation of concerns)
 - [Phase 11]: profile_name=None default bypasses the pre-flight gate (back-compat with Plan 11-02 tests) — caller is responsible for gating when None is supplied
 - [Phase 11]: Refused dispatch emits a single blocked-by-profile ACTA-04 entry (no layer_id) — preserves the invariant that layer_id is present iff a layer was iterated
+- [Phase 12-wiki-ingest-of-linuxone-accelerator]: 12-02: Case-insensitive + whitespace-stripped status comparison in check_gap_drift; MISSING-GAP naming chosen over MISSING-VENDOR to avoid label collision with H.1's UNKNOWN VENDOR
 
 ### Pending Todos
 
@@ -273,6 +275,6 @@ None yet — note that 10 may require an upstream fsi-dsp PR merge before 11 can
 
 ## Session Continuity
 
-Last session: 2026-05-23T17:24:05.072Z
-Stopped at: Completed 11-04-PLAN.md — Phase 11 complete (all 4 plans landed; MAN-02..05 verified)
+Last session: 2026-05-23T17:53:19.931Z
+Stopped at: Completed 12-02-PLAN.md (parallel wave with 12-01)
 Resume file: None
