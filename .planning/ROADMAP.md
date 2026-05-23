@@ -93,6 +93,13 @@ Audit: [`milestones/v2.0-MILESTONE-AUDIT.md`](milestones/v2.0-MILESTONE-AUDIT.md
   4. Bidirectional canon-parity CI (`.github/workflows/canon-parity.yml` or equivalent) is extended to walk accelerator MANIFEST entries; PRs that drift the cflt-ai map from upstream MANIFEST fail in both repos with a clear remediation message (mirrors the G.2c CI shape; same `--check` mode pattern).
   5. `/dsp:apply` respects existing profile gating for accelerator artifacts: `read-only` profile refuses any accelerator apply with explicit error; `engineer` profile permits all 5 layers; `break-glass` enforces the existing two-step confirmation before any real apply. Negative-space tests prove fail-closed for each profile family.
 
+**Plans:** 4 plans
+- [ ] 11-01-PLAN.md — MODULE_TO_CANON_KEY extension + parity walker (MAN-04, MAN-05)
+- [ ] 11-02-PLAN.md — execute_accelerator() executor + ACTA-04 per-layer (MAN-03)
+- [ ] 11-03-PLAN.md — /dsp:plan act-harness extension + 5 golden cases (MAN-02)
+- [ ] 11-04-PLAN.md — Profile gating for accelerator dispatch (MAN-03 completion)
+
+
 ### Phase 12: Wiki ingest of LinuxONE accelerator
 **Goal:** Mirror the H.1 ingest pattern for the LinuxONE accelerator. Compile ≥6 wiki articles from the upstream accelerator's `DESIGN.md`, `KNOWN-GAPS.md`, `MIGRATION.md`, and embedded patterns (LinuxONE-on-CFK reference architecture; x86→LinuxONE Cluster Linking with regulatory evidence checklist; FIPS-at-install OCP requirement; auditor-readonly RBAC payload-isolation pattern; custom s390x image build pipeline for Connect + Flink SQL-runner; Flink-on-CFK FSI example jobs). Encode all 13 `KNOWN-GAPS.md` entries (G-01..G-13) as `tools/vendor-sources.json` trip-wires with status, workaround, and FSI impact. Extend the golden eval harness with ≥15 cases across `/ask` and `/review` so coverage holds at the H.2 EVAL-02 floor. After 12, `/ask` and `/review` can reason about LinuxONE deployments with full provenance, and `/wiki:lint --full` surfaces drift when upstream gap status changes.
 **Depends on:** 10 (wiki articles cite MANIFEST entries by stable ID; the `type: accelerator` contract must exist first). Can parallelize with late-11 work but easier to sequence after 11 so articles can cross-reference the canon-key map.
@@ -157,7 +164,7 @@ G.2c shipped in v1.0. G.2a, G.2b, G.2d, G.2e carry forward (see above). Detailed
 | H.3c. /dsp:scaffold wrapper | v2.0 | 1/1 | Complete | 2026-05-17 |
 | 9. Submodule sync + canon-parity unblock | v2.1 | 0/2 | Not started | - |
 | 10. Accelerator artifact-type registration | v2.1 | 2/3 | Complete    | 2026-05-23 |
-| 11. Act-rail wiring for accelerator dispatch | v2.1 | 0/? | Not started | - |
+| 11. Act-rail wiring for accelerator dispatch | v2.1 | 0/4 | Not started | - |
 | 12. Wiki ingest of LinuxONE accelerator | v2.1 | 0/? | Not started | - |
 | G.2a. mcp-confluent tool-call executor | backlog | 0/1 | Not started | - |
 | G.2b. Composite scenario executor | backlog | 0/1 | Not started | - |
