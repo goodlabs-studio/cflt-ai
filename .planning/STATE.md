@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: — LinuxONE Accelerator Integration
 status: executing
-stopped_at: "Completed 10-02-PLAN.md — atomic commit ad2304f landed: submodule pointer b117f3f + check_manifest.py validator + 9 TestManifestSchemaValidator tests + 2 fixtures + tools/manifest-schema.md + CONTRIBUTING.md cross-link"
-last_updated: "2026-05-23T16:42:56.563Z"
+stopped_at: "Completed 11-01-PLAN.md — atomic commits dcc1bec + ece76b5 landed: MODULE_TO_CANON_KEY 2→7 entries with 5 accelerator composite keys + check_parity walker extension + 8 new tests + fsi.* keys in fsi/overrides.yaml"
+last_updated: "2026-05-23T17:07:59.436Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 9
+  completed_plans: 6
   percent: 0
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-23)
 
 **Core value:** Canon overlay stack works — customers can fork and override safely
-**Current focus:** Phase 10 — accelerator-artifact-type-registration
+**Current focus:** Phase 11 — act-rail-wiring-for-accelerator-dispatch
 
 ## Current Position
 
-Phase: 11
-Plan: Not started
+Phase: 11 (act-rail-wiring-for-accelerator-dispatch) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
 Last activity: 2026-05-23
 
@@ -113,6 +113,7 @@ Tag: `v1.0`
 | Phase 09-submodule-sync-canon-parity-unblock P02 | 4min | 3 tasks | 3 files |
 | Phase 10-accelerator-artifact-type-registration P01 | 3min | 1 tasks | 1 files |
 | Phase 10-accelerator-artifact-type-registration P02 | 4min | 3 tasks | 7 files |
+| Phase 11 P01 | 6min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -244,6 +245,11 @@ Recent decisions affecting current work:
 - [Phase 10-accelerator-artifact-type-registration]: Schema-shape vs path-existence kept orthogonal — validate_capability() skips path-on-disk check; that's TestManifestPathsExist's job; lets validator run as fast pre-commit gate without submodule checkout
 - [Phase 10-accelerator-artifact-type-registration]: Atomic commit ad2304f bundles submodule pointer + validator + tests + fixtures + docs — single git revert returns repo to pre-MAN-01 baseline; mirrors Phase 9 atomic-landing discipline
 - [Phase 10-accelerator-artifact-type-registration]: 9-test coverage matrix for new type (2 positive + 4 negative-space + 1 cross-type regression + 1 enum-gate + 1 constant-shape lock) — reusable template for future type additions
+- [Phase 11]: [Phase 11-act-rail-wiring-for-accelerator-dispatch]: fsi.* canon keys placed in canon/industry/fsi/overrides.yaml (not defaults.yaml) — base canon stays vendor-neutral; check_parity unions both via new fsi_overrides_path arg
+- [Phase 11]: [Phase 11-act-rail-wiring-for-accelerator-dispatch]: Composite-key shape '<artifact-id>:<layer-name>' (flat string, no nested dict) — keeps MODULE_TO_CANON_KEY walker grep-friendly and uniform across terraform-module + accelerator entries per CONTEXT D-04 lock
+- [Phase 11]: [Phase 11-act-rail-wiring-for-accelerator-dispatch]: Three distinct [DRIFT-1] accelerator shapes (unknown composite, canon_key mismatch naming both sides, orphan canon-key) — auditable CI output; mirror direction-1 discipline from terraform-module loop
+- [Phase 11]: [Phase 11-act-rail-wiring-for-accelerator-dispatch]: check_parity() gains optional fsi_overrides_path arg (PROJECT_ROOT default) — production behavior unchanged but tempdir tests inject non-existent path to isolate synthetic fixtures from real fsi keys; CLI --fsi-overrides-path flag added symmetrically
+- [Phase 11]: [Phase 11-act-rail-wiring-for-accelerator-dispatch]: CANON_INFRA_KEYS filters out composite keys (those containing ':') — direction-2 WARN-2 reverse-lookup stays terraform-module-only; accelerator reverse direction enforced by per-layer canon_key field on MANIFEST
 
 ### Pending Todos
 
@@ -255,6 +261,6 @@ None yet — note that 10 may require an upstream fsi-dsp PR merge before 11 can
 
 ## Session Continuity
 
-Last session: 2026-05-23T15:58:04.090Z
-Stopped at: Completed 10-02-PLAN.md — atomic commit ad2304f landed: submodule pointer b117f3f + check_manifest.py validator + 9 TestManifestSchemaValidator tests + 2 fixtures + tools/manifest-schema.md + CONTRIBUTING.md cross-link
+Last session: 2026-05-23T17:07:46.329Z
+Stopped at: Completed 11-01-PLAN.md — atomic commits dcc1bec + ece76b5 landed: MODULE_TO_CANON_KEY 2→7 entries with 5 accelerator composite keys + check_parity walker extension + 8 new tests + fsi.* keys in fsi/overrides.yaml
 Resume file: None
