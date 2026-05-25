@@ -11,6 +11,14 @@ tags: [fsi, overlay, upstream-skills, canon, kafka-streams, python-client, schem
 
 # FSI Canon Overlay for Confluent Agent Skills
 
+> **Automated activation (v2.2+):** `/review` Step 4.0.5 and `/wiki:validate`
+> Step 2e now call `tools/skill_routing.py` automatically when a claim or stub
+> matches a skill's keywords. `activate_skill()` extracts the matching
+> `## <skill-slug>` section below and returns the parsed override table to the
+> calling skill spec, which folds the overrides into Canon Compliance checks.
+> Manual read-then-apply is preserved for ad-hoc consultation but is no longer
+> the only activation path.
+
 When the four upstream skills shipped by the `streaming-skills-plugin@confluent-agent-skills` plugin activate inside cflt-ai — `kafka-streams-programming`, `developing-kafka-python-client`, `kafka-schema-registry`, `confluent-cloud-cdc-tableflow` — Claude reads this overlay and applies the FSI overrides below on top of the upstream defaults. Each section corresponds to one upstream skill, opens with a "when this skill activates" hook, and lays out a 5-column override table where every row traces back to the project's `CLAUDE.md` Confluent Canon (or an ADR / wiki article when the override goes beyond canon).
 
 The overlay is the **operator/production** layer of the canon overlay stack: base (GoodLabs) → industry (FSI, this article) → customer (acme-bank, etc.) → engagement. The **developer-sandbox** layer is orthogonal and lands in Phase H.4 — when Claude is helping a developer scaffold a local-only test project, the dev-sandbox overlay relaxes some of the rows below; for any prod-tier or customer-facing work, FSI overrides win.

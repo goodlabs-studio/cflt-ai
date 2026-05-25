@@ -129,6 +129,48 @@ For claims where wiki coverage is absent or where the claim is particularly impo
 - Use `context7` MCP for architecture patterns and best practices
 - Record the validation result (Confirmed / Corrected / Unverifiable) for each claim checked
 
+#### Step 4.0.5: Skill consultation (advisory)
+
+For each claim, consult the relevant streaming-skills-plugin skill alongside MCP.
+MCP remains authoritative when verdicts conflict; skill verdict is annotated for
+follow-up review. The four skills cover: Kafka Streams topology, Python Kafka
+client, Schema Registry governance, CDC→Tableflow pipelines.
+
+**For each claim from Step 4:**
+
+1. Route the claim to a skill:
+   ```bash
+   python3 tools/skill_routing.py route "<claim text>"
+   ```
+   Output is a skill slug (e.g., `kafka-streams-programming`) or `—` for no match.
+
+2. If a skill slug is returned, activate the skill:
+   ```bash
+   python3 tools/skill_routing.py activate <slug> --json
+   ```
+   This loads `SKILL.md` and extracts the matching FSI overlay block from
+   `wiki/patterns/fsi-canon-overlay-for-confluent-skills.md`.
+
+3. Read the skill's `SKILL.md` (path in activation output) plus any referenced
+   sections under `references/` that are relevant to the claim. Use the skill's
+   guidance to form a `skill_verdict` (one of `Confirmed`, `Corrected`,
+   `Unverifiable`, `Out-of-scope`).
+
+4. **Conflict handling:** if `skill_verdict != mcp_verdict`, keep MCP's verdict
+   in the final row, but append a ⚠️ note in Corrections:
+   > Skill (`<slug>`) and MCP disagree — MCP authoritative.
+   > Skill said: `<one-line skill evidence>`.
+
+5. **FSI overlay application:** if `activate_skill()` returned `applied_overrides`,
+   carry those rows into the Canon Compliance check in Step 5. The overlay is
+   canonical (per ADR-009 / `wiki/patterns/fsi-canon-overlay-for-confluent-skills.md`)
+   — do not re-validate overlay overrides through MCP.
+
+**Reporting:** the Claim Validation table in Step 6 gains two new columns,
+`Skill` and `Skill Verdict`. For rows where no skill routed, both columns show
+`—`. Track the unique skill slugs activated during this review for the
+activity-log entry.
+
 #### Step 4.1: Auditor-readonly payload-isolation claim flag (WIKI-03)
 
 If a claim or paraphrase matches ANY of the following patterns (case-insensitive,
@@ -189,19 +231,21 @@ Write the report with these sections in order:
 #### ## Claim Validation
 - For single-doc input: organize by section/topic
 - For multi-doc input: organize first by source file, then by section within each file
-- Each claim row: `#`, `Claim`, `Wiki source`, `MCP source`, `Verdict`
-  (Verdict = `Confirmed` / `Corrected` / `Unverifiable`)
+- Each claim row: `#`, `Claim`, `Wiki source`, `MCP source`, `Skill`, `Skill Verdict`, `Verdict`
+  (`Verdict` = `Confirmed` / `Corrected` / `Unverifiable` — MCP-authoritative)
+  (`Skill` = streaming-skills-plugin slug or `—`; `Skill Verdict` = same enum or `—`)
 - After each section's table, list specific Corrections with explanation and source
 
 ```markdown
 ### <Section/Topic 1>
 
-| # | Claim | Wiki | MCP | Verdict |
-|---|-------|------|-----|---------|
-| deck-1 | [claim text] | [article or "—"] | [source or "—"] | Confirmed / Corrected / Unverifiable |
+| # | Claim | Wiki | MCP | Skill | Skill Verdict | Verdict |
+|---|-------|------|-----|-------|---------------|---------|
+| deck-1 | [claim text] | [article or "—"] | [source or "—"] | [slug or "—"] | [verdict or "—"] | Confirmed / Corrected / Unverifiable |
 
 **Corrections:**
 - Claim #deck-N: [what's wrong and what the correct answer is, with source]
+- (Append ⚠️ Skill-MCP conflict notes here when skill_verdict != mcp_verdict)
 ```
 
 #### ## Premise Challenge
@@ -250,6 +294,7 @@ Follow the format defined in `wiki/activity/README.md`:
 **Input:** {space-separated list of input file paths, or "pasted content" if no file paths}
 **Output:** {report file path(s) written, e.g., "outputs/reports/deck-review-2026-04-28.md"}
 **Canon stack:** {output of active_layers(), e.g., "base + industry/fsi"}
+**Skills consulted:** {comma-separated list of streaming-skills-plugin slugs activated during this review, or "none" if no claim routed to a skill}
 ```
 
 ## Rules

@@ -1,0 +1,93 @@
+{
+  "_comment": "Keyword routing data for tools/skill_routing.py. Maps claim text to one of the four streaming-skills-plugin skills. Keywords are case-insensitive substring matches. Priority order matters when multiple skills match: developing-kafka-python-client wins for Python context even when Schema Registry keywords are present. See tools/skill_routing.py for the priority logic. Co-locates skill paths + FSI overlay section refs in one file, matching the H.1 vendor-sources.json pattern.",
+  "_pinned_to": "streaming-skills-plugin@91d1871e (see tools/vendor-sources.json)",
+  "_priority_order": [
+    "developing-kafka-python-client",
+    "confluent-cloud-cdc-tableflow",
+    "kafka-streams-programming",
+    "kafka-schema-registry"
+  ],
+  "skills": {
+    "kafka-streams-programming": {
+      "keywords": [
+        "KStream",
+        "KTable",
+        "GlobalKTable",
+        "StreamsBuilder",
+        "TopologyTestDriver",
+        "topology",
+        "interactive queries",
+        "processor API",
+        "tumbling window",
+        "session window",
+        "hopping window",
+        "join window",
+        "rebalancing loop",
+        "state store",
+        "Kafka Streams"
+      ],
+      "skill_md": "raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/SKILL.md",
+      "references_dir": "raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-streams-programming/references",
+      "fsi_overlay_section": "## kafka-streams-programming"
+    },
+    "developing-kafka-python-client": {
+      "keywords": [
+        "confluent-kafka-python",
+        "AvroProducer",
+        "AvroConsumer",
+        "AvroSerializer",
+        "JSONSerializer",
+        "ProtobufSerializer",
+        "kafka-python",
+        "Python producer",
+        "Python consumer",
+        "Python Kafka client"
+      ],
+      "skill_md": "raw/vendor/confluent-agent-skills/91d1871e/skills/developing-kafka-python-client/SKILL.md",
+      "references_dir": "raw/vendor/confluent-agent-skills/91d1871e/skills/developing-kafka-python-client/references",
+      "fsi_overlay_section": "## developing-kafka-python-client"
+    },
+    "kafka-schema-registry": {
+      "keywords": [
+        "Schema Registry",
+        "FULL_TRANSITIVE",
+        "BACKWARD",
+        "FORWARD",
+        "BACKWARD_TRANSITIVE",
+        "FORWARD_TRANSITIVE",
+        "subject",
+        "compatibility mode",
+        "compatibility level",
+        "schema migration",
+        "schema evolution",
+        "TopicNameStrategy",
+        "RecordNameStrategy",
+        "TopicRecordNameStrategy",
+        "hard delete",
+        "permanent=true"
+      ],
+      "skill_md": "raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/SKILL.md",
+      "references_dir": "raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references",
+      "fsi_overlay_section": "## kafka-schema-registry"
+    },
+    "confluent-cloud-cdc-tableflow": {
+      "keywords": [
+        "CDC",
+        "Debezium",
+        "Tableflow",
+        "Iceberg",
+        "Delta Lake",
+        "change data capture",
+        "schemaless topic",
+        "multi-event topic",
+        "CDC pipeline",
+        "Debezium source connector",
+        "JSON_SR",
+        "Flink CDC"
+      ],
+      "skill_md": "raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/SKILL.md",
+      "references_dir": "raw/vendor/confluent-agent-skills/91d1871e/skills/confluent-cloud-cdc-tableflow/references",
+      "fsi_overlay_section": "## confluent-cloud-cdc-tableflow"
+    }
+  }
+}

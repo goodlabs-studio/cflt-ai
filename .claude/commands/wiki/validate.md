@@ -50,14 +50,44 @@ For each article with `confidence: high` (within scope):
   ```
 - **Confirmed**: No action (don't add noise).
 
+**2e. Skill consultation (advisory).** In parallel with the MCP query, route the
+claim through the streaming-skills-plugin skills:
+
+```bash
+python3 tools/skill_routing.py route "<claim text>"
+```
+
+If a skill slug is returned, activate the skill (`python3 tools/skill_routing.py
+activate <slug> --json`), read its `SKILL.md` plus any topical sections under
+`references/`, and form an advisory `skill_verdict`.
+
+- **Skill-MCP conflict** (skill verdict != MCP verdict): log under a NEW section
+  `## Skill-MCP Conflicts` in `wiki/_queue.md` (separate from "Unverified Claims
+  to Resolve" so reviewers can spot-check skill quality independently). Format:
+  ```
+  - [ ] <article path> line N: "<wiki claim>" — MCP: "<mcp finding>" — Skill (<slug>): "<skill evidence>"
+  ```
+  MCP remains authoritative for the auto-fix path in Step 5; the skill conflict
+  is informational.
+- **Skill agrees with MCP**: no action.
+- **No skill routed**: no action.
+
+Track the unique skill slugs activated during this validation pass for the
+activity-log entry below.
+
 ### Step 3: Check low-confidence articles for expansion potential
 
 For articles with `confidence: low` (stubs):
 1. Read the stub to see what topic it covers
-2. Query relevant MCP tools to see if enough content exists to expand it
-3. If expandable, add to `wiki/_queue.md` under "Articles to Expand":
+2. **Route the topic through skill routing** (`python3 tools/skill_routing.py
+   route "<stub topic>"`). If a skill is returned, prefer that skill's
+   `references/` body as the primary content source — it has cached domain
+   knowledge plus the FSI overlay baked in. MCP becomes the secondary
+   fact-check.
+3. Query relevant MCP tools to see if enough content exists to expand it
+4. If expandable, add to `wiki/_queue.md` under "Articles to Expand":
    ```
-   - [ ] wiki/<path> — MCP sources have sufficient content on <topic>; key points: <summary>
+   - [ ] wiki/<path> — MCP sources have sufficient content on <topic>; key points: <summary> | Skill: <slug or "—">
    ```
 
 ### Step 4: Write validation report
@@ -68,6 +98,8 @@ Ensure `outputs/reports/` directory exists (create if missing). Create `outputs/
 - Claims validated (count)
 - Drift instances found (count and details)
 - Stubs with expansion potential (count and list)
+- **Skills consulted** (comma-separated list of streaming-skills-plugin slugs activated, or "none")
+- **Skill-MCP conflicts** (count and brief list — full detail in `wiki/_queue.md` under that section)
 - Overall wiki health assessment
 
 ### Step 5: Offer auto-fix
