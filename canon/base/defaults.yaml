@@ -41,3 +41,30 @@ security:
   auth_mechanism: "mTLS + RBAC"              # For regulated environments; never username/password in FSI
   service_account_scope: "per_application"   # Not per team
   audit_log: true                            # All production clusters
+
+# Database connector defaults (governs fsi-dsp module/db_connector — polymorphic
+# CC managed connector for MongoDB, Redis, CockroachDB, PostgreSQL source/sink).
+# Per fsi-dsp ADR-012. Honest baseline; FSI overrides land in industry/fsi/overrides.yaml.
+connector_config:
+  errors_tolerance: "none"                   # FSI: never silently drop in regulated workloads
+  consumer_override:
+    auto_offset_reset: "earliest"            # Deterministic replay; align with consumer canon
+  producer_override:
+    acks: "all"                              # Inherit producer canon; never weaken in connector overrides
+    enable_idempotence: true
+  sla_tier_default: "standard"               # Match module default; critical needs explicit override
+
+# Lakehouse sink defaults (governs fsi-dsp module/lakehouse_sink — Databricks Delta
+# Lake Sink Connector + Snowflake Snowpipe Streaming Connector). Per fsi-dsp ADR-011.
+lakehouse_sink_config:
+  flush_interval_ms: 5000                    # Module default; tune per workload latency budget
+  auto_evolve: false                         # FSI: explicit schema evolution; auto-evolve hides governance failures
+  enable_schematization: true                # Snowflake-side: structured tables over variant blobs
+  dlq_retention_ms: 604800000                # 7 days; aligns with audit-event retention floor
+
+# Tableflow defaults (governs fsi-dsp module/tableflow — Iceberg/Delta materialization
+# into Databricks Unity Catalog or Snowflake Open Catalog). Per fsi-dsp ADR-011.
+tableflow_config:
+  storage_format: "ICEBERG"                  # ADR-011 default; Delta acceptable for Databricks-only stack
+  catalog_target: "none"                     # Production must explicitly pick: databricks_unity | snowflake_open
+  scope_required: "cc_managed_only"          # Tableflow is CC-only; on-prem fallback is DB-C/SF-A sink connectors

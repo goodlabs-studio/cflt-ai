@@ -45,6 +45,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODULE_TO_CANON_KEY = {
     "module/topic": "topic_design",
     "module/flink": "flink_sql",
+    # New terraform-modules from fsi-dsp ADR-011 (lakehouse) + ADR-012 (database connectors).
+    # Each governs a top-level canon defaults key in canon/base/defaults.yaml; FSI overrides
+    # land in canon/industry/fsi/overrides.yaml as that surface matures.
+    "module/db_connector": "connector_config",
+    "module/lakehouse_sink": "lakehouse_sink_config",
+    "module/tableflow": "tableflow_config",
     "accelerator/confluent-on-linuxone:01-rbac": "fsi.security.mds-rbac",
     "accelerator/confluent-on-linuxone:02-tls": "fsi.security.tls-fips",
     "accelerator/confluent-on-linuxone:03-schema-governance": "fsi.schema.compatibility-full-transitive",
@@ -59,6 +65,106 @@ MODULE_TO_CANON_KEY = {
 # Keys NOT in this set are cross-cutting (security, producer, consumer, etc.) and
 # are exempt from "no module found" warnings because they apply across all artifacts.
 CANON_INFRA_KEYS = {v for k, v in MODULE_TO_CANON_KEY.items() if ":" not in k}  # {"topic_design", "flink_sql"}
+
+
+# Directories under fsi-dsp/ scanned for stray assets (on-disk paths not registered
+# in MANIFEST.yaml). Mode is either "subdirs" (each immediate child directory is a
+# candidate) or "files" (each immediate child file is a candidate).
+#
+# When a new tier lands upstream (lakehouse via ADR-011, database connectors via
+# ADR-012, etc.), every new subdir/file under these paths must appear in MANIFEST
+# or the gate fires [STRAY-1]. This forces upstream PRs to register tiers before
+# they merge into main.
+STRAY_SCAN: dict[str, str] = {
+    "modules": "subdirs",
+    "accelerators": "subdirs",
+    "ansible/roles": "subdirs",
+    "scenarios": "subdirs",
+    "reference": "subdirs",
+    "scripts": "files",
+    "observability": "subdirs",
+    "docs/adr": "files",
+}
+
+# Allowlist of disk paths that are intentionally NOT registered in MANIFEST.
+# Use sparingly — every entry is technical debt. Each entry needs a comment
+# explaining WHY it's exempt and what the resolution path is.
+ALLOWED_STRAY: set[str] = {
+    # ADR template (not a real ADR). Upstream may rename to docs/adr/_template.md
+    # eventually; until then, leave registered as a stray exemption.
+    "docs/adr/000-template.md",
+    # Duplicate ADR-009 number — upstream has both 009-linuxone-kafka-offload.md
+    # (registered) and 009-linuxone-deployment-guidance.md (this one). Numbering
+    # collision should be resolved by upstream rename or merge; allowlisting here
+    # to unblock the gate while that PR is pending.
+    "docs/adr/009-linuxone-deployment-guidance.md",
+    # Empty .terraform residue from v1.0 era PR #2 (module/cc-cluster-basic).
+    # The directory contains only `.terraform/` and `.terraform.lock.hcl` — no real
+    # module files. Should be cleaned up upstream (added to .gitignore + removed
+    # from history); allowlisting here so the gate doesn't block on stale residue.
+    "modules/cc-cluster-basic",
+}
+
+
+def check_strays(manifest_path: Path, fsi_dsp_root: Path) -> List[str]:
+    """Check that every on-disk asset under governable dirs is registered in MANIFEST.
+
+    Walks the directories in STRAY_SCAN and asserts each child (subdir or file,
+    depending on mode) appears in either:
+      - some MANIFEST capability's `path` field, OR
+      - some accelerator's `apply_sequence[].path` field, OR
+      - the ALLOWED_STRAY allowlist.
+
+    Returns a list of [STRAY-1] finding strings. Empty list = no strays.
+
+    Resolution path for a STRAY-1 finding is one of:
+      1. Add a MANIFEST capability for the asset (preferred — restores governance).
+      2. Add the path to ALLOWED_STRAY with a justification comment (debt path).
+      3. Delete the unregistered file/dir from fsi-dsp (rare — actual stray).
+    """
+    drift: List[str] = []
+
+    try:
+        manifest_data = yaml.safe_load(manifest_path.read_text())
+    except FileNotFoundError:
+        # check_parity() reports this; don't duplicate the error here.
+        return drift
+    except yaml.YAMLError:
+        return drift
+
+    capabilities = manifest_data.get("capabilities", []) if isinstance(manifest_data, dict) else []
+
+    # Build the set of paths the MANIFEST claims to own.
+    registered: set[str] = set()
+    for cap in capabilities:
+        if "path" in cap:
+            registered.add(cap["path"])
+        for layer in cap.get("apply_sequence", []) or []:
+            if isinstance(layer, dict) and "path" in layer:
+                registered.add(layer["path"])
+
+    # Walk each governance-relevant directory and find disk paths not registered.
+    for relpath, mode in STRAY_SCAN.items():
+        scan_dir = fsi_dsp_root / relpath
+        if not scan_dir.exists():
+            continue
+        for child in sorted(scan_dir.iterdir()):
+            if child.name.startswith("."):
+                continue
+            if mode == "subdirs" and not child.is_dir():
+                continue
+            if mode == "files" and not child.is_file():
+                continue
+            rel = f"{relpath}/{child.name}"
+            if rel in registered or rel in ALLOWED_STRAY:
+                continue
+            drift.append(
+                f"[STRAY-1] {rel} exists on disk but is not registered in MANIFEST "
+                f"and not in ALLOWED_STRAY — register it as a typed capability or "
+                f"add to ALLOWED_STRAY with justification"
+            )
+
+    return drift
 
 
 def check_parity(
@@ -229,12 +335,25 @@ def main() -> int:
         default=PROJECT_ROOT / "canon" / "industry" / "fsi" / "overrides.yaml",
         help="Path to canon fsi overrides.yaml (default: canon/industry/fsi/overrides.yaml)",
     )
+    parser.add_argument(
+        "--fsi-dsp-root",
+        type=Path,
+        default=PROJECT_ROOT / "raw" / "repos" / "fsi-dsp",
+        help="Path to fsi-dsp submodule root for stray-asset scan (default: raw/repos/fsi-dsp)",
+    )
+    parser.add_argument(
+        "--skip-strays",
+        action="store_true",
+        help="Skip the stray-asset walker (useful for early test fixtures that only exercise drift logic)",
+    )
     args = parser.parse_args()
 
     drift = check_parity(args.manifest_path, args.defaults_path, args.fsi_overrides_path)
+    if not args.skip_strays:
+        drift.extend(check_strays(args.manifest_path, args.fsi_dsp_root))
 
     if not drift:
-        print("OK: canon <-> fsi-dsp parity confirmed (no drift)")
+        print("OK: canon <-> fsi-dsp parity confirmed (no drift, no strays)")
         return 0
 
     print("DRIFT DETECTED:", file=sys.stderr)

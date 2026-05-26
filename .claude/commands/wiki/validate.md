@@ -136,6 +136,35 @@ For articles with `confidence: low` (stubs):
    - [ ] wiki/<path> — MCP sources have sufficient content on <topic>; key points: <summary> | Skill: <slug or "—">
    ```
 
+### Step 3.5: Source-staleness check (reconsolidation queue)
+
+After Step 2 and Step 3 finish, run the source-staleness check on every article
+in scope. This closes the canon reconsolidation loop: when an article cites an
+`fsi-dsp://<id>` URI and the underlying file has been modified upstream since
+the article's `last_validated` date, the article needs human re-review.
+
+**How:** This runs automatically inside `tools/wiki-lint.py --full` and emits
+findings under the `stale_source`, `missing_source`, and `ambiguous_source`
+keys. To invoke explicitly:
+
+```bash
+python3 tools/wiki-lint.py --full 2>&1 | grep -E "STALE-SOURCE|MISSING-SOURCE|AMBIGUOUS-SOURCE"
+```
+
+**Three finding shapes:**
+
+- **STALE-SOURCE-1** — file changed since article validated. Add to `wiki/_queue.md`
+  under `## Source-changed articles (reconsolidation queue)`:
+  ```
+  - [ ] <article path> cites <uri> (<cap_path>); validated <YYYY-MM-DD>, file last changed <YYYY-MM-DD> — reconsolidate
+  ```
+- **MISSING-SOURCE** — URI resolves to no MANIFEST capability (id removed or
+  never registered). Surface in report; flag for upstream investigation.
+- **AMBIGUOUS-SOURCE** — short-form URI matches multiple MANIFEST capabilities.
+  Article needs to use the full capability ID.
+
+The queue entries feed the next `/ask --mode reconsolidate` pass.
+
 ### Step 4: Write validation report
 
 Ensure `outputs/reports/` directory exists (create if missing). Create `outputs/reports/wiki-validation-YYYY-MM-DD.md` with:
@@ -147,6 +176,8 @@ Ensure `outputs/reports/` directory exists (create if missing). Create `outputs/
 - **Skills consulted** (comma-separated list of streaming-skills-plugin slugs activated, or "none")
 - **Skill-MCP conflicts** (count and brief list — full detail in `wiki/_queue.md` under that section)
 - **Preload bundle** (`navigation` if Step 1.5 fired; `none` if skipped for under-threshold sweep)
+- **Source-staleness** (count of STALE-SOURCE-1 findings from Step 3.5; queued for reconsolidation in `wiki/_queue.md`)
+- **Missing/ambiguous sources** (count from Step 3.5; flagged for upstream investigation)
 - Overall wiki health assessment
 
 ### Step 5: Offer auto-fix

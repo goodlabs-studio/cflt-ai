@@ -265,23 +265,25 @@ class TestAcceleratorParity:
         so WARN-2 reverse-lookup noise does not pollute the positive-path assertion.
         """
         tmp = Path(tmpdir)
+        # Include every terraform-module currently in MODULE_TO_CANON_KEY so the
+        # direction-2 reverse-lookup check finds a backing module for each canon
+        # infra key. Keeps the fixture self-maintaining: any future module ID
+        # added to MODULE_TO_CANON_KEY only needs the matching canon defaults
+        # entry added below.
+        terraform_module_ids = [k for k in MODULE_TO_CANON_KEY if ":" not in k]
+        terraform_module_canon_keys = [MODULE_TO_CANON_KEY[k] for k in terraform_module_ids]
         manifest_data = {
             "version": "1.1.0",
             "capabilities": [
                 {
-                    "id": "module/topic",
+                    "id": mid,
                     "type": "terraform-module",
-                    "name": "topic",
-                    "path": "modules/topic",
-                    "description": "Topic module",
-                },
-                {
-                    "id": "module/flink",
-                    "type": "terraform-module",
-                    "name": "flink",
-                    "path": "modules/flink",
-                    "description": "Flink module",
-                },
+                    "name": mid.split("/")[-1],
+                    "path": f"modules/{mid.split('/')[-1]}",
+                    "description": f"{mid} module",
+                }
+                for mid in terraform_module_ids
+            ] + [
                 {
                     "id": "accelerator/confluent-on-linuxone",
                     "type": "accelerator",
@@ -300,7 +302,7 @@ class TestAcceleratorParity:
         manifest_path = _write_yaml(tmp / "MANIFEST.yaml", manifest_data)
         defaults_path = _write_yaml(
             tmp / "defaults.yaml",
-            _make_defaults([canon_key, "topic_design", "flink_sql"]),
+            _make_defaults([canon_key, *terraform_module_canon_keys]),
         )
         # Skip the real fsi overrides — defaults fixture above is the union source.
         return check_parity(manifest_path, defaults_path, tmp / "no-overrides.yaml")

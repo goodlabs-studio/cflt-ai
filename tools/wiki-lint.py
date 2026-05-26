@@ -187,6 +187,125 @@ def check_gap_drift(repo_root: Path, vendor_pins) -> dict:
     return findings
 
 
+def _load_manifest_index(repo_root: Path) -> "dict[str, str]":
+    """Return {capability_id: path} for every MANIFEST.yaml capability.
+
+    Used by check_source_staleness() to resolve `fsi-dsp://<id>` URIs in wiki
+    article frontmatter to on-disk paths in the submodule. Returns empty dict if
+    MANIFEST is missing or malformed (passive failure mode — wiki staleness is
+    advisory, never blocking lint exit codes).
+    """
+    import yaml
+    manifest_path = repo_root / "raw/repos/fsi-dsp/MANIFEST.yaml"
+    if not manifest_path.exists():
+        return {}
+    try:
+        data = yaml.safe_load(manifest_path.read_text())
+    except yaml.YAMLError:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    index: dict[str, str] = {}
+    for cap in data.get("capabilities", []):
+        if isinstance(cap, dict) and "id" in cap and "path" in cap:
+            index[cap["id"]] = cap["path"]
+    return index
+
+
+def _file_last_modified_in_submodule(repo_root: Path, rel_path: str) -> "datetime | None":
+    """Return the most-recent git commit date for `rel_path` in the fsi-dsp submodule.
+
+    Uses `git log -1 --format=%cI -- <path>` to get the ISO-8601 committer date.
+    Returns None if the file is untracked, the submodule is unavailable, or the
+    git command fails for any reason (passive failure — silent skip is correct).
+    """
+    submodule_path = repo_root / "raw/repos/fsi-dsp"
+    if not submodule_path.exists():
+        return None
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["git", "-C", str(submodule_path), "log", "-1", "--format=%cI", "--", rel_path],
+            capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode != 0 or not result.stdout.strip():
+            return None
+        # %cI format is full ISO-8601 with timezone, e.g. 2026-05-26T01:30:00+00:00
+        return datetime.fromisoformat(result.stdout.strip().replace("Z", "+00:00"))
+    except (subprocess.SubprocessError, ValueError, OSError):
+        return None
+
+
+def check_source_staleness(article_path: Path, fm: dict, repo_root: Path,
+                           manifest_index: "dict[str, str] | None" = None) -> list:
+    """Return STALE-SOURCE findings for one article. Empty = clean.
+
+    Resolves each `fsi-dsp://<id>` URI in the article's `sources:` list to a
+    MANIFEST capability path, gets the file's most-recent commit date in the
+    submodule, compares against the article's `last_validated`. If the file
+    has been modified since the article was validated, emits STALE-SOURCE-1.
+
+    Findings:
+    - STALE-SOURCE-1: file changed since article validation (queue for reconsolidation)
+    - STALE-SOURCE-2: file no longer exists in MANIFEST (id was removed upstream)
+    - STALE-SOURCE-3: URI is malformed or unresolvable
+
+    Passive posture per H.1 D-09: findings surface but do not fail lint exit.
+    """
+    sources = fm.get("sources") or []
+    if not isinstance(sources, list) or not sources:
+        return []
+    last_validated_str = fm.get("last_validated") or fm.get("last_updated")
+    if not last_validated_str:
+        return []
+    try:
+        last_validated = datetime.strptime(str(last_validated_str), "%Y-%m-%d")
+        # Treat the date as midnight UTC so the comparison against tz-aware git dates is sane.
+        from datetime import timezone
+        last_validated = last_validated.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return []
+
+    if manifest_index is None:
+        manifest_index = _load_manifest_index(repo_root)
+
+    findings: list = []
+    for uri in sources:
+        uri_str = str(uri)
+        if not uri_str.startswith("fsi-dsp://"):
+            continue  # other vendor URIs handled by check_vendor_drift
+        cap_id = uri_str[len("fsi-dsp://"):]
+        cap_path = manifest_index.get(cap_id)
+        if cap_path is None:
+            # Allow short-form IDs like adr/009 by prefix-matching against the index;
+            # if exactly one match, accept it. Multiple matches = ambiguous, skip.
+            matches = [p for cid, p in manifest_index.items() if cid.startswith(cap_id + "-") or cid == cap_id]
+            if len(matches) == 1:
+                cap_path = matches[0]
+            elif len(matches) > 1:
+                findings.append(
+                    f"STALE-SOURCE-3 {article_path}: URI {uri_str!r} is ambiguous "
+                    f"({len(matches)} MANIFEST matches) — use full capability ID"
+                )
+                continue
+            else:
+                findings.append(
+                    f"STALE-SOURCE-2 {article_path}: URI {uri_str!r} resolves to no "
+                    f"MANIFEST capability — id removed or never registered"
+                )
+                continue
+        file_mtime = _file_last_modified_in_submodule(repo_root, cap_path)
+        if file_mtime is None:
+            continue  # silent skip — file untracked or submodule unavailable
+        if file_mtime > last_validated:
+            findings.append(
+                f"STALE-SOURCE-1 {article_path}: cites {uri_str} ({cap_path}); "
+                f"validated {last_validated.date()}, file last changed "
+                f"{file_mtime.date()} — queue for reconsolidation"
+            )
+    return findings
+
+
 def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
     wiki = root / "wiki"
     findings = {
@@ -203,8 +322,14 @@ def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
         "gap_drift": [],
         "missing_gap": [],
         "malformed_gap": [],
+        "stale_source": [],
+        "missing_source": [],
+        "ambiguous_source": [],
     }
     vendor_pins = load_vendor_pins(root)
+    # Build the MANIFEST index once per lint run; reused for every article's
+    # source-staleness check. Empty dict if MANIFEST is unavailable (passive skip).
+    manifest_index = _load_manifest_index(root)
 
     all_md = {str(p.relative_to(root)) for p in wiki.rglob("*.md")}
     stale_cutoff = datetime.now() - timedelta(days=90)
@@ -259,6 +384,19 @@ def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
                 findings["malformed_source"].append(drift_msg)
             elif drift_msg.startswith("UNKNOWN VENDOR"):
                 findings["unknown_vendor"].append(drift_msg)
+
+        # Source-staleness: fsi-dsp:// URIs in `sources:` whose file changed
+        # since `last_validated`. Drives the reconsolidation loop — queues
+        # affected articles for /wiki:validate review without manual tracking.
+        # Only runs in --full mode (git log per article has measurable latency).
+        if full:
+            for sm in check_source_staleness(Path(rel), fm, root, manifest_index):
+                if sm.startswith("STALE-SOURCE-1"):
+                    findings["stale_source"].append(sm)
+                elif sm.startswith("STALE-SOURCE-2"):
+                    findings["missing_source"].append(sm)
+                elif sm.startswith("STALE-SOURCE-3"):
+                    findings["ambiguous_source"].append(sm)
 
     # Orphans: articles not referenced in _index.md
     # _index.md uses paths relative to the wiki dir (e.g. "concepts/foo.md"),
@@ -315,6 +453,9 @@ def main():
         "gap_drift": "KNOWN-GAPS DRIFT (declared trip-wire status doesn't match upstream KNOWN-GAPS.md)",
         "missing_gap": "MISSING-GAP (trip-wire ID has no matching row in upstream KNOWN-GAPS.md — gap removed?)",
         "malformed_gap": "MALFORMED-GAP (trip-wire JSON missing required field)",
+        "stale_source": "STALE-SOURCE (fsi-dsp:// citation file changed since last_validated — queue for /wiki:validate)",
+        "missing_source": "MISSING-SOURCE (fsi-dsp:// citation resolves to no MANIFEST capability — id removed?)",
+        "ambiguous_source": "AMBIGUOUS-SOURCE (fsi-dsp:// citation matches multiple MANIFEST capabilities — use full id)",
     }
     for key, items in findings.items():
         if items:
