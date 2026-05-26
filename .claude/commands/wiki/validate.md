@@ -23,6 +23,52 @@ By default, validates all articles. If the user provides an argument, treat it a
 
 Read `wiki/_index.md` to get the full article list. Apply scope filter if provided.
 
+### Step 1.5: Preload navigation bundle for full sweeps (≥10 articles)
+
+After scope is resolved in Step 1, count the articles you will validate. **If
+the count is 10 or more**, preload the navigation bundle before iterating —
+this is the CAG-style optimization documented in
+`outputs/spikes/cag-canon-cache-2026-05-25.md`. Modelled savings: ~88% of
+input-token cost on Sonnet vs. re-reading canon + wiki TOC + skill headers
+across every article.
+
+**How to preload:**
+
+1. Run the bundle assembler:
+   ```bash
+   python3 tools/canon_preload.py emit --bundle navigation
+   ```
+   This emits a deterministic, cache-friendly concatenation of CLAUDE.md +
+   MANIFEST.yaml + canon/{base,industry/fsi,customer/acme-bank} + wiki/_index +
+   wiki/_graph + wiki/_queue + 4 skill SKILL.md files (~53k tokens).
+
+2. **Read the bundle output into your working context** as the authoritative
+   reference for the rest of this validation pass. Treat the files inside it as
+   already-loaded — do NOT re-read CLAUDE.md, MANIFEST.yaml, canon files,
+   wiki/_index, wiki/_graph, or any skill SKILL.md during per-article work in
+   Step 2 below. They're already in your context window.
+
+3. **Per-article work still does targeted Reads** for the specific article
+   under validation. The bundle only covers the cross-cutting context that
+   would otherwise repeat 50+ times across the sweep.
+
+**When NOT to preload** (skip Step 1.5 entirely):
+
+- Scope is a single article path (`/wiki:validate concepts/sla-tiers.md`)
+- Scope is a small tag with <10 hits (`#linuxone` if it only matches 4 articles)
+- Any sweep with fewer than 10 articles
+
+For these cases, the cache-write premium isn't paid back within the run; just
+do the targeted reads inline in Step 2.
+
+**Why the threshold:** Anthropic's prompt-prefix cache has a 5-minute ephemeral
+TTL and a ~1.25× write premium. Modelled break-even is ~3 cached reads of the
+same prefix; the 10-article threshold gives margin for the bundle assembly
++ per-article reasoning overhead. See the spike report for the full cost model.
+
+**Record preload usage** in the activity log entry below: `**Preload bundle:**
+navigation` (or `none` if Step 1.5 was skipped).
+
 ### Step 2: Validate high-confidence articles
 
 For each article with `confidence: high` (within scope):
@@ -100,6 +146,7 @@ Ensure `outputs/reports/` directory exists (create if missing). Create `outputs/
 - Stubs with expansion potential (count and list)
 - **Skills consulted** (comma-separated list of streaming-skills-plugin slugs activated, or "none")
 - **Skill-MCP conflicts** (count and brief list — full detail in `wiki/_queue.md` under that section)
+- **Preload bundle** (`navigation` if Step 1.5 fired; `none` if skipped for under-threshold sweep)
 - Overall wiki health assessment
 
 ### Step 5: Offer auto-fix
