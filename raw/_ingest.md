@@ -31,6 +31,74 @@ Run: `python tools/wiki-compile.py --delta` to process.
 
 ## Processed
 
+- path: /Users/jhogan/Downloads/mTLS-CP-LinuxOne.md
+  source_url: |
+    /Users/jhogan/Downloads/mTLS-CP-LinuxOne.md (raw user-provided runbook)
+    https://docs.confluent.io/platform/current/security/protect-data/encrypt-tls.html
+    https://docs.confluent.io/platform/current/security/authorization/acls/overview.html
+    https://docs.confluent.io/platform/current/schema-registry/installation/config.html
+    https://docs.confluent.io/control-center/current/installation/configuration.html
+    https://docs.confluent.io/platform/current/connect/security.html
+  added: 2026-05-27
+  notes: |
+    /wiki:ingest invoked with /Users/jhogan/Downloads/mTLS-CP-LinuxOne.md. The runbook
+    is a 628-line end-to-end Confluent Platform mTLS guide written with LinuxONE / IBM
+    Semeru / FIPS context (Sections 0-9 plus Appendix A on s390x non-SSL hurdles and
+    Appendix B on per-component debug recipes). Split into THREE wiki articles to keep
+    each focused and individually navigable:
+
+      1. wiki/patterns/cp-mtls-self-signed-setup.md (pattern template) — Sections 0-7
+         and §9. Canonical mTLS procedure: CA gen, broker keystore + EKU=serverAuth+clientAuth,
+         shared truststore, client keystore, broker server.properties with ssl.client.auth=
+         required + StandardAuthorizer + ssl.principal.mapping.rules, client.properties,
+         openssl/kafka-broker-api-versions/topic+produce+consume verification, kafka-acls.
+         confidence: high — full MCP validation gate against confluent-docs encrypt-tls.html
+         (ssl.client.auth=required vs requested discouraged; ssl.endpoint.identification.
+         algorithm) and ACL overview (StandardAuthorizer at org.apache.kafka.metadata.
+         authorizer.StandardAuthorizer for KRaft; super.users; allow.everyone.if.no.acl.found;
+         ssl.principal.mapping.rules canonical name). Fidelity/internal-domain references in
+         the source were genericized to Example/example.internal.
+
+      2. wiki/patterns/cp-tls-debugging-by-component.md (pattern template) — Appendix B.
+         Per-component debug recipes (client / broker-to-broker / SR kafkastore-vs-REST /
+         C3 multi-downstream / Connect 3-surface / app / tcpdump / diagnostic bundle).
+         Documents the *_OPTS injection points (KAFKA_OPTS, SCHEMA_REGISTRY_OPTS,
+         CONTROL_CENTER_OPTS), JVM debug flags, grep markers, and the
+         ssl.client.auth (broker) vs ssl.client.authentication (SR/Connect REST) property-
+         name asymmetry. confidence: high — MCP-validated against Connect security
+         docs (producer.ssl.* / consumer.ssl.* / admin.ssl.* / listeners.https.* prefix
+         that overrides top-level ssl.*), SR config (kafkastore.ssl.* for backing store,
+         ssl.client.authentication for REST), and C3 config (confluent.controlcenter.
+         streams.ssl.* / .connect.<name>.* / .ksql.* / .schema.registry.* namespaces).
+         Two inline ⚠️ unverified markers retained: (a) exact SCHEMA_REGISTRY_OPTS /
+         CONTROL_CENTER_OPTS env var names (operational convention, not surfaced in fetched
+         docs), (b) confluent.monitoring.interceptor.* namespace (interceptor JAR pattern
+         is canonical but not in the C3 config page).
+
+      3. wiki/concepts/linuxone-jdk-tls-gotchas.md (concept template) — Section 8 + Appendix A.
+         IBM Semeru / FIPS / s390x specific failure modes: IBMJCE/IBMJSSE2 provider order,
+         FIPS mode and PKCS12 MAC algorithm (HmacPBESHA256 forcing flags), cipher suite
+         intersection x86↔s390x, TLS 1.3 quirks on older Semeru, PKCS#11/CEX wiring
+         (CCA vs EP11), time skew/STP, hostname/SAN matching. Plus non-SSL s390x hurdles:
+         multi-arch image discipline (QEMU emulation footgun), RocksDB JNI for Kafka
+         Streams, connector JAR JNI compatibility, endianness in custom serializers.
+         confidence: medium — most claims here are IBM-JDK / FIPS / s390x territory rather
+         than Confluent product surface, so confluent-docs MCP isn't the primary validator.
+         Three inline ⚠️ unverified markers retained: (a) IBMJCE/IBMJSSE2 default ordering
+         on Semeru, (b) exact PKCS#11+CEX wiring syntax, (c) IBM JDK TLS 1.3 quirks tied
+         to specific Semeru versions. Cross-linked to fips-at-install-ocp-requirement,
+         linuxone-platform-foundations, linuxone-kafka-integration, s390x-custom-image-
+         build-pipeline.
+
+    All three articles cross-link to each other and to existing LinuxONE/FSI wiki content.
+    Index updated under Concepts (jdk-tls-gotchas) and Patterns (mtls-setup, tls-debugging).
+    Graph backlinks added (≥1 inbound, ≥1 outbound per new article).
+  compiled: 2026-05-27
+  wiki_articles:
+    - wiki/patterns/cp-mtls-self-signed-setup.md
+    - wiki/patterns/cp-tls-debugging-by-component.md
+    - wiki/concepts/linuxone-jdk-tls-gotchas.md
+
 - path: <none — MCP-only ingest, no rich raw source>
   source_url: |
     https://docs.confluent.io/cloud/current/monitoring/metrics-api.html (10 ksqlDB metrics confirmed)

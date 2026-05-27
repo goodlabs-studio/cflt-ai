@@ -1,0 +1,75 @@
+---
+# ============================================================
+# CA configuration
+# ============================================================
+kafka_ca_dir: /etc/pki/kafka-ca
+kafka_ca_country: US
+kafka_ca_state: MA
+kafka_ca_locality: Boston
+kafka_ca_org: Fidelity
+kafka_ca_ou: Platform
+kafka_ca_common_name: Fidelity-Kafka-Root-CA
+kafka_ca_validity_days: 3650
+
+# ============================================================
+# Leaf cert settings (brokers + clients)
+# ============================================================
+kafka_cert_validity_days: 825          # browsers cap at 825; good discipline
+kafka_cert_key_size: 2048
+kafka_cert_digest: sha256
+
+# ============================================================
+# On-host cert paths + ownership
+# ============================================================
+kafka_ssl_dir: /etc/kafka/ssl
+kafka_ssl_owner: cp-kafka              # override for non-Confluent packaging
+kafka_ssl_group: confluent
+
+# Staging dirs on the Ansible controller (relative to project root)
+kafka_ctrl_csr_dir: "{{ playbook_dir }}/../files/csrs"
+kafka_ctrl_signed_dir: "{{ playbook_dir }}/../files/signed"
+kafka_ctrl_ca_cert: "{{ playbook_dir }}/../files/ca-cert.pem"
+kafka_ctrl_client_dir: "{{ playbook_dir }}/../files/clients"
+
+# ============================================================
+# Truststore (same file shipped to every host)
+# ============================================================
+kafka_truststore_filename: kafka.truststore.p12
+
+# ============================================================
+# Listener settings
+# ============================================================
+kafka_listener_port: 9093
+kafka_listener_name: SSL
+kafka_domain: kafka.fidelity.internal
+kafka_server_properties: /etc/kafka/server.properties
+kafka_service_name: confluent-kafka    # systemd unit for restart handler
+
+# ============================================================
+# TLS protocol/cipher pinning + auth config
+# ============================================================
+kafka_ssl_enabled_protocols: "TLSv1.3,TLSv1.2"
+kafka_ssl_protocol: "TLSv1.3"
+kafka_ssl_client_auth: required        # "required" = mTLS; "requested" is a trap
+kafka_ssl_endpoint_identification: HTTPS
+kafka_ssl_principal_mapping: "RULE:^CN=([^,]+).*$/$1/,DEFAULT"
+kafka_ssl_keystore_type: PKCS12
+kafka_ssl_truststore_type: PKCS12
+
+# Leave empty to use JDK defaults; pin explicitly if you've seen x86↔s390x mismatches
+kafka_ssl_cipher_suites: ""
+
+# ============================================================
+# Derived: super.users from broker CNs (FQDNs).
+# Each broker CN becomes a super user so inter-broker ops don't need explicit ACLs.
+# Override this if your principal mapping rules extract something other than
+# the full inventory_hostname.
+# ============================================================
+kafka_super_users: "User:{{ groups['kafka_brokers'] | join(';User:') }}"
+
+# ============================================================
+# Vault references — actual values in group_vars/vault.yml (encrypted)
+# ============================================================
+kafka_ca_passphrase: "{{ vault_kafka_ca_passphrase }}"
+kafka_keystore_password: "{{ vault_kafka_keystore_password }}"
+kafka_truststore_password: "{{ vault_kafka_truststore_password }}"

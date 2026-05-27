@@ -1,0 +1,29 @@
+---
+# Inserts / updates the SSL block in server.properties using blockinfile.
+# Uses a stable marker so re-runs update the block in place without
+# clobbering the rest of the config.
+#
+# If your existing Kafka role renders the entire server.properties from a
+# template, prefer merging the ssl-block.properties.j2 snippet into that
+# template instead of using blockinfile.
+
+- name: Render SSL block into server.properties
+  ansible.builtin.blockinfile:
+    path: "{{ kafka_server_properties }}"
+    marker: "# {mark} ANSIBLE MANAGED mTLS BLOCK"
+    block: "{{ lookup('template', 'ssl-block.properties.j2') }}"
+    owner: "{{ kafka_ssl_owner }}"
+    group: "{{ kafka_ssl_group }}"
+    mode: '0640'
+    backup: true
+  notify: Restart Kafka broker
+  no_log: false  # flip to true if you want passwords out of the log
+
+- name: Ensure keystore/truststore referenced in config actually exist
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: _ssl_files
+  loop:
+    - "{{ kafka_ssl_dir }}/{{ inventory_hostname_short }}.keystore.p12"
+    - "{{ kafka_ssl_dir }}/{{ kafka_truststore_filename }}"
+  failed_when: not _ssl_files.stat.exists

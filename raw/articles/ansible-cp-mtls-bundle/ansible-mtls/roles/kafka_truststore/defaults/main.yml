@@ -1,0 +1,2 @@
+---
+# Role-specific defaults (overridden by group_vars/all.yml and host_vars)

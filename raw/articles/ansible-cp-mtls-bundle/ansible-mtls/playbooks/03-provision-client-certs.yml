@@ -1,0 +1,13 @@
+---
+- name: Provision per-client mTLS certs + truststore
+  hosts: kafka_clients
+  become: true
+  gather_facts: true
+  tags: [client_certs]
+  roles:
+    - role: kafka_client_cert
+    - role: kafka_truststore
+      vars:
+        # Clients don't have the cp-kafka user, fall back to root
+        kafka_ssl_owner: root
+        kafka_ssl_group: root

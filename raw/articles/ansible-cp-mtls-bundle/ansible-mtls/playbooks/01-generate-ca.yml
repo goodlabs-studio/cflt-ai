@@ -1,0 +1,8 @@
+---
+- name: Generate Kafka root CA
+  hosts: cert_authority
+  become: true
+  gather_facts: false
+  tags: [ca]
+  roles:
+    - role: kafka_ca

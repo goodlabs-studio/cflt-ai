@@ -1,0 +1,73 @@
+---
+# Verification playbook — exercises the mTLS configuration end-to-end.
+# Run after the provisioning playbooks to confirm handshakes work.
+#
+# Does NOT mutate state; safe to re-run.
+
+- name: Verify broker TLS handshake (pure openssl)
+  hosts: kafka_brokers
+  become: true
+  gather_facts: false
+  tags: [verify]
+  tasks:
+    - name: openssl s_client handshake check (server-only, no client cert)
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo | openssl s_client \
+          -connect {{ inventory_hostname }}:{{ kafka_listener_port }} \
+          -CAfile {{ kafka_ssl_dir }}/ca-cert.pem \
+          -servername {{ inventory_hostname }} \
+          -tls1_3 2>&1 \
+          | grep -E 'Verify return code|subject=|issuer=' | head -20
+      args:
+        executable: /bin/bash
+      register: _handshake_server
+      changed_when: false
+      failed_when: '"Verify return code: 0 (ok)" not in _handshake_server.stdout'
+
+    - name: Display handshake summary (server auth only)
+      ansible.builtin.debug:
+        var: _handshake_server.stdout_lines
+
+- name: Verify mTLS handshake from client side
+  hosts: kafka_clients
+  become: true
+  gather_facts: false
+  tags: [verify]
+  tasks:
+    - name: Pick an arbitrary broker to test against
+      ansible.builtin.set_fact:
+        _test_broker: "{{ groups['kafka_brokers'] | first }}"
+
+    - name: openssl s_client mTLS handshake check (presents client cert)
+      ansible.builtin.shell: |
+        set -o pipefail
+        # Extract the client key + cert in PEM form from the PKCS12 keystore
+        # (openssl s_client needs PEM, not PKCS12)
+        TMP=$(mktemp -d)
+        trap "rm -rf $TMP" EXIT
+        openssl pkcs12 -in {{ kafka_ssl_dir }}/{{ client_cn }}.keystore.p12 \
+          -passin pass:{{ kafka_keystore_password }} \
+          -nocerts -nodes -out $TMP/client.key 2>/dev/null
+        openssl pkcs12 -in {{ kafka_ssl_dir }}/{{ client_cn }}.keystore.p12 \
+          -passin pass:{{ kafka_keystore_password }} \
+          -clcerts -nokeys -out $TMP/client.crt 2>/dev/null
+
+        echo | openssl s_client \
+          -connect {{ _test_broker }}:{{ kafka_listener_port }} \
+          -CAfile {{ kafka_ssl_dir }}/ca-cert.pem \
+          -cert $TMP/client.crt \
+          -key $TMP/client.key \
+          -servername {{ _test_broker }} \
+          -tls1_3 2>&1 \
+          | grep -E 'Verify return code|subject=|SSL handshake has read' | head -20
+      args:
+        executable: /bin/bash
+      register: _handshake_client
+      changed_when: false
+      no_log: true
+      failed_when: '"Verify return code: 0 (ok)" not in _handshake_client.stdout'
+
+    - name: Display mTLS handshake summary
+      ansible.builtin.debug:
+        var: _handshake_client.stdout_lines

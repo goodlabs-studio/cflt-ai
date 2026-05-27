@@ -1,0 +1,10 @@
+---
+# Copy this file to group_vars/vault.yml, replace placeholders,
+# then encrypt with:
+#   ansible-vault encrypt group_vars/vault.yml
+#
+# Run playbooks with --ask-vault-pass or --vault-password-file.
+
+vault_kafka_ca_passphrase: "REPLACE-ME-ca-passphrase"
+vault_kafka_keystore_password: "REPLACE-ME-keystore-password"
+vault_kafka_truststore_password: "REPLACE-ME-truststore-password"

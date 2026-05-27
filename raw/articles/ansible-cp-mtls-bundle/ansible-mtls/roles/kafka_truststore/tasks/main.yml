@@ -1,0 +1,74 @@
+---
+# Installs a PKCS12 truststore containing just the CA cert.
+# Same truststore goes to every broker and client — there's nothing
+# host-specific in it.
+#
+# Why shell out to keytool instead of using community.crypto?
+#  community.crypto.openssl_pkcs12 requires a private key; it's designed
+#  for keystores, not truststores. keytool handles cert-only PKCS12
+#  cleanly and is present wherever Kafka is running.
+
+- name: Ensure SSL directory exists
+  ansible.builtin.file:
+    path: "{{ kafka_ssl_dir }}"
+    state: directory
+    owner: "{{ kafka_ssl_owner | default('root') }}"
+    group: "{{ kafka_ssl_group | default('root') }}"
+    mode: '0750'
+
+- name: Ensure CA cert is present on host
+  ansible.builtin.copy:
+    src: "{{ kafka_ctrl_ca_cert }}"
+    dest: "{{ kafka_ssl_dir }}/ca-cert.pem"
+    owner: "{{ kafka_ssl_owner | default('root') }}"
+    group: "{{ kafka_ssl_group | default('root') }}"
+    mode: '0444'
+
+- name: Check whether truststore already contains CA with current fingerprint
+  ansible.builtin.shell: |
+    set -o pipefail
+    keytool -list -keystore "{{ kafka_ssl_dir }}/{{ kafka_truststore_filename }}" \
+            -storetype PKCS12 \
+            -storepass "{{ kafka_truststore_password }}" \
+            -alias CARoot 2>/dev/null \
+      | awk -F: '/SHA-256/ {gsub(/ /, "", $2); gsub(/:/, "", $0); print tolower($0)}' \
+      | tr -d '\n'
+  args:
+    executable: /bin/bash
+  register: _existing_ts_fp
+  failed_when: false
+  changed_when: false
+
+- name: Compute current CA cert fingerprint
+  community.crypto.x509_certificate_info:
+    path: "{{ kafka_ssl_dir }}/ca-cert.pem"
+  register: _ca_info
+
+- name: Remove stale truststore if fingerprint differs
+  ansible.builtin.file:
+    path: "{{ kafka_ssl_dir }}/{{ kafka_truststore_filename }}"
+    state: absent
+  when:
+    - _existing_ts_fp.stdout is defined
+    - _existing_ts_fp.stdout | length > 0
+    - (_ca_info.fingerprints.sha256 | default('')) | replace(':', '') | lower not in _existing_ts_fp.stdout
+
+- name: Import CA cert into PKCS12 truststore via keytool
+  ansible.builtin.command:
+    cmd: >
+      keytool -importcert
+      -keystore {{ kafka_ssl_dir }}/{{ kafka_truststore_filename }}
+      -storetype PKCS12
+      -storepass {{ kafka_truststore_password }}
+      -alias CARoot
+      -file {{ kafka_ssl_dir }}/ca-cert.pem
+      -noprompt
+    creates: "{{ kafka_ssl_dir }}/{{ kafka_truststore_filename }}"
+  no_log: true
+
+- name: Set truststore permissions
+  ansible.builtin.file:
+    path: "{{ kafka_ssl_dir }}/{{ kafka_truststore_filename }}"
+    owner: "{{ kafka_ssl_owner | default('root') }}"
+    group: "{{ kafka_ssl_group | default('root') }}"
+    mode: '0444'

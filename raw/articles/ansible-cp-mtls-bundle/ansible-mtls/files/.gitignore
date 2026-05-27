@@ -1,0 +1,11 @@
+# Controller-side staging. Actual CSRs/certs should not be committed.
+# Keep the directory structure, ignore contents.
+csrs/*
+signed/*
+clients/*
+ca-cert.pem
+
+# But DO keep .gitkeep so empty dirs are preserved
+!csrs/.gitkeep
+!signed/.gitkeep
+!clients/.gitkeep

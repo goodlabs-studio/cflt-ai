@@ -60,6 +60,7 @@ The LLM maintains this file. Do not edit manually.
 [ksqlDB Observability — CC and Self-Managed](concepts/ksqldb-observability.md) — CC Metrics API surface (10 metrics: committed_offset_lag, query_restarts, query_saturation, etc.) + self-managed JMX (io.confluent.ksql.metrics: engine/queries/pull/push) + underlying Kafka Streams runtime MBeans + per-tier alert patterns and DLQ routing — #observability #ksqldb #jmx #mbean #confluent-cloud #confluent-platform #cfk #metrics-api #kafka-streams #fsi
 [FIPS-at-install OCP Requirement](concepts/fips-at-install-ocp-requirement.md) — Trip-wire: spec.tls.fips.enabled is no-op on non-FIPS OCP; Red Hat does not support post-install FIPS conversion — #linuxone #ibm #s390x #ocp #fips #fsi #trip-wire
 [s390x Custom Image Build Pipeline](concepts/s390x-custom-image-build-pipeline.md) — docker buildx --platform linux/s390x for CFK Connect (G-08) and Flink SQL-runner (G-12); UBI9 base for SR bootstrap; arch-neutral Java JARs — #linuxone #ibm #s390x #docker-buildx #connect #flink #fsi
+[LinuxONE JDK / TLS / s390x Gotchas](concepts/linuxone-jdk-tls-gotchas.md) — IBM Semeru provider order (IBMJCE/IBMJSSE2), FIPS mode, PKCS12 MAC algorithm (HmacPBESHA256), cipher intersection x86↔s390x, TLS 1.3 quirks on older Semeru, PKCS#11/CEX wiring, time skew, hostname/SAN, plus s390x multi-arch/RocksDB/connector JNI/endianness — #linuxone #ibm #s390x #ibm-semeru #openj9 #fips #pkcs12 #pkcs11 #cex #tls #jdk #rocksdb #fsi
 
 ## Patterns
 
@@ -96,6 +97,8 @@ The LLM maintains this file. Do not edit manually.
 [x86 → LinuxONE Cluster Linking Migration](patterns/x86-to-linuxone-cluster-linking-migration.md) — Pre-migration audit + in-flight validation (mirror-lag, end-offset parity, schema parity) + rollback + 7y regulatory evidence collection — #linuxone #cluster-linking #migration #fsi #compliance
 [Auditor-Readonly RBAC Payload Isolation](patterns/auditor-readonly-rbac-payload-isolation.md) — DeveloperRead is consume-granting; auditor isolation requires topic-scoped binding to confluent-audit-log-events + SR subjects ONLY, NOT to payments.* business topics — #rbac #mds #audit #fsi #linuxone
 [Flink-on-CFK FSI Example Jobs](patterns/flink-on-cfk-fsi-example-jobs.md) — Tumbling-window TPS + temporal stream-table enrichment join on CMF-managed Flink with mTLS, SR Avro-Confluent, audit integration — #flink #cmf #cfk #linuxone #fsi #s390x
+[Confluent Platform mTLS Setup with Self-Signed Certs](patterns/cp-mtls-self-signed-setup.md) — End-to-end self-signed CA → broker keystore (with serverAuth+clientAuth EKU) → shared truststore → client keystore → broker server.properties (ssl.client.auth=required, StandardAuthorizer, principal mapping) → client.properties → verification → ACLs; LinuxONE/IBM Semeru aware — #confluent-platform #mtls #tls #ssl #kafka #security #pkcs12 #acls #fsi #linuxone
+[Confluent Platform TLS Debugging by Component](patterns/cp-tls-debugging-by-component.md) — Per-component handshake debug recipes (client / broker-to-broker / SR kafkastore-vs-REST / C3 multi-downstream / Connect 3-surface / app / tcpdump / diag bundle); KAFKA_OPTS injection points and grep markers — #confluent-platform #mtls #tls #ssl #debugging #troubleshooting #schema-registry #connect #control-center #kafka #tcpdump #fsi
 
 ## Incidents
 

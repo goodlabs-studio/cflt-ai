@@ -1,0 +1,127 @@
+---
+# Per-client cert provisioning.
+#
+# Same flow as broker certs, but:
+#  - CN comes from `client_cn` host var (becomes the Kafka principal)
+#  - EKU is clientAuth only (clients don't serve TLS)
+#  - No IP SAN needed (clients connect OUT, they aren't dialed)
+#  - The final keystore bundle is also fetched back to the controller
+#    under files/clients/<host>/ so it can be distributed to app teams
+#    out-of-band if the client host itself isn't in Ansible reach.
+
+- name: Ensure SSL directory on client
+  ansible.builtin.file:
+    path: "{{ kafka_ssl_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Generate client private key on client
+  community.crypto.openssl_privatekey:
+    path: "{{ kafka_ssl_dir }}/{{ client_cn }}.key.pem"
+    size: "{{ kafka_cert_key_size }}"
+    type: RSA
+    owner: root
+    group: root
+    mode: '0400'
+
+- name: Generate client CSR on client (clientAuth EKU)
+  community.crypto.openssl_csr:
+    path: "{{ kafka_ssl_dir }}/{{ client_cn }}.csr"
+    privatekey_path: "{{ kafka_ssl_dir }}/{{ client_cn }}.key.pem"
+    common_name: "{{ client_cn }}"
+    organization_name: "{{ kafka_ca_org }}"
+    organizational_unit_name: Apps
+    country_name: "{{ kafka_ca_country }}"
+    state_or_province_name: "{{ kafka_ca_state }}"
+    locality_name: "{{ kafka_ca_locality }}"
+    extended_key_usage:
+      - clientAuth
+    extended_key_usage_critical: false
+    key_usage:
+      - digitalSignature
+      - keyEncipherment
+    key_usage_critical: true
+    digest: "{{ kafka_cert_digest }}"
+
+- name: Fetch client CSR to controller
+  ansible.builtin.fetch:
+    src: "{{ kafka_ssl_dir }}/{{ client_cn }}.csr"
+    dest: "{{ kafka_ctrl_csr_dir }}/{{ client_cn }}.csr"
+    flat: true
+
+- name: Ship client CSR to CA host
+  ansible.builtin.copy:
+    src: "{{ kafka_ctrl_csr_dir }}/{{ client_cn }}.csr"
+    dest: "{{ kafka_ca_dir }}/signed/{{ client_cn }}.csr"
+    owner: root
+    group: root
+    mode: '0400'
+  delegate_to: "{{ groups['cert_authority'][0] }}"
+
+- name: Sign client CSR on CA host
+  community.crypto.x509_certificate:
+    path: "{{ kafka_ca_dir }}/signed/{{ client_cn }}-cert.pem"
+    csr_path: "{{ kafka_ca_dir }}/signed/{{ client_cn }}.csr"
+    ownca_path: "{{ kafka_ca_dir }}/ca-cert.pem"
+    ownca_privatekey_path: "{{ kafka_ca_dir }}/ca-key.pem"
+    ownca_privatekey_passphrase: "{{ kafka_ca_passphrase }}"
+    ownca_not_after: "+{{ kafka_cert_validity_days }}d"
+    ownca_digest: "{{ kafka_cert_digest }}"
+    provider: ownca
+    owner: root
+    group: root
+    mode: '0444'
+  delegate_to: "{{ groups['cert_authority'][0] }}"
+
+- name: Fetch signed client cert to controller
+  ansible.builtin.fetch:
+    src: "{{ kafka_ca_dir }}/signed/{{ client_cn }}-cert.pem"
+    dest: "{{ kafka_ctrl_signed_dir }}/{{ client_cn }}-cert.pem"
+    flat: true
+  delegate_to: "{{ groups['cert_authority'][0] }}"
+
+- name: Ship signed cert + CA cert to client
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: '0444'
+  loop:
+    - { src: "{{ kafka_ctrl_signed_dir }}/{{ client_cn }}-cert.pem",
+        dest: "{{ kafka_ssl_dir }}/{{ client_cn }}-cert.pem" }
+    - { src: "{{ kafka_ctrl_ca_cert }}",
+        dest: "{{ kafka_ssl_dir }}/ca-cert.pem" }
+
+- name: Assemble client PKCS12 keystore on client
+  community.crypto.openssl_pkcs12:
+    path: "{{ kafka_ssl_dir }}/{{ client_cn }}.keystore.p12"
+    friendly_name: "{{ client_cn }}"
+    privatekey_path: "{{ kafka_ssl_dir }}/{{ client_cn }}.key.pem"
+    certificate_path: "{{ kafka_ssl_dir }}/{{ client_cn }}-cert.pem"
+    other_certificates:
+      - "{{ kafka_ssl_dir }}/ca-cert.pem"
+    passphrase: "{{ kafka_keystore_password }}"
+    state: present
+    owner: root
+    group: root
+    mode: '0400'
+
+- name: Ensure per-client staging dir exists on controller
+  ansible.builtin.file:
+    path: "{{ kafka_ctrl_client_dir }}/{{ client_cn }}"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  become: false
+
+- name: Fetch client keystore bundle back to controller for distribution
+  ansible.builtin.fetch:
+    src: "{{ item }}"
+    dest: "{{ kafka_ctrl_client_dir }}/{{ client_cn }}/{{ item | basename }}"
+    flat: true
+  loop:
+    - "{{ kafka_ssl_dir }}/{{ client_cn }}.keystore.p12"
+    - "{{ kafka_ssl_dir }}/ca-cert.pem"

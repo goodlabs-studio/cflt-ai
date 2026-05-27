@@ -659,3 +659,31 @@ patterns/flink-runtime-models → patterns/flink-on-cfk-fsi-example-jobs : CMF F
 patterns/linuxone-on-cfk-reference-architecture → concepts/fips-at-install-ocp-requirement : layer 02 inbound (parent → trip-wire concept)
 concepts/cluster-linking-topology → patterns/x86-to-linuxone-cluster-linking-migration : migration use case of CL topology
 concepts/fsi-compliance → patterns/auditor-readonly-rbac-payload-isolation : canonical FSI RBAC payload-isolation pattern
+
+# Outbound — patterns/cp-mtls-self-signed-setup
+patterns/cp-mtls-self-signed-setup → concepts/linuxone-jdk-tls-gotchas : IBM Semeru / FIPS / PKCS12 footguns
+patterns/cp-mtls-self-signed-setup → patterns/cp-tls-debugging-by-component : per-component handshake debug recipes
+patterns/cp-mtls-self-signed-setup → concepts/fips-at-install-ocp-requirement : CFK fips.enabled is no-op on non-FIPS OCP
+patterns/cp-mtls-self-signed-setup → concepts/linuxone-kafka-integration : LinuxONE Kafka context
+patterns/cp-mtls-self-signed-setup → patterns/auditor-readonly-rbac-payload-isolation : ACL design once mTLS is up
+
+# Outbound — patterns/cp-tls-debugging-by-component
+patterns/cp-tls-debugging-by-component → patterns/cp-mtls-self-signed-setup : the setup procedure this pattern debugs against
+patterns/cp-tls-debugging-by-component → concepts/linuxone-jdk-tls-gotchas : IBM Semeru / FIPS / s390x specific failure modes
+patterns/cp-tls-debugging-by-component → concepts/schema-registry-best-practices : production SR posture beyond TLS
+patterns/cp-tls-debugging-by-component → patterns/connect-deployment-models : where SSL config lives across deployment models
+
+# Outbound — concepts/linuxone-jdk-tls-gotchas
+concepts/linuxone-jdk-tls-gotchas → patterns/cp-mtls-self-signed-setup : the canonical mTLS procedure this article supports
+concepts/linuxone-jdk-tls-gotchas → patterns/cp-tls-debugging-by-component : handshake debug recipes per component
+concepts/linuxone-jdk-tls-gotchas → concepts/fips-at-install-ocp-requirement : silent-failure trip-wire on non-FIPS OCP
+concepts/linuxone-jdk-tls-gotchas → concepts/linuxone-platform-foundations : STP / UKO / CBU foundations
+concepts/linuxone-jdk-tls-gotchas → concepts/linuxone-kafka-integration : z/OS bridge and platform positioning
+concepts/linuxone-jdk-tls-gotchas → concepts/s390x-custom-image-build-pipeline : closing image gaps via docker buildx
+concepts/linuxone-jdk-tls-gotchas → patterns/linuxone-kafka-tuning : Kafka 4.2 / CP 8.2 tuning with FSI tier overlay
+
+# Inbound (existing wiki → new mTLS articles) — ≥1 inbound per article
+concepts/fips-at-install-ocp-requirement → patterns/cp-mtls-self-signed-setup : mTLS procedure depends on FIPS-at-install for OCP-hosted CFK
+concepts/linuxone-platform-foundations → concepts/linuxone-jdk-tls-gotchas : foundations referenced by the L1 gotcha catalog
+patterns/auditor-readonly-rbac-payload-isolation → patterns/cp-mtls-self-signed-setup : mTLS is the auth substrate for the ACL pattern
+patterns/connect-deployment-models → patterns/cp-tls-debugging-by-component : Connect deployment surfaces the SSL config landscape

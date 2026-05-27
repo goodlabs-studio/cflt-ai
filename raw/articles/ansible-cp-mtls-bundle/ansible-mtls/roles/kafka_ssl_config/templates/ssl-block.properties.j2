@@ -1,0 +1,35 @@
+# ===== Listeners =====
+listeners={{ kafka_listener_name }}://0.0.0.0:{{ kafka_listener_port }}
+advertised.listeners={{ kafka_listener_name }}://{{ inventory_hostname }}:{{ kafka_listener_port }}
+listener.security.protocol.map={{ kafka_listener_name }}:SSL
+inter.broker.listener.name={{ kafka_listener_name }}
+
+# ===== Keystore (this broker's identity) =====
+ssl.keystore.type={{ kafka_ssl_keystore_type }}
+ssl.keystore.location={{ kafka_ssl_dir }}/{{ inventory_hostname_short }}.keystore.p12
+ssl.keystore.password={{ kafka_keystore_password }}
+ssl.key.password={{ kafka_keystore_password }}
+
+# ===== Truststore (who we accept) =====
+ssl.truststore.type={{ kafka_ssl_truststore_type }}
+ssl.truststore.location={{ kafka_ssl_dir }}/{{ kafka_truststore_filename }}
+ssl.truststore.password={{ kafka_truststore_password }}
+
+# ===== mTLS =====
+ssl.client.auth={{ kafka_ssl_client_auth }}
+ssl.endpoint.identification.algorithm={{ kafka_ssl_endpoint_identification }}
+
+# ===== Protocol / cipher pinning =====
+ssl.enabled.protocols={{ kafka_ssl_enabled_protocols }}
+ssl.protocol={{ kafka_ssl_protocol }}
+{% if kafka_ssl_cipher_suites | length > 0 %}
+ssl.cipher.suites={{ kafka_ssl_cipher_suites }}
+{% endif %}
+
+# ===== Principal mapping + super users =====
+ssl.principal.mapping.rules={{ kafka_ssl_principal_mapping }}
+super.users={{ kafka_super_users }}
+
+# ===== Authorizer (KRaft) =====
+authorizer.class.name=org.apache.kafka.metadata.authorizer.StandardAuthorizer
+allow.everyone.if.no.acl.found=false

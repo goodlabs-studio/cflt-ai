@@ -1,0 +1,9 @@
+---
+- name: Provision per-broker mTLS certs + truststore
+  hosts: kafka_brokers
+  become: true
+  gather_facts: true
+  tags: [broker_certs]
+  roles:
+    - role: kafka_broker_cert
+    - role: kafka_truststore

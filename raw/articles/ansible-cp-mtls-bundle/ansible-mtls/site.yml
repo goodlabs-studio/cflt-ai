@@ -1,0 +1,12 @@
+---
+# Master playbook — runs CA generation, cert provisioning, and SSL config
+# in the correct order. Use this for a green-field rollout.
+#
+# For incremental operations (adding a broker, rotating a client cert),
+# run the individual playbooks in playbooks/ directly.
+
+- import_playbook: playbooks/01-generate-ca.yml
+- import_playbook: playbooks/02-provision-broker-certs.yml
+- import_playbook: playbooks/03-provision-client-certs.yml
+- import_playbook: playbooks/04-configure-mtls.yml
+- import_playbook: playbooks/99-verify-mtls.yml

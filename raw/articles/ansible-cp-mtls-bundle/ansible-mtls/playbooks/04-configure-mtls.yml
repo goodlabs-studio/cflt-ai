@@ -1,0 +1,23 @@
+---
+- name: Configure mTLS SSL block in server.properties (rolling)
+  hosts: kafka_brokers
+  become: true
+  gather_facts: true
+  tags: [ssl_config]
+  # Rolling restart — one broker at a time. For large clusters, raise to
+  # a small percentage (e.g., serial: "25%") and add a health check task
+  # after the handler fires.
+  serial: 1
+  max_fail_percentage: 0
+  roles:
+    - role: kafka_ssl_config
+
+  post_tasks:
+    - name: Wait for broker SSL port to accept connections after restart
+      ansible.builtin.wait_for:
+        host: "{{ inventory_hostname }}"
+        port: "{{ kafka_listener_port }}"
+        timeout: 120
+        delay: 5
+      delegate_to: localhost
+      become: false

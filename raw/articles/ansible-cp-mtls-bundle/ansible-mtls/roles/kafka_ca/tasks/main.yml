@@ -1,0 +1,86 @@
+---
+# Generates a self-signed root CA on the cert_authority host.
+# Idempotent: the community.crypto modules check file presence + validity.
+# Re-runs won't regenerate unless something actually changed.
+
+- name: Ensure CA directory exists
+  ansible.builtin.file:
+    path: "{{ kafka_ca_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Ensure signing workspace exists
+  ansible.builtin.file:
+    path: "{{ kafka_ca_dir }}/signed"
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Generate CA private key (RSA 4096, passphrase-protected)
+  community.crypto.openssl_privatekey:
+    path: "{{ kafka_ca_dir }}/ca-key.pem"
+    size: 4096
+    type: RSA
+    cipher: auto
+    passphrase: "{{ kafka_ca_passphrase }}"
+    owner: root
+    group: root
+    mode: '0400'
+    backup: true
+
+- name: Generate CA CSR
+  community.crypto.openssl_csr:
+    path: "{{ kafka_ca_dir }}/ca.csr"
+    privatekey_path: "{{ kafka_ca_dir }}/ca-key.pem"
+    privatekey_passphrase: "{{ kafka_ca_passphrase }}"
+    common_name: "{{ kafka_ca_common_name }}"
+    organization_name: "{{ kafka_ca_org }}"
+    organizational_unit_name: "{{ kafka_ca_ou }}"
+    country_name: "{{ kafka_ca_country }}"
+    state_or_province_name: "{{ kafka_ca_state }}"
+    locality_name: "{{ kafka_ca_locality }}"
+    basic_constraints:
+      - 'CA:TRUE'
+    basic_constraints_critical: true
+    key_usage:
+      - keyCertSign
+      - cRLSign
+    key_usage_critical: true
+    digest: "{{ kafka_cert_digest }}"
+    owner: root
+    group: root
+    mode: '0400'
+
+- name: Generate self-signed CA certificate
+  community.crypto.x509_certificate:
+    path: "{{ kafka_ca_dir }}/ca-cert.pem"
+    csr_path: "{{ kafka_ca_dir }}/ca.csr"
+    privatekey_path: "{{ kafka_ca_dir }}/ca-key.pem"
+    privatekey_passphrase: "{{ kafka_ca_passphrase }}"
+    provider: selfsigned
+    selfsigned_not_after: "+{{ kafka_ca_validity_days }}d"
+    selfsigned_digest: "{{ kafka_cert_digest }}"
+    owner: root
+    group: root
+    mode: '0444'
+
+- name: Fetch CA cert to controller for distribution
+  ansible.builtin.fetch:
+    src: "{{ kafka_ca_dir }}/ca-cert.pem"
+    dest: "{{ kafka_ctrl_ca_cert }}"
+    flat: true
+
+- name: Display CA cert summary
+  community.crypto.x509_certificate_info:
+    path: "{{ kafka_ca_dir }}/ca-cert.pem"
+  register: ca_info
+
+- name: Report CA cert details
+  ansible.builtin.debug:
+    msg:
+      - "CA subject : {{ ca_info.subject }}"
+      - "CA valid   : {{ ca_info.not_before }} → {{ ca_info.not_after }}"
+      - "CA SHA-256 : {{ ca_info.fingerprints.sha256 | default('n/a') }}"

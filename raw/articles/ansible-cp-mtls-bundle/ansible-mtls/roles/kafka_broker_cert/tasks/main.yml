@@ -1,0 +1,159 @@
+---
+# Per-broker cert provisioning.
+#
+# Flow (executed for each host in kafka_brokers):
+#   1. Broker: ensure ssl dir exists
+#   2. Broker: generate private key LOCALLY (never leaves the broker)
+#   3. Broker: generate CSR LOCALLY with proper SANs + serverAuth/clientAuth EKU
+#   4. Controller: fetch CSR from broker
+#   5. CA host: receive CSR (via copy), sign with CA key
+#   6. Controller: fetch signed cert from CA host
+#   7. Broker: receive signed cert + CA cert (via copy)
+#   8. Broker: assemble PKCS12 keystore LOCALLY from key + signed cert + CA
+#
+# Private keys never cross the wire. Only CSRs and certs do.
+
+- name: Ensure SSL directory on broker
+  ansible.builtin.file:
+    path: "{{ kafka_ssl_dir }}"
+    state: directory
+    owner: "{{ kafka_ssl_owner }}"
+    group: "{{ kafka_ssl_group }}"
+    mode: '0750'
+
+- name: Generate broker private key on broker
+  community.crypto.openssl_privatekey:
+    path: "{{ kafka_ssl_dir }}/{{ inventory_hostname_short }}.key.pem"
+    size: "{{ kafka_cert_key_size }}"
+    type: RSA
+    owner: "{{ kafka_ssl_owner }}"
+    group: "{{ kafka_ssl_group }}"
+    mode: '0400'
+
+- name: Generate broker CSR on broker (with SANs + serverAuth,clientAuth EKU)
+  community.crypto.openssl_csr:
+    path: "{{ kafka_ssl_dir }}/{{ inventory_hostname_short }}.csr"
+    privatekey_path: "{{ kafka_ssl_dir }}/{{ inventory_hostname_short }}.key.pem"
+    common_name: "{{ inventory_hostname }}"
+    organization_name: "{{ kafka_ca_org }}"
+    organizational_unit_name: "{{ kafka_ca_ou }}"
+    country_name: "{{ kafka_ca_country }}"
+    state_or_province_name: "{{ kafka_ca_state }}"
+    locality_name: "{{ kafka_ca_locality }}"
+    subject_alt_name: "{{ _broker_san_list }}"
+    extended_key_usage:
+      - serverAuth
+      - clientAuth
+    extended_key_usage_critical: false
+    key_usage:
+      - digitalSignature
+      - keyEncipherment
+    key_usage_critical: true
+    digest: "{{ kafka_cert_digest }}"
+    owner: "{{ kafka_ssl_owner }}"
+    group: "{{ kafka_ssl_group }}"
+    mode: '0444'
+  vars:
+    _broker_san_list: >-
+      {{ ['DNS:' ~ inventory_hostname,
+          'DNS:' ~ inventory_hostname_short,
+          'IP:' ~ broker_ip]
+         + (broker_extra_sans | default([])) }}
+
+- name: Ensure controller staging dir exists for CSRs
+  ansible.builtin.file:
+    path: "{{ kafka_ctrl_csr_dir }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  run_once: true
+  become: false
+
+- name: Fetch CSR from broker to controller
+  ansible.builtin.fetch:
+    src: "{{ kafka_ssl_dir }}/{{ inventory_hostname_short }}.csr"
+    dest: "{{ kafka_ctrl_csr_dir }}/{{ inventory_hostname_short }}.csr"
+    flat: true
+
+- name: Ship CSR to CA host
+  ansible.builtin.copy:
+    src: "{{ kafka_ctrl_csr_dir }}/{{ inventory_hostname_short }}.csr"
+    dest: "{{ kafka_ca_dir }}/signed/{{ inventory_hostname_short }}.csr"
+    owner: root
+    group: root
+    mode: '0400'
+  delegate_to: "{{ groups['cert_authority'][0] }}"
+
+- name: Sign broker CSR on CA host (ownca provider)
+  community.crypto.x509_certificate:
+    path: "{{ kafka_ca_dir }}/signed/{{ inventory_hostname_short }}-cert.pem"
+    csr_path: "{{ kafka_ca_dir }}/signed/{{ inventory_hostname_short }}.csr"
+    ownca_path: "{{ kafka_ca_dir }}/ca-cert.pem"
+    ownca_privatekey_path: "{{ kafka_ca_dir }}/ca-key.pem"
+    ownca_privatekey_passphrase: "{{ kafka_ca_passphrase }}"
+    ownca_not_after: "+{{ kafka_cert_validity_days }}d"
+    ownca_digest: "{{ kafka_cert_digest }}"
+    provider: ownca
+    owner: root
+    group: root
+    mode: '0444'
+  delegate_to: "{{ groups['cert_authority'][0] }}"
+
+- name: Ensure controller staging dir exists for signed certs
+  ansible.builtin.file:
+    path: "{{ kafka_ctrl_signed_dir }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  run_once: true
+  become: false
+
+- name: Fetch signed broker cert from CA host to controller
+  ansible.builtin.fetch:
+    src: "{{ kafka_ca_dir }}/signed/{{ inventory_hostname_short }}-cert.pem"
+    dest: "{{ kafka_ctrl_signed_dir }}/{{ inventory_hostname_short }}-cert.pem"
+    flat: true
+  delegate_to: "{{ groups['cert_authority'][0] }}"
+
+- name: Ship signed broker cert to broker
+  ansible.builtin.copy:
+    src: "{{ kafka_ctrl_signed_dir }}/{{ inventory_hostname_short }}-cert.pem"
+    dest: "{{ kafka_ssl_dir }}/{{ inventory_hostname_short }}-cert.pem"
+    owner: "{{ kafka_ssl_owner }}"
+    group: "{{ kafka_ssl_group }}"
+    mode: '0444'
+
+- name: Ship CA cert to broker
+  ansible.builtin.copy:
+    src: "{{ kafka_ctrl_ca_cert }}"
+    dest: "{{ kafka_ssl_dir }}/ca-cert.pem"
+    owner: "{{ kafka_ssl_owner }}"
+    group: "{{ kafka_ssl_group }}"
+    mode: '0444'
+
+- name: Assemble broker PKCS12 keystore on broker
+  community.crypto.openssl_pkcs12:
+    path: "{{ kafka_ssl_dir }}/{{ inventory_hostname_short }}.keystore.p12"
+    friendly_name: "{{ inventory_hostname_short }}"
+    privatekey_path: "{{ kafka_ssl_dir }}/{{ inventory_hostname_short }}.key.pem"
+    certificate_path: "{{ kafka_ssl_dir }}/{{ inventory_hostname_short }}-cert.pem"
+    other_certificates:
+      - "{{ kafka_ssl_dir }}/ca-cert.pem"
+    passphrase: "{{ kafka_keystore_password }}"
+    state: present
+    owner: "{{ kafka_ssl_owner }}"
+    group: "{{ kafka_ssl_group }}"
+    mode: '0400'
+
+- name: Verify broker cert chain validates against CA
+  ansible.builtin.command:
+    cmd: >
+      openssl verify
+      -CAfile {{ kafka_ssl_dir }}/ca-cert.pem
+      {{ kafka_ssl_dir }}/{{ inventory_hostname_short }}-cert.pem
+  changed_when: false
+  register: _verify_chain
+
+- name: Report chain validation
+  ansible.builtin.debug:
+    var: _verify_chain.stdout
