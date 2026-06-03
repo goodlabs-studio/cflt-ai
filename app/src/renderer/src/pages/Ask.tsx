@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { Loader2, Send, Square, X } from 'lucide-react';
+import { Loader2, Send, Square, X, AlertTriangle } from 'lucide-react';
 import type { AskMode, ClaudeRoute, ReportMeta } from '@shared/types';
 import { runSkill } from '@/lib/skill';
 import { useAsk, type AskStatus } from '@/store/ask';
@@ -206,6 +206,17 @@ function QueryComposer({
           )}
         </div>
       </div>
+      {mode === 'reconsolidate' && (
+        <div className="mt-2 flex items-start gap-2 rounded border border-warning/40 bg-warning/10 px-2 py-1.5 text-[11px] text-warning">
+          <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+          <div>
+            Writes to canon — patches{' '}
+            <span className="font-mono">wiki/</span> articles where MCP finds
+            corrections and bumps their{' '}
+            <span className="font-mono">last_validated</span>.
+          </div>
+        </div>
+      )}
     </div>
   );
 }

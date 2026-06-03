@@ -19,6 +19,7 @@ import type {
   FsEvent,
   GraphEdge,
   IncidentMeta,
+  ManifestEntry,
   PlanDoc,
   PlanMeta,
   QueueEntry,
@@ -97,6 +98,33 @@ function readGraph(): GraphEdge[] {
     if (m) edges.push({ source: m[1], target: m[2], relationship: m[3] });
   }
   return edges;
+}
+
+// ─── fsi-dsp asset manifest (raw/repos/fsi-dsp/MANIFEST.yaml) ───────────
+
+const MANIFEST_PATH = 'raw/repos/fsi-dsp/MANIFEST.yaml';
+
+function readManifest(): ManifestEntry[] {
+  if (!pathExists(MANIFEST_PATH)) return [];
+  const raw = readFileSync(resolveInRepo(MANIFEST_PATH), 'utf-8');
+  // Reuse gray-matter's bundled YAML engine by wrapping the whole doc in
+  // fences — avoids adding a YAML dependency. Safe: MANIFEST.yaml has no bare
+  // `---` lines (its dividers are box-drawing comments).
+  const { data } = matter(`---\n${raw}\n---\n`);
+  const caps = (data as { capabilities?: unknown }).capabilities;
+  if (!Array.isArray(caps)) return [];
+  return caps
+    .filter(
+      (c): c is Record<string, unknown> =>
+        !!c && typeof c === 'object' && typeof (c as Record<string, unknown>).id === 'string',
+    )
+    .map((c) => ({
+      id: String(c.id),
+      type: String(c.type ?? ''),
+      name: String(c.name ?? c.id),
+      path: String(c.path ?? ''),
+      description: String(c.description ?? ''),
+    }));
 }
 
 // ─── queue (wiki/_queue.md) ────────────────────────────────────────────
@@ -642,6 +670,7 @@ export function registerFsHandlers(): void {
   ipcMain.handle('fs:listWikiTree', async () => listWikiTree());
   ipcMain.handle('fs:readWiki', async (_e, p: string) => readWiki(p));
   ipcMain.handle('fs:readGraph', async () => readGraph());
+  ipcMain.handle('fs:readManifest', async () => readManifest());
   ipcMain.handle('fs:readQueue', async () => readQueue());
   ipcMain.handle('fs:removeQueueEntry', async (_e, entryId: string) => removeQueueEntry(entryId));
   ipcMain.handle('fs:readActivity', async (_e, m?: string) => readActivity(m));

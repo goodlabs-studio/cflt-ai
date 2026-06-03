@@ -17,6 +17,7 @@ import {
 } from '@shared/types';
 import { runSkill } from '@/lib/skill';
 import { parsePlan } from '@/lib/plan-parse';
+import { useNav } from '@/store/nav';
 import { GateChain } from '@/components/plan/GateChain';
 import { cn } from '@/lib/utils';
 
@@ -34,8 +35,18 @@ export function PlanPage(): React.JSX.Element {
   const [response, setResponse] = useState('');
   const [plans, setPlans] = useState<PlanMeta[]>([]);
   const cancelRef = useRef<(() => void) | null>(null);
+  const planSeed = useNav((s) => s.planSeed);
+  const setPlanSeed = useNav((s) => s.setPlanSeed);
 
   const parsed = useMemo(() => parsePlan(response), [response]);
+
+  // Consume a one-shot deep-link seed from the Wiki "Plan this" action.
+  useEffect(() => {
+    if (planSeed) {
+      setRequest(planSeed);
+      setPlanSeed(null);
+    }
+  }, [planSeed, setPlanSeed]);
 
   useEffect(() => {
     let mounted = true;

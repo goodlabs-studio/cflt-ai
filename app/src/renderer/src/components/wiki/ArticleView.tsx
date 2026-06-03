@@ -2,20 +2,25 @@ import type React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import type { WikiArticle, GraphEdge } from '@shared/types';
+import type { WikiArticle, GraphEdge, ManifestEntry } from '@shared/types';
 import { FrontmatterPanel } from './Frontmatter';
 import { Backlinks } from './Backlinks';
+import { DeployedBy } from './DeployedBy';
 
 interface Props {
   article: WikiArticle;
   edges: GraphEdge[];
+  assets: ManifestEntry[];
   onNavigate?: (articleKey: string) => void;
+  onPlanArtifact?: (entry: ManifestEntry) => void;
 }
 
 export function ArticleView({
   article,
   edges,
+  assets,
   onNavigate,
+  onPlanArtifact,
 }: Props): React.JSX.Element {
   const articleKey = article.path
     .replace(/^wiki\//, '')
@@ -47,6 +52,11 @@ export function ArticleView({
       </article>
       <div className="space-y-5 pt-2">
         <FrontmatterPanel frontmatter={article.frontmatter} />
+        <DeployedBy
+          sources={article.frontmatter.sources}
+          assets={assets}
+          onPlan={onPlanArtifact}
+        />
         <Backlinks
           edges={edges}
           articleKey={articleKey}

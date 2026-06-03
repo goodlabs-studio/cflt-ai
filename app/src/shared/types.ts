@@ -32,6 +32,19 @@ export interface GraphEdge {
 }
 
 /**
+ * One capability entry from fsi-dsp MANIFEST.yaml — the stable wiki↔asset
+ * contract. Patterns reference these via `fsi-dsp://<id>` URIs in frontmatter
+ * `sources`; the renderer resolves those URIs against this list.
+ */
+export interface ManifestEntry {
+  id: string; // stable capability id, e.g. "role/cp_dr_mm2"
+  type: string; // ansible-role | terraform-module | scenario | script | …
+  name: string;
+  path: string; // repo-relative within fsi-dsp
+  description: string;
+}
+
+/**
  * Queue entry status — derived at read-time by cross-referencing _queue.md
  * against the wiki tree. Never stored in _queue.md. Order matters for sort.
  *
@@ -140,6 +153,7 @@ export interface CfltFsAPI {
   readWiki(path: string): Promise<WikiArticle>;
   listWikiTree(): Promise<WikiNode[]>;
   readGraph(): Promise<GraphEdge[]>;
+  readManifest(): Promise<ManifestEntry[]>;
   readQueue(): Promise<QueueEntry[]>;
   removeQueueEntry(entryId: string): Promise<{ removed: boolean }>;
   readActivity(month?: string): Promise<ActivityEntry[]>;
