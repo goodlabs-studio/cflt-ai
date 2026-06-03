@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNav, type PageKey } from '@/store/nav';
 import { initMcpInitialProbe, useMcp } from '@/store/mcp';
 import { useUserConfig } from '@/store/config';
+import { useBadgeWatchers } from '@/store/badges';
 import { Sidebar } from '@/components/Sidebar';
 import { Titlebar } from '@/components/Titlebar';
 import { Placeholder } from '@/pages/Placeholder';
@@ -21,12 +22,12 @@ import { SettingsModal } from '@/components/SettingsModal';
 const PAGE_HOTKEY_ORDER: PageKey[] = [
   'ask',
   'wiki',
-  'reports',
-  'activity',
-  'queue',
   'review',
   'plan',
   'apply',
+  'queue',
+  'activity',
+  'reports',
 ];
 
 export function App(): React.JSX.Element {
@@ -36,6 +37,9 @@ export function App(): React.JSX.Element {
   const loadConfig = useUserConfig((s) => s.load);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // App-level attention counters (Queue / Reports nav badges).
+  useBadgeWatchers();
 
   // One-time wiring: initial MCP probe + load user config.
   useEffect(() => {

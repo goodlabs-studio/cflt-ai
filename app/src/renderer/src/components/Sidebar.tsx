@@ -1,6 +1,7 @@
-import type React from 'react';
+import React, { Fragment } from 'react';
 import { cn } from '@/lib/utils';
 import { useNav, type PageKey } from '@/store/nav';
+import { useBadges, selectReportUnread } from '@/store/badges';
 import {
   MessageCircleQuestion,
   BookOpen,
@@ -12,34 +13,50 @@ import {
   PlayCircle,
 } from 'lucide-react';
 
+type NavGroup = 'consult' | 'execute' | 'track';
+
 interface NavItem {
   key: PageKey;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  group: 'read' | 'act';
+  group: NavGroup;
 }
 
 const ITEMS: NavItem[] = [
-  { key: 'ask', label: 'Ask', icon: MessageCircleQuestion, group: 'read' },
-  { key: 'wiki', label: 'Wiki', icon: BookOpen, group: 'read' },
-  { key: 'reports', label: 'Reports', icon: FileText, group: 'read' },
-  { key: 'activity', label: 'Activity', icon: Activity, group: 'read' },
-  { key: 'queue', label: 'Queue', icon: ListChecks, group: 'read' },
-  { key: 'review', label: 'Review', icon: ClipboardCheck, group: 'act' },
-  { key: 'plan', label: 'Plan', icon: GitPullRequest, group: 'act' },
-  { key: 'apply', label: 'Apply', icon: PlayCircle, group: 'act' },
+  { key: 'ask', label: 'Ask', icon: MessageCircleQuestion, group: 'consult' },
+  { key: 'wiki', label: 'Wiki', icon: BookOpen, group: 'consult' },
+  { key: 'review', label: 'Review', icon: ClipboardCheck, group: 'consult' },
+  { key: 'plan', label: 'Plan', icon: GitPullRequest, group: 'execute' },
+  { key: 'apply', label: 'Apply', icon: PlayCircle, group: 'execute' },
+  { key: 'queue', label: 'Queue', icon: ListChecks, group: 'track' },
+  { key: 'activity', label: 'Activity', icon: Activity, group: 'track' },
+  { key: 'reports', label: 'Reports', icon: FileText, group: 'track' },
 ];
+
+const GROUP_ORDER: NavGroup[] = ['consult', 'execute', 'track'];
 
 export function Sidebar(): React.JSX.Element {
   const { page, setPage } = useNav();
-  const readItems = ITEMS.filter((i) => i.group === 'read');
-  const actItems = ITEMS.filter((i) => i.group === 'act');
+  const queueCount = useBadges((s) => s.queueOpenCount);
+  const reportUnread = useBadges(selectReportUnread);
+  const badges: Partial<Record<PageKey, number>> = {
+    queue: queueCount,
+    reports: reportUnread,
+  };
 
   return (
     <nav className="flex h-full w-44 flex-col border-r border-border bg-muted/30 px-2 py-4">
-      <Group items={readItems} active={page} onSelect={setPage} />
-      <div className="my-3 h-px bg-border" />
-      <Group items={actItems} active={page} onSelect={setPage} />
+      {GROUP_ORDER.map((group, i) => (
+        <Fragment key={group}>
+          {i > 0 && <div className="my-3 h-px bg-border" />}
+          <Group
+            items={ITEMS.filter((it) => it.group === group)}
+            active={page}
+            badges={badges}
+            onSelect={setPage}
+          />
+        </Fragment>
+      ))}
     </nav>
   );
 }
@@ -47,16 +64,19 @@ export function Sidebar(): React.JSX.Element {
 function Group({
   items,
   active,
+  badges,
   onSelect,
 }: {
   items: NavItem[];
   active: PageKey;
+  badges: Partial<Record<PageKey, number>>;
   onSelect: (k: PageKey) => void;
 }): React.JSX.Element {
   return (
     <ul className="space-y-1">
       {items.map(({ key, label, icon: Icon }) => {
         const isActive = key === active;
+        const count = badges[key] ?? 0;
         return (
           <li key={key}>
             <button
@@ -77,6 +97,14 @@ function Group({
                 )}
               />
               <span className="tracking-wide uppercase text-[11px]">{label}</span>
+              {count > 0 && (
+                <span
+                  className="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-cflt-blue px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white tabular-nums"
+                  title={`${count} ${key === 'queue' ? 'open' : 'unread'}`}
+                >
+                  {count}
+                </span>
+              )}
             </button>
           </li>
         );

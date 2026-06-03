@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import type { ReportMeta } from '@shared/types';
+import { useBadges } from '@/store/badges';
 import { cn } from '@/lib/utils';
 
 export function ReportsPage(): React.JSX.Element {
@@ -31,6 +32,14 @@ export function ReportsPage(): React.JSX.Element {
     return dispose;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Drain the unread badge: mark all current reports seen while this page is
+  // open, and again whenever new reports land here (inbox-on-screen behavior).
+  const reportSlugs = useBadges((s) => s.reportSlugs);
+  const markReportsRead = useBadges((s) => s.markReportsRead);
+  useEffect(() => {
+    markReportsRead();
+  }, [reportSlugs, markReportsRead]);
 
   // Load active report body
   useEffect(() => {

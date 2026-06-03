@@ -16,6 +16,6 @@ interface NavState {
 }
 
 export const useNav = create<NavState>((set) => ({
-  page: 'wiki',
+  page: 'ask',
   setPage: (page) => set({ page }),
 }));

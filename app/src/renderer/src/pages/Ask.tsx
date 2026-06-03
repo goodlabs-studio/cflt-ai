@@ -28,6 +28,15 @@ const MODES: { value: AskMode; label: string; hint: string }[] = [
   },
 ];
 
+// Placeholder shifts with the mode so the user knows what submitting will do.
+const MODE_PLACEHOLDERS: Record<AskMode, string> = {
+  ephemeral: 'Ask a Confluent / Kafka / Flink question. ⌘↵ to submit.',
+  report:
+    'Ask a question worth keeping — the validated answer is saved as a report in outputs/reports/. ⌘↵ to submit.',
+  reconsolidate:
+    'Ask something that should improve the wiki — writes a report and folds new findings back into canon (updates articles, stubs gaps). ⌘↵ to submit.',
+};
+
 const ROUTE_OPTIONS: { value: ClaudeRoute | 'auto'; label: string }[] = [
   { value: 'auto', label: 'auto' },
   { value: 'wiki', label: 'wiki-only' },
@@ -162,7 +171,7 @@ function QueryComposer({
         onKeyDown={(e) => {
           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit();
         }}
-        placeholder="Ask a Confluent / Kafka / Flink question. ⌘↵ to submit."
+        placeholder={MODE_PLACEHOLDERS[mode]}
         className="min-h-[5rem] w-full resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground/60"
       />
       <div className="mt-2 flex items-center justify-between gap-2">
