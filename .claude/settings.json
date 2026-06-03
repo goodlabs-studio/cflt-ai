@@ -17,5 +17,8 @@
       "WebFetch(domain:docs.redhat.com)",
       "WebFetch(domain:flox.dev)"
     ]
+  },
+  "enabledPlugins": {
+    "streaming-skills-plugin@confluent-agent-skills": true
   }
 }

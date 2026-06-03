@@ -6,7 +6,7 @@ This is a shared Confluent knowledge base. Claude Code reads this file automatic
 
 **How this works:**
 - The `wiki/` directory contains validated articles on Kafka, Flink, Schema Registry, DR, and FSI patterns
-- Three MCP servers provide live validation: `context7` (architecture patterns), `confluent-docs` (current Confluent docs), `mcp-confluent` (Confluent Cloud API)
+- MCP servers provide live validation: `context7` (architecture patterns), `confluent-docs` (current Confluent docs), `mcp-confluent` (Confluent Cloud API), `terraform` (provider/IaC), `dynatrace` (Confluent Cloud telemetry / DQL), `grafana` (CFK/on-prem telemetry / PromQL)
 - The "Confluent Canon" below defines canonical defaults — treat these as the baseline for all recommendations
 
 **Key skills:**
@@ -128,6 +128,9 @@ The `streaming-skills-plugin@confluent-agent-skills` plugin is installed at proj
 | `context7` | Confluent canon + architecture patterns | Architecture questions, design reviews |
 | `confluent-docs` | Live Confluent documentation (llms.txt) | Config syntax, API refs, version-specific |
 | `mcp-confluent` | Confluent Cloud control plane | Topic mgmt, Flink SQL, schema inspection |
+| `terraform` | Terraform registry + provider docs | Validating Confluent-provider IaC (e.g. Schema Registry Terraform from `kafka-schema-registry`) |
+| `dynatrace` | Confluent Cloud SaaS telemetry (Grail/DQL) | Validating DQL, metric field names, CC Metrics API identities before observability handoffs. Grail queries bill by GB — budget-capped at 50 GB. Scope to observability patterns only. |
+| `grafana` | CFK / on-prem telemetry (PromQL/LogQL via Grafana datasources) | Validating PromQL/LogQL and JMX→Prometheus metric identities for the CP/CFK/LinuxONE tier. Read-only (`-disable-write`); proxies Prometheus datasources. The on-prem counterpart to `dynatrace`. |
 
 ---
 

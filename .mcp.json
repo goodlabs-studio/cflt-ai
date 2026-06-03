@@ -27,6 +27,23 @@
     "terraform": {
       "command": "/usr/local/bin/terraform-mcp-server",
       "args": []
+    },
+    "dynatrace": {
+      "command": "npx",
+      "args": ["-y", "@dynatrace-oss/dynatrace-mcp-server"],
+      "env": {
+        "DT_ENVIRONMENT": "${DT_ENVIRONMENT}",
+        "DT_PLATFORM_TOKEN": "${DT_PLATFORM_TOKEN}",
+        "DT_GRAIL_QUERY_BUDGET_GB": "50"
+      }
+    },
+    "grafana": {
+      "command": "/Users/jhogan/go/bin/mcp-grafana",
+      "args": ["-t", "stdio", "-disable-write"],
+      "env": {
+        "GRAFANA_URL": "${GRAFANA_URL}",
+        "GRAFANA_API_KEY": "${GRAFANA_API_KEY}"
+      }
     }
   }
 }
