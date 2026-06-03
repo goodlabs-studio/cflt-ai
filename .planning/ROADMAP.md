@@ -63,6 +63,12 @@ Run `/gsd:new-milestone` to scope the next milestone. Candidate backlog items be
 
 Forward-looking work captured during recent sessions. Not committed to a milestone; promoted into a real phase when scope and timing firm up.
 
+### Telemetry & operate tier (captured 2026-06-03)
+
+- [ ] **fsi-dsp asset MCP** — Thin read-only MCP wrapping `raw/repos/fsi-dsp/MANIFEST.yaml` (`list_capabilities` / `get_artifact` / `match_capability`). NOT needed for the app/skills — they read the manifest directly (see FRANZ "Deployed by" panel + `fs:readManifest`). Build it only as the tool substrate for the operate-tier devops agent; the manifest is already its schema.
+- [ ] **Monitor/Operate section under Plan/Apply** — New tier realizing NLP → LLM → devops agent → MCP → Confluent+. Substrate: fsi-dsp asset MCP + telemetry MCPs (`dynatrace`, `grafana` — already registered in `.mcp.json`, parked) + `mcp-confluent`. Consumes fsi-dsp `observability/{dynatrace,grafana,splunk,…}` deployable bundles. Telemetry MCP UI wiring (Titlebar `EXPECTED_MCP_SERVERS`) deferred until this lands.
+- [ ] **SVG/diagram rendering in ArticleView** — Add diagram rendering (rehype-mermaid or static-SVG image handling) so wiki patterns can carry rendered architecture diagrams, and make diagram production part of `/wiki:ingest` generation. Today ArticleView runs remark-gfm + rehype-highlight only: ASCII box diagrams render, mermaid/SVG do not. See the SVG-in-wiki plan.
+
 ### Deferred sub-phases (G.2 carry-forward — promoted at sequencing-time)
 
 - [ ] **G.2a: mcp-confluent tool-call executor** — Dispatch `artifact.type == "mcp-confluent-tool"` to a tool-call sequence executor via stdio MCP from Python. Smallest, most isolated of the remaining G.2 work; proves the MCP-stdio-from-Python plumbing. Unblocked now that G.2c has corrected the tool classification.
