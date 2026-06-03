@@ -64,10 +64,13 @@ Each record follows CloudEvents format with these filterable fields:
 
 ### Sink Pipeline Architecture
 
-```
-confluent-audit-log-events          HTTP Sink Connector          Dynatrace
-(dedicated audit log cluster) ────> (Confluent Cloud Connect   ────> Log Ingest API
-                                     or self-managed)                /api/v2/logs/ingest
+```mermaid
+flowchart LR
+  AUDIT[("confluent-audit-log-events — dedicated audit log cluster")]
+  SINK["HTTP Sink Connector — Confluent Cloud Connect or self-managed"]
+  DT["Dynatrace Log Ingest API /api/v2/logs/ingest"]
+  AUDIT --> SINK
+  SINK --> DT
 ```
 
 **Recommended: two connector instances** for separation of concern and SLA:

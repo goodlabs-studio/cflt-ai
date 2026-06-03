@@ -20,21 +20,17 @@ This article describes the framework-level routing pattern. For the specific CDC
 
 ### Pipeline shape
 
-```
-Producer ──▶ raw.<domain>.<entity>.<event>          (single canonical topic, wire-format unchanged)
-                          │
-                          ▼
-            Flink SQL statement (stateless)
-              - filter:    SELECT ... WHERE <predicate>
-              - project:   SELECT <subset of cols>
-              - split:     one INSERT per derived topic, each with its own WHERE
-              - enrich:    LEFT JOIN <reference table>  (lookup join; bounded state)
-                          │
-                          ▼
-            derived.<domain>.<entity>.<view>         (one topic per consumer view)
-                          │
-                          ▼
-                 Consumers / downstream connectors
+```mermaid
+flowchart TD
+  PROD["Producer"]
+  RAW[("raw.domain.entity.event — single canonical topic, wire-format unchanged")]
+  FLINK["Flink SQL statement (stateless): filter, project, split, enrich via lookup join"]
+  DERIVED[("derived.domain.entity.view — one topic per consumer view")]
+  CONS["Consumers / downstream connectors"]
+  PROD --> RAW
+  RAW --> FLINK
+  FLINK --> DERIVED
+  DERIVED --> CONS
 ```
 
 The raw topic is the **system of record** for the event stream. Every derived topic is a deterministic function of the raw topic plus the Flink statement. If you delete a derived topic you can always reconstruct it; if you delete the raw topic you can't.

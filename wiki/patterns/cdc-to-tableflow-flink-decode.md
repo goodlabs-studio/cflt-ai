@@ -22,17 +22,19 @@ Sourced from `confluentinc/agent-skills@91d1871e` (Apache-2.0) — upstream main
 
 ### Pipeline shape
 
-```
-Source DB ──Debezium CDC Source──▶ raw topic (CHANGELOG envelope)
-                                    │
-                                    ▼
-                              Flink INSERT (decode + type-convert)
-                                    │
-                                    ▼
-                                  clean topic (changelog.mode=upsert, with PRIMARY KEY)
-                                    │
-                                    ▼
-                                  Tableflow → Iceberg/Delta
+```mermaid
+flowchart TD
+  DB[("Source DB")]
+  RAW[("raw topic — CHANGELOG envelope")]
+  FLINK["Flink INSERT — decode + type-convert"]
+  CLEAN[("clean topic — changelog.mode=upsert, with PRIMARY KEY")]
+  TF["Tableflow"]
+  LAKE[("Iceberg/Delta")]
+  DB -->|"Debezium CDC Source"| RAW
+  RAW --> FLINK
+  FLINK --> CLEAN
+  CLEAN --> TF
+  TF --> LAKE
 ```
 
 The clean topic is the **Tableflow handoff point**. Never enable Tableflow on the raw CDC topic — see [CDC Tableflow Flink Decode Required](cdc-tableflow-flink-decode-required.md) for the trip-wire.

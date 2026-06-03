@@ -40,16 +40,13 @@ the configuration table needs cross-cloud overrides on top.
 
 ### Architecture
 
-```
-┌──────────────────┐    ┌─────────────────────┐    ┌──────────────────┐
-│  OIC Integration │───>│  Connectivity Agent │───>│  Confluent Cloud │
-│  (OCI managed)   │    │  (JVM, OCI VM/VCN)  │    │  (Azure/AWS)     │
-│                  │    │  Kafka client lives │    │  Private Link    │
-│                  │    │  here              │    │  endpoint         │
-└──────────────────┘    └─────────────────────┘    └──────────────────┘
-                              │
-                              └── cross-cloud RTT 30–80ms typical
-                                  Azure ILB on the CC side
+```mermaid
+flowchart LR
+  OIC["OIC Integration (OCI managed)"]
+  AGENT["Connectivity Agent (JVM, OCI VM/VCN) — Kafka client lives here"]
+  CC[("Confluent Cloud (Azure/AWS) — Private Link endpoint")]
+  OIC --> AGENT
+  AGENT -->|"cross-cloud RTT 30-80ms typical, Azure ILB on the CC side"| CC
 ```
 
 The Kafka producer client lives in the Connectivity Agent JVM, not in the OIC integration

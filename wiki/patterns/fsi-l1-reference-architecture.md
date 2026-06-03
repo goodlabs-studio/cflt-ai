@@ -31,38 +31,28 @@ Reference architecture for FSI workloads that pins the **operational data plane*
 
 ### 1. Topology
 
-```
-┌──────────────────  IBM LinuxONE Emperor 5 (frame 1)  ──────────────────┐
-│                                                                        │
-│  ┌─ Operational Stores LPAR ─────────────────────────────────────┐     │
-│  │  MongoDB │ CockroachDB │ PostgreSQL │ Redis │ Neo4j           │     │
-│  └────────────────────┬──────────────────────────────────────────┘     │
-│                       │ CDC via Confluent Connect                      │
-│                       │ (Mongo CDC, Postgres CDC V2, Cockroach         │
-│                       │  native changefeed, IBM MQ Source)             │
-│                       ▼                                                │
-│  ┌─ Broker LPAR(s) ────────────────────┐  ┌─ KRaft Controller LPAR ─┐  │
-│  │ Kafka brokers │ SR │ Connect        │◄─►│ 3 dedicated voters      │  │
-│  └────────────┬────────────────────────┘  └─────────────────────────┘  │
-│               │ HiperSockets / SMC-D                                   │
-│               ▼                                                        │
-│  ┌─ Flink LPAR (CMF) ─────────┐   ┌─ z/OS LPAR ──────────────┐         │
-│  │ Stateful streams + UDFs    │   │ Mainframe apps via IBM MQ│         │
-│  │ Telum II NNPA / Spyre      │   └──────────────────────────┘         │
-│  └─────────┬──────────────────┘                                        │
-│            │ Kafka topics: scored events, alerts, decisions            │
-└────────────┼───────────────────────────────────────────────────────────┘
-             │
-             ├── MRC stretch (RoCE Express + SMC-R) ──► Frame 2 (paired DC, intra-campus)
-             │   compliance-tier RPO=0; sub-50 ms RTT requirement
-             │
-             └── Cluster Linking (OSA-Express) ───────► Confluent Cloud (cross-region/cloud)
-                                                              │
-                                                              ▼
-                                                   Tableflow → Iceberg / Delta Lake
-                                                              │
-                                                              ▼
-                                                          Databricks
+```mermaid
+flowchart TD
+  subgraph FRAME1["IBM LinuxONE Emperor 5 (frame 1)"]
+    STORES["Operational Stores LPAR — MongoDB, CockroachDB, PostgreSQL, Redis, Neo4j"]
+    BROKER["Broker LPAR(s) — Kafka brokers, SR, Connect"]
+    KRAFT["KRaft Controller LPAR — 3 dedicated voters"]
+    FLINK["Flink LPAR (CMF) — stateful streams + UDFs, Telum II NNPA / Spyre"]
+    ZOS["z/OS LPAR — mainframe apps via IBM MQ"]
+    STORES -->|"CDC via Confluent Connect: Mongo CDC, Postgres CDC V2, Cockroach changefeed, IBM MQ Source"| BROKER
+    BROKER <--> KRAFT
+    BROKER -->|"HiperSockets / SMC-D"| FLINK
+    ZOS --> BROKER
+  end
+  FRAME2[("Frame 2 — paired DC, intra-campus")]
+  CC[("Confluent Cloud — cross-region/cloud")]
+  TF["Tableflow to Iceberg / Delta Lake"]
+  DBX["Databricks"]
+  FLINK -->|"scored events, alerts, decisions"| BROKER
+  BROKER -->|"MRC stretch (RoCE Express + SMC-R): compliance-tier RPO=0, sub-50 ms RTT"| FRAME2
+  BROKER -->|"Cluster Linking (OSA-Express)"| CC
+  CC --> TF
+  TF --> DBX
 ```
 
 **Two distinct DR / replication mechanisms — they are not interchangeable:**

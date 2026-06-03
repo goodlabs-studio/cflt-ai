@@ -126,13 +126,15 @@ This is the differentiator — and the answer to the user's bonus.
 
 #### 4.1 Architecture
 
-```
-Kafka source (read_committed)
-   ↓
-Map/ProcessFunction wrapping anomaly inference
-   ↓
-   ├── if score > threshold → kafka.alerts.* (kafka.fraud.alerts.v1)
-   └── always → kafka.events.scored.v1 (audit)
+```mermaid
+flowchart TD
+  SRC[("Kafka source — read_committed")]
+  PROC["Map/ProcessFunction wrapping anomaly inference"]
+  ALERTS[("kafka.fraud.alerts.v1")]
+  SCORED[("kafka.events.scored.v1 — audit")]
+  SRC --> PROC
+  PROC -->|"if score > threshold"| ALERTS
+  PROC -->|"always"| SCORED
 ```
 
 The inference call is **in-process, on-LPAR, on-chip** — there is no network hop, no PCIe round-trip to a GPU, no microservice call. Telum II's NNPA accelerator is invoked via the IBM Z Deep Neural Network library (`zDNN`); models are pre-compiled from ONNX with the IBM Z Deep Learning Compiler (`zDLC`), which emits a JNI-callable JAR.

@@ -90,8 +90,15 @@ The Google Cloud and CP gaps are significant for FSI shops with multi-cloud or h
 
 The dominant production use case is Change Data Capture into a lakehouse. Tableflow on the **raw** Debezium topic doesn't work — Debezium emits null-value tombstones on DELETE, and Tableflow's default APPEND mode suspends on the first tombstone. The canonical shape is:
 
-```
-Source DB ──Debezium──▶ raw CDC topic ──Flink decode──▶ clean topic (changelog.mode=upsert) ──Tableflow──▶ Iceberg / Delta
+```mermaid
+flowchart LR
+  DB[("Source DB")]
+  RAW[("raw CDC topic")]
+  CLEAN[("clean topic (changelog.mode=upsert)")]
+  LAKE[("Iceberg / Delta")]
+  DB -->|"Debezium"| RAW
+  RAW -->|"Flink decode"| CLEAN
+  CLEAN -->|"Tableflow"| LAKE
 ```
 
 See:

@@ -37,28 +37,18 @@ Use [DR — MirrorMaker 2](dr-mirrormaker2.md) observability instead for CFK/CP 
 
 ### Architecture
 
-```
-                ┌──────────────────┐                       ┌──────────────────┐
-                │ Source cluster   │                       │ Destination     │
-                │ (primary region) │──── cluster link ─────│ cluster (DR)    │
-                │                  │                       │                  │
-                │ topic.orders     │                       │ topic.orders    │
-                │  (writable)      │                       │  (mirror,       │
-                └──────────────────┘                       │   read-only)    │
-                        │                                  └──────────────────┘
-                        │                                          │
-                        ▼                                          ▼
-                 Metrics API + JMX                            Metrics API + JMX
-                        │                                          │
-                        └──────────────┬───────────────────────────┘
-                                       ▼
-                              ┌──────────────────┐
-                              │ DR Readiness     │
-                              │ Dashboard        │  (Grafana / Dynatrace / …)
-                              │ (Row 1: lag)     │
-                              │ (Row 2: states)  │
-                              │ (Row 3: clients) │
-                              └──────────────────┘
+```mermaid
+flowchart TD
+  SRC[("Source cluster (primary region) — topic.orders writable")]
+  DST[("Destination cluster (DR) — topic.orders mirror, read-only")]
+  SRCM["Metrics API + JMX"]
+  DSTM["Metrics API + JMX"]
+  DASH["DR Readiness Dashboard — Grafana / Dynatrace"]
+  SRC -->|"cluster link"| DST
+  SRC --> SRCM
+  DST --> DSTM
+  SRCM --> DASH
+  DSTM --> DASH
 ```
 
 ### Step 1 — Mirror lag (the RPO metric)

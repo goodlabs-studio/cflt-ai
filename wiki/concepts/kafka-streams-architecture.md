@@ -26,21 +26,33 @@ Kafka Streams is a **client library** — it runs inside your JVM process, not o
 
 ### Threading model
 
-```
-KafkaStreams instance
-├── StreamThread-1 (Java thread)
-│   ├── Consumer (polls assigned partitions)
-│   ├── Task 0_0 (partition 0 of subtopology 0)
-│   │   ├── Processor topology
-│   │   └── State stores (RocksDB)
-│   ├── Task 0_1 (partition 1 of subtopology 0)
-│   └── Producer (writes to output/changelog topics)
-├── StreamThread-2
-│   └── ...
-├── GlobalStreamThread (if GlobalKTable is used)
-│   └── Reads ALL partitions of global topics
-└── StateRestoreThread
-    └── Replays changelogs to rebuild state stores
+```mermaid
+flowchart TD
+  KS["KafkaStreams instance"]
+  ST1["StreamThread-1 (Java thread)"]
+  ST2["StreamThread-2"]
+  GST["GlobalStreamThread (if GlobalKTable is used)"]
+  SRT["StateRestoreThread"]
+  CONS["Consumer: polls assigned partitions"]
+  T00["Task 0_0: partition 0 of subtopology 0"]
+  T01["Task 0_1: partition 1 of subtopology 0"]
+  PROD["Producer: writes to output/changelog topics"]
+  PTOP["Processor topology"]
+  SS[("State stores (RocksDB)")]
+  GSTREAD["Reads ALL partitions of global topics"]
+  SRTREAD["Replays changelogs to rebuild state stores"]
+  KS --> ST1
+  KS --> ST2
+  KS --> GST
+  KS --> SRT
+  ST1 --> CONS
+  ST1 --> T00
+  ST1 --> T01
+  ST1 --> PROD
+  T00 --> PTOP
+  T00 --> SS
+  GST --> GSTREAD
+  SRT --> SRTREAD
 ```
 
 - **StreamThread** — event loop: poll → process → commit. One thread handles multiple tasks.
