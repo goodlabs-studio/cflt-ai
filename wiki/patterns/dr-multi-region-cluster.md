@@ -16,6 +16,23 @@ RPO=0 DR pattern using Confluent Platform's replica placement v2 with synchronou
 
 ## Pattern
 
+```mermaid
+flowchart LR
+  Clients["Producers + Consumers"]
+  Consul{"Consul KV: active DC"}
+  subgraph Topic["Single topic, replica placement v2 (RF=5, min.insync.replicas=3)"]
+    East[("East DC: 2 sync replicas, read-write")]
+    West[("West DC: 2 sync replicas, read-write")]
+    Obs[("Central DC: 1 observer, async")]
+  end
+  Clients -->|"resolve via Consul"| Consul
+  Consul --> East
+  East <-->|"synchronous cross-DC writes (RPO=0)"| West
+  East -.->|"async"| Obs
+  West -.->|"async"| Obs
+  Obs -.->|"auto-promote into ISR on under-min-isr"| West
+```
+
 ### 2.5-Cluster Architecture
 
 - **East DC (Primary):** 2 replicas per partition (full read/write)

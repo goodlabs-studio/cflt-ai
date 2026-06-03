@@ -16,6 +16,19 @@ Active-passive DR pattern for Confluent Cloud deployments using bidirectional Cl
 
 ## Pattern
 
+```mermaid
+flowchart LR
+  Clients["Producers + Consumers"]
+  Consul{"Consul KV: fsi/kafka/active-region"}
+  East[("East (Primary): active read-write")]
+  West[("West (DR): mirror topics, passive")]
+  Clients -->|"resolve via Consul DNS"| Consul
+  Consul -->|"active=east"| East
+  Consul -.->|"active=west after failover"| West
+  East <-->|"bidirectional cluster link, async"| West
+  West -.->|"mirror failover promotes to read-write"| West
+```
+
 ### Architecture
 
 - **East (Primary):** Active production cluster, all producers and consumers resolve here via Consul DNS

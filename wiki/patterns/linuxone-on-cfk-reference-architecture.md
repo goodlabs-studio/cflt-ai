@@ -29,6 +29,26 @@ processing — wired in as Kustomize Components on top. The result is one builda
 artifact per environment (`overlays/{dev,prod}/kustomization.yaml`) that yields a
 production-grade hardened CP on LinuxONE with each control independently validated.
 
+```mermaid
+flowchart TD
+  subgraph Platform["OCP on IBM LinuxONE (s390x, FIPS)"]
+    Base[("IBM Mondics base: CP 8.2.0, CFK 3.2.x, KRaft, Cluster Linking")]
+    L1["01-rbac: MDS + LDAP, 6 FSI roles, ConfluentServerAuthorizer"]
+    L2["02-tls: mTLS internal listeners, FIPS, cert-manager"]
+    L3["03-schema-governance: FULL_TRANSITIVE, SR bootstrap Job"]
+    L4["04-audit: event router, 7y audit topic, Splunk + Dynatrace sinks"]
+    L5["05-flink: FlinkEnvironment, CMFRestClass, example jobs"]
+  end
+  Overlay["overlays/env kustomization.yaml (single buildable artifact)"]
+  Overlay --> Base
+  Base --> L1
+  L1 -->|"authorizer before audit routing"| L4
+  L1 -->|"MDS for Flink RBAC"| L5
+  L2 -->|"ca-issuer before SR and Flink mTLS"| L3
+  L2 -->|"ca-issuer for Flink Certificate CRs"| L5
+  L3 --> L4
+```
+
 Source of truth: `fsi-dsp://accelerator/confluent-on-linuxone` (DESIGN.md, README.md,
 RUNBOOK.md, KNOWN-GAPS.md, MIGRATION.md). Decision-level rationale: `fsi-dsp://adr/009`
 (LinuxONE deployment guidance — IBM Semeru, PKCS12, CPACF).

@@ -24,6 +24,28 @@ Sourced from `confluentinc/agent-skills@91d1871e` (Apache-2.0) — upstream main
 
 ## Pattern
 
+```mermaid
+flowchart LR
+  CODE[("Existing Kafka codebase")]
+  DETECT["S1 Detect: build files, producers, consumers, serializers, risk flags"]
+  CATALOGUE["App catalogue (per app: language, role, format, sr_integrated, category)"]
+  CAT{"Producer category?"}
+  CODE --> DETECT
+  DETECT --> CATALOGUE
+  CATALOGUE --> CAT
+  CAT -->|"B: JSON no SR — producers first"| MIGRATE
+  CAT -->|"A to Header: on SR — producers only"| MIGRATE
+  CAT -->|"C: auto-register — register via TF then producers first"| MIGRATE
+  CAT -->|"E: custom serializer — consumers first"| MIGRATE
+  CAT -->|"A: compliant — extract schema to TF"| MIGRATE
+  MIGRATE["S2 Migrate: SR-aware serdes (Avro / Protobuf / JSON Schema) per language"]
+  TF["terraform/schemas.tf registers subjects in SR"]
+  GOVERNED[("Governed pipeline: every topic has a registered schema, no auto.register")]
+  DETECT -.->|"extract schemas"| TF
+  TF --> GOVERNED
+  MIGRATE --> GOVERNED
+```
+
 ### Section 1 — Detection patterns
 
 The detection phase runs first. Goal: produce an app catalogue with every Kafka producer/consumer in the codebase, classified by serializer family (Avro/Protobuf/JSON Schema/raw/custom), SR-integration status, and risk flags (`auto.register.schemas=true`, `use.latest.version=true`).

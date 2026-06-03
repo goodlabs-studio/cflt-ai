@@ -16,6 +16,30 @@ Kafka DR patterns ([Cluster Linking](dr-cluster-linking.md), [MM2](dr-mirrormake
 
 ## Pattern
 
+```mermaid
+flowchart LR
+  CLIENTS["Producers and consumers (failed-region endpoint)"]
+  FAILED[("Failed cluster")]
+  DR[("DR cluster (writable after promote/failover)")]
+  CLIENTS -.->|"connections time out"| FAILED
+  FAILED -->|"Cluster Linking / MM2 data plane: topics + offsets"| DR
+  subgraph ROUTING["Client plane — three solution classes"]
+    DNS["Solution 1: DNS abstraction (Consul KV flip, logical FQDN)"]
+    PROXY["Solution 2: Protocol proxy (Confluent Gateway, ORKA, Kroxylicious)"]
+    CC["Solution 3: One-Click DR (CC managed, CC-only)"]
+  end
+  CLIENTS --> DNS
+  CLIENTS --> PROXY
+  CLIENTS --> CC
+  DNS -->|"new connections resolve to DR"| DR
+  PROXY -->|"rewrites Metadata, pauses fetch, swaps auth"| DR
+  CC -->|"managed mirror promote + endpoint flip"| DR
+  STATE{"Workload class?"}
+  CLIENTS --> STATE
+  STATE -->|"stateless / at-least-once: correct under all 3"| DR
+  STATE -.->|"stateful (Streams/ksqlDB/Flink): state outside CL scope"| DR
+```
+
 ### The problem the data plane doesn't solve
 
 Cluster Linking and MM2 replicate **topic data** and **consumer offsets** to the DR cluster. A failover (`mirror failover`) makes the DR topics writable. At that moment, every existing producer and consumer is still connected to the failed cluster's bootstrap endpoint. Three things happen unless you intervene:

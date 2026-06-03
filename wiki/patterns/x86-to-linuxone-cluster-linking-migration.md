@@ -30,6 +30,28 @@ Architectural decision rationale: `fsi-dsp://adr/005` (Cluster Linking over MM2 
 MRC for Confluent-to-Confluent migration). This article is the operational
 procedure that ADR-005 governs.
 
+```mermaid
+flowchart LR
+  AUDIT["S1: Pre-migration audit (RBAC, TLS, schema, audit-log, data scope)"]
+  X86[("Source: x86 Confluent cluster")]
+  CL["S2: Apply Cluster Link manifest (kustomize overlays/prod)"]
+  L1[("Destination: LinuxONE cluster")]
+  VALIDATE{"Mirror lag = 0 and parity OK?"}
+  CUTOVER["S2.5 Cutover: quiesce producers, mirror promote, Consul KV flip, restart consumers"]
+  ROLLBACK["S3 Rollback: re-point Consul to x86, pause/reverse-replicate CL"]
+  EVIDENCE["S4: Evidence collection (7y retention: lag, parity, audit, RBAC, schema diff)"]
+  SR["Schema Registry migrated separately (CL does NOT replicate schemas)"]
+  AUDIT --> X86
+  X86 -->|"async mirror"| CL
+  CL --> L1
+  L1 --> VALIDATE
+  SR -.->|"trip-wire: SR sync separate"| VALIDATE
+  VALIDATE -->|"yes"| CUTOVER
+  VALIDATE -->|"no / fault within RTO"| ROLLBACK
+  CUTOVER --> EVIDENCE
+  ROLLBACK --> EVIDENCE
+```
+
 ## Section 1 — Pre-migration audit checklist (source x86 cluster)
 
 A control gap on the source propagates to the destination. Validate both ends
