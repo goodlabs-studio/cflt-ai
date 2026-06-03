@@ -1,11 +1,47 @@
 import type React from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import type { WikiArticle, GraphEdge, ManifestEntry } from '@shared/types';
 import { FrontmatterPanel } from './Frontmatter';
 import { Backlinks } from './Backlinks';
 import { DeployedBy } from './DeployedBy';
+import { Mermaid } from './Mermaid';
+
+/** Flatten React children (incl. rehype-highlight spans) back to source text. */
+function nodeText(node: React.ReactNode): string {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(nodeText).join('');
+  if (typeof node === 'object' && 'props' in node) {
+    return nodeText((node as { props?: { children?: React.ReactNode } }).props?.children);
+  }
+  return '';
+}
+
+// Intercept ```mermaid fences and render them as diagrams; everything else
+// keeps the default code/pre rendering (with highlight classes intact).
+const markdownComponents: Components = {
+  code(props) {
+    const { className, children } = props;
+    if (/\blanguage-mermaid\b/.test(className ?? '')) {
+      return <Mermaid chart={nodeText(children).replace(/\n+$/, '')} />;
+    }
+    return <code className={className}>{children}</code>;
+  },
+  pre(props) {
+    const { children, node } = props as {
+      children?: React.ReactNode;
+      node?: { children?: Array<{ properties?: { className?: unknown } }> };
+    };
+    const cls = node?.children?.[0]?.properties?.className;
+    // Mermaid renders its own framed block — drop the <pre> card wrapper.
+    if (Array.isArray(cls) && cls.includes('language-mermaid')) {
+      return <>{children}</>;
+    }
+    return <pre>{children}</pre>;
+  },
+};
 
 interface Props {
   article: WikiArticle;
@@ -44,7 +80,8 @@ export function ArticleView({
         <div className="wiki-prose">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeHighlight]}
+            rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
+            components={markdownComponents}
           >
             {article.body}
           </ReactMarkdown>

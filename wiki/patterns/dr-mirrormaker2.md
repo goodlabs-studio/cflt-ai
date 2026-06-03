@@ -16,6 +16,16 @@ DR pattern for CFK on OpenShift and Confluent Platform on RHEL deployments using
 
 ## Pattern
 
+```mermaid
+flowchart LR
+  SRC[("Kafka source — east")]
+  MM2["MM2 connectors: Source, Checkpoint, Heartbeat"]
+  TGT[("Kafka target — west, topics east.*")]
+  SRC -->|async replication| MM2
+  MM2 --> TGT
+  SRC -.->|consumer offset translation| MM2
+```
+
 ### Architecture Differences from Cluster Linking
 
 | Aspect | Cluster Linking | MirrorMaker 2 |
