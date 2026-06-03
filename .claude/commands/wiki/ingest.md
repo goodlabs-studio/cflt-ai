@@ -32,6 +32,7 @@ For each entry in `## Pending`:
 - Set `confidence: medium` initially (will be upgraded after validation)
 - Include proper frontmatter with all required fields
 - Add cross-links to related existing articles
+- **Diagram (architectural patterns):** if the article describes an architecture, topology, or data-flow, include one ` ```mermaid ` block near the top of the body (under `## Pattern`). Use `flowchart LR` or `flowchart TD`, quoted node labels (`id["Label"]`; clusters/datastores `id[("Label")]`; decisions `id{"Label"}`), quoted edge labels, and `subgraph GID["Title"] … end` for grouping. Do NOT use `\n`, `<br/>`, HTML entities, or unicode box-drawing characters in labels — keep labels short and single-line, splitting into multiple nodes for detail. ArticleView renders mermaid as SVG; ASCII box-drawing diagrams do not render and must not be used for new articles.
 
 **3d. MCP validation gate (MANDATORY)**
 

@@ -315,6 +315,7 @@ def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
         "stale": [],
         "low_confidence": [],
         "unverified": [],
+        "missing_diagram": [],
         "decayed": [],
         "drift": [],
         "malformed_source": [],
@@ -361,6 +362,21 @@ def lint_wiki(root: Path, full: bool = False, fix: bool = False) -> dict:
                     findings["stale"].append(rel)
             except ValueError:
                 pass
+
+        # Advisory (--full): architectural patterns with no rendered diagram.
+        # Heuristic on filename markers (precise, low false-positive); a diagram
+        # is either a mermaid block or legacy ASCII box-drawing art.
+        if full and rel.startswith("wiki/patterns/"):
+            name = md.stem
+            archy = any(
+                k in name
+                for k in ("reference-architecture", "-architecture", "dr-", "migration", "topology")
+            )
+            has_diagram = "```mermaid" in content or any(
+                c in content for c in "┌└├│┐┘┤─┬┴┼"
+            )
+            if archy and not has_diagram:
+                findings["missing_diagram"].append(rel)
 
         # Decay rule (WIKI-03/04): confidence:high with stale last_validated
         if check_decay(fm):
@@ -446,6 +462,7 @@ def main():
         "stale": "Stale articles (>90 days)",
         "low_confidence": "Low confidence articles",
         "unverified": "Unverified inline claims",
+        "missing_diagram": "Architectural pattern with no diagram (consider adding a mermaid diagram)",
         "decayed": "Decayed articles (confidence demoted)",
         "drift": "Vendor-source DRIFT (article SHA doesn't match tools/vendor-sources.json pin)",
         "malformed_source": "MALFORMED source field (vendor@<sha> shape required)",

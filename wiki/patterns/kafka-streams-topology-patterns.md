@@ -20,6 +20,24 @@ Sourced from `confluentinc/agent-skills@91d1871e` (Apache-2.0) — upstream main
 
 ## Pattern
 
+```mermaid
+flowchart TD
+  START{"What is the goal?"}
+  START -->|"transform / filter / route"| STATELESS["Stateless: filter, mapValues, flatMapValues, split, merge"]
+  START -->|"enrich from a lookup"| JOIN{"Lookup shape?"}
+  START -->|"roll up / count / sum"| AGG["Aggregations: groupByKey aggregate, cogroup for multi-source"]
+  START -->|"time-bounded grouping"| WIN["Windowing + suppression: tumbling, hopping, session"]
+  START -->|"drop duplicates"| DEDUP["Deduplication: windowed state store"]
+  START -->|"low-level control"| PAPI["Processor API escape hatch"]
+  JOIN -->|"co-partitioned, table fits per instance"| STJOIN["Stream-Table join"]
+  JOIN -->|"lookup key differs, small table"| GKT["GlobalKTable broadcast join"]
+  JOIN -->|"table-table FK relationship"| FKJ["Foreign-key table-table join"]
+  JOIN -->|"two streams, windowed correlation"| SSJ["Stream-Stream join with JoinWindows"]
+  STATELESS --> EOS["Wrap in exactly-once: processing.guarantee=exactly_once_v2"]
+  AGG --> EOS
+  WIN --> EOS
+```
+
 ### Stateless transforms
 
 Filter, map, route, split, merge. No state stores, no rebalance overhead, simplest to operate.
