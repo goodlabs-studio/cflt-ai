@@ -125,7 +125,16 @@ function parseInit(raw: Record<string, unknown>): InitInfo {
 }
 
 function normalizeMcpStatus(s: unknown): McpServerStatus['status'] {
-  if (s === 'connected' || s === 'failed' || s === 'needs-auth') return s;
+  // `pending` shows up in headless --print init snapshots: slow npx/uvx stdio
+  // servers are still mid-handshake when the init event fires. They connect a
+  // beat later, so it must not be flattened to `unknown` (which reads as down).
+  if (
+    s === 'connected' ||
+    s === 'failed' ||
+    s === 'needs-auth' ||
+    s === 'pending'
+  )
+    return s;
   return 'unknown';
 }
 

@@ -94,7 +94,9 @@ export function Titlebar({ onOpenSettings }: TitlebarProps = {}): React.JSX.Elem
                             ? 'bg-danger'
                             : d.status === 'needs-auth'
                               ? 'bg-warning'
-                              : 'bg-muted-foreground/40')
+                              : d.status === 'pending'
+                                ? 'bg-warning/60 animate-pulse'
+                                : 'bg-muted-foreground/40')
                       }
                     />
                   </Tooltip.Trigger>
