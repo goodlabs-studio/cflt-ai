@@ -174,7 +174,7 @@ export type AskMode = 'ephemeral' | 'report' | 'reconsolidate';
 
 export interface McpServerStatus {
   name: string;
-  status: 'connected' | 'failed' | 'needs-auth' | 'unknown';
+  status: 'connected' | 'failed' | 'needs-auth' | 'pending' | 'unknown';
 }
 
 export interface InitInfo {
