@@ -36,14 +36,7 @@ terraform {
 
 locals {
   # Queue topics carry a -queue suffix so naming makes the consumption model explicit.
-  topic_name    = "${var.domain}.${var.application}.${var.schema_version}.${var.entity}-queue"
-  value_subject = "${local.topic_name}-value"
-
-  # FSI tripwire: a queue (at-least-once, unordered) may not be 'critical' tier
-  # unless the caller explicitly accepts those semantics.
-  _enforce_at_least_once = (
-    var.sla_tier == "critical" && !var.allow_at_least_once
-  ) ? tobool("sla_tier=critical on a share-group topic requires allow_at_least_once=true (share groups are at-least-once and unordered)") : true
+  topic_name = "${var.domain}.${var.application}.${var.schema_version}.${var.entity}-queue"
 }
 
 resource "confluent_kafka_topic" "this" {
@@ -57,6 +50,15 @@ resource "confluent_kafka_topic" "this" {
     # Durable writes — FSI baseline regardless of consumption model.
     "min.insync.replicas" = "2"
     "cleanup.policy"      = "delete"
+  }
+
+  # FSI tripwire: a queue (at-least-once, unordered) may not back a 'critical'
+  # SLA tier unless the caller explicitly accepts those semantics.
+  lifecycle {
+    precondition {
+      condition     = !(var.sla_tier == "critical" && !var.allow_at_least_once)
+      error_message = "sla_tier=critical on a share-group topic requires allow_at_least_once=true (share groups are at-least-once and unordered)."
+    }
   }
 }
 
