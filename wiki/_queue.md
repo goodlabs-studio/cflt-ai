@@ -19,6 +19,7 @@ The LLM reads this at session start and clears items when complete.
 ## Articles to Expand
 
 <!-- format: - [ ] wiki/concepts/<slug>.md — what is missing -->
+- [ ] [Queues for Kafka (Share Groups)](wiki/concepts/queues-for-kafka-share-groups.md) — authored at confidence:medium; promote to high via /wiki:validate once the Confluent share-groups doc page is reachable through confluent-docs. Resolve the ⚠️ unverified markers: group.share.* config names/defaults, KafkaShareConsumer ack modes, kafka-share-groups CLI path, GA version + CP/CC availability, and share-group metric identities.
 
 ## Unverified Claims to Resolve
 
