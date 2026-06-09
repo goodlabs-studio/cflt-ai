@@ -222,3 +222,30 @@ def test_resolve_industry_precedence():
     assert scaffold_engine._resolve_industry(None, {"industry": "retail"}) == "retail"
     # Explicit arg overrides the profile field.
     assert scaffold_engine._resolve_industry("fsi", {"industry": "retail"}) == "fsi"
+
+
+def test_industry_missing_dev_sandbox_tier_raises(tmp_path, monkeypatch):
+    """An industry with a prod overlay but no developer-sandbox tier fails loudly
+    on a non-prod scaffold instead of silently composing base-only canon."""
+    ext = tmp_path / "ext"
+    half = ext / "industry" / "telco"
+    half.mkdir(parents=True)
+    (half / "overrides.yaml").write_text(
+        'producer:\n  compression_type: "zstd"\n  override_source: "telco://adr/001"\n'
+    )  # note: no developer-sandbox/ subdir
+    monkeypatch.setenv("CFLT_CANON_EXTERNAL_PATH", str(ext))
+
+    # Prod tier exists → valid industry, scaffolds fine.
+    ok = scaffold(
+        artifact_type="producer", name="telco-prod",
+        profile_name="engineer", operator="test-op", prod=True, industry="telco",
+    )
+    assert ok.status == "success"
+    assert _prov(ok)["canon_layer"] == "industry/telco"
+
+    # Non-prod targets the missing developer-sandbox tier → raises, no silent fallback.
+    with pytest.raises(ValueError, match="no overrides.yaml"):
+        scaffold(
+            artifact_type="producer", name="telco-dev",
+            profile_name="engineer", operator="test-op", industry="telco",
+        )

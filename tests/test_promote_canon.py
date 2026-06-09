@@ -31,25 +31,48 @@ def test_source_keys_become_todo(promote):
     assert "citi" not in out  # placeholder is client-free
 
 
-def test_scrub_redacts_client_terms_and_generalizes_guards(promote):
+def test_scrub_redacts_client_terms_in_values_and_keys(promote):
     source = {
         "producer": {
             "compression_type": "zstd",
             "override_source": "customer/citi/adr-001",
         },
         "environment_guard": {"pattern": "citi-prod-sandbox", "enforcement": "advisory"},
+        "citi-mainframe": {"bridge": "ibm-mq"},  # client identifier in a KEY
         "note": "Tuned for Citi market-data desk",
     }
     terms = ["citi", promote._client_name("customer/citi")]
     scrubbed = promote._scrub(source, terms, "customer/citi")
     dumped = yaml.safe_dump(scrubbed)
 
-    # No client identifier survives anywhere in the promoted content.
+    # No client identifier survives anywhere — values OR keys.
     assert "citi" not in dumped.lower()
+    # The client-named key was scrubbed, not passed through verbatim.
+    assert "citi-mainframe" not in scrubbed
     # Source citation rewritten to a placeholder.
     assert scrubbed["producer"]["override_source"].startswith("TODO: ADR-xxx")
-    # Guard pattern generalized: citi-*-sandbox -> <owner>-*-sandbox.
-    assert scrubbed["environment_guard"]["pattern"] == "<owner>-prod-sandbox"
+    # Guard pattern is redacted (left for the operator to generalize), not auto-rewritten.
+    assert scrubbed["environment_guard"]["pattern"] == "<redacted>-prod-sandbox"
+
+
+def test_orphaned_redacted_marker_blocks_ready(promote, project_root, tmp_path, monkeypatch, capsys):
+    """A scrub that lands mid-token leaves <redacted> and must report NOT READY."""
+    client = tmp_path / "customer" / "citi"
+    client.mkdir(parents=True)
+    (client / "overrides.yaml").write_text(
+        "environment_guard:\n"
+        '  pattern: "citi-prod-sandbox"\n'
+        '  override_source: "customer/citi/adr-001"\n'
+    )
+    monkeypatch.setenv("CFLT_CANON_EXTERNAL_PATH", str(tmp_path))
+    monkeypatch.setattr(
+        promote.sys, "argv",
+        ["promote-canon.py", "--from", "customer/citi", "--to", "industry/fsi", "--scrub", "citi"],
+    )
+    assert promote.main() == 0
+    out = capsys.readouterr().out
+    assert "NOT READY" in out
+    assert "<redacted>" in out
 
 
 def test_ensure_source_flags_keys_without_adr(promote):

@@ -31,7 +31,7 @@ from tools.apply_engine import (  # noqa: E402 — after sys.path.insert
     check_skill_permitted,
     PROJECT_ROOT,
 )
-from canon.stack import resolve_stack, validate_industry  # noqa: E402
+from canon.stack import resolve_stack, validate_industry, layer_has_overrides  # noqa: E402
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -210,6 +210,16 @@ def scaffold(
             f"industry/{selected_industry}"
             if canon_family == "operator-prod"
             else f"industry/{selected_industry}/developer-sandbox"
+        )
+    # Validate the actual layer we're about to compose has overrides — guards against
+    # a missing developer-sandbox tier or a typo'd developer-profile canon_layer
+    # silently degrading to base-only canon. (canon_layer=None defers to resolve_stack's
+    # validated default.)
+    if canon_layer and not layer_has_overrides(canon_layer):
+        raise ValueError(
+            f"Canon layer {canon_layer!r} has no overrides.yaml in any root — "
+            f"cannot scaffold against empty canon. Check the industry/tier or "
+            f"the profile's canon_layer."
         )
     canon_dict, canon_hash = resolve_stack(family=canon_stack_family_param, canon_layer=canon_layer)
 

@@ -182,13 +182,29 @@ def resolve_stack(
     return merged, stack_hash
 
 
+def layer_has_overrides(layer_name: str) -> bool:
+    """True if a layer resolves to an overrides.yaml in any canon root.
+
+    Used to reject a selected industry/tier that would otherwise resolve to an
+    empty layer and silently degrade to base-only canon.
+    """
+    return any((root / layer_name / "overrides.yaml").exists() for root in _layer_roots())
+
+
 def available_industries() -> List[str]:
-    """Industry names present under canon/industry/ across all roots (repo + external)."""
+    """Industry names with a prod overrides.yaml, across all roots (repo + external).
+
+    A bare directory with no overrides.yaml is not a usable industry — excluding it
+    here means validate_industry() rejects it instead of resolving to empty canon.
+    """
     found = set()
     for root in _layer_roots():
         industry_dir = root / "industry"
         if industry_dir.is_dir():
-            found.update(p.name for p in industry_dir.iterdir() if p.is_dir())
+            found.update(
+                p.name for p in industry_dir.iterdir()
+                if p.is_dir() and (p / "overrides.yaml").exists()
+            )
     return sorted(found)
 
 

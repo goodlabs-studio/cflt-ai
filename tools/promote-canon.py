@@ -51,19 +51,27 @@ def _scrub_string(key: str, value: str, terms: list[str], from_layer: str) -> st
     # deliberately client-free — from_layer is recorded in the file header only.
     if key in SOURCE_KEYS or key.endswith("_source"):
         return "TODO: ADR-xxx (replace with target-layer ADR)"
-    scrubbed = value
+    return _redact(value, terms)
+
+
+def _redact(text: str, terms: list[str]) -> str:
+    """Replace every scrub term in a string with the literal <redacted> marker.
+
+    No structural rewriting (no guard-pattern generalization) — any surviving
+    <redacted> marker forces NOT READY so the operator resolves it by hand rather
+    than the tool guessing a replacement and mangling prose.
+    """
     for term in terms:
         if not term:
             continue
-        scrubbed = re.sub(re.escape(term), "<redacted>", scrubbed, flags=re.IGNORECASE)
-    # Generalize guard patterns: "<redacted>-*-sandbox" -> "<owner>-*-sandbox".
-    scrubbed = re.sub(r"<redacted>-", "<owner>-", scrubbed)
-    return scrubbed
+        text = re.sub(re.escape(term), "<redacted>", text, flags=re.IGNORECASE)
+    return text
 
 
 def _scrub(node, terms: list[str], from_layer: str, key: str = ""):
     if isinstance(node, dict):
-        return {k: _scrub(v, terms, from_layer, key=k) for k, v in node.items()}
+        # Scrub keys too — a client identifier in a YAML key must not survive.
+        return {_redact(k, terms): _scrub(v, terms, from_layer, key=k) for k, v in node.items()}
     if isinstance(node, list):
         return [_scrub(v, terms, from_layer, key=key) for v in node]
     if isinstance(node, str):
@@ -121,7 +129,10 @@ def main() -> int:
     # Any source scrubbed/injected from a client layer leaves a TODO ADR — never
     # auto-ready while those remain.
     todos = candidate_yaml.count("TODO: ADR")
-    ready = not residual and not needs_adr and todos == 0
+    # A surviving <redacted> marker means a scrub landed mid-token (e.g. a guard
+    # pattern) and needs a human to supply the generalized form — not paste-safe yet.
+    orphaned = "<redacted>" in candidate_yaml
+    ready = not residual and not needs_adr and todos == 0 and not orphaned
 
     # Write candidate.
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -157,8 +168,11 @@ def main() -> int:
         print(f"[warn] keys needing a target-layer ADR (TODO placeholders inserted): {needs_adr}")
     if todos:
         print(f"[warn] {todos} TODO ADR placeholder(s) to fill before promoting.")
+    if orphaned:
+        print("[warn] '<redacted>' marker(s) survived — replace with a generalized "
+              "value (e.g. a guard pattern) by hand before promoting.")
     print(f"\n{'READY' if ready else 'NOT READY'} - "
-          f"{'review the diff, then hand-apply.' if ready else 'fill TODO ADRs / clear residual hits before promoting.'}")
+          f"{'review the diff, then hand-apply.' if ready else 'resolve the warnings above before promoting.'}")
     return 0
 
 
