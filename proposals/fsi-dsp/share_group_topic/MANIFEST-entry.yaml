@@ -1,0 +1,11 @@
+# Proposed capability entry to append to raw/repos/fsi-dsp/MANIFEST.yaml
+# under `capabilities:` (bump MANIFEST version minor when landing — IDs are
+# append-only per CNTR-04). Pairs with MODULE_TO_CANON_KEY:
+#   "module/share_group_topic": "share_group_config"   (add to tools/check-canon-parity.py)
+# and a new `share_group_config` block in canon/base/defaults.yaml.
+
+- id: "module/share_group_topic"
+  type: terraform-module
+  name: "share_group_topic"
+  path: "modules/share_group_topic"
+  description: "Governed Kafka topic for share-group (queue) consumption with least-privilege worker-pool RBAC; enforces at-least-once acknowledgement before allowing critical SLA tier (KIP-932)"
