@@ -170,3 +170,82 @@ def test_manifest_entry_yaml_is_valid():
     assert entry["type"] == "scaffolded-producer"
     assert "provenance" in entry
     assert entry["provenance"]["generator_phase"] == "H.3c"
+
+
+# ── Operator-side industry selection ─────────────────────────────────────────
+
+def _prov(result):
+    return json.loads((result.scaffold_dir / "provenance.json").read_text())
+
+
+def test_industry_defaults_to_fsi_prod():
+    """Back-compat: engineer + --prod with no industry resolves industry/fsi."""
+    result = scaffold(
+        artifact_type="producer", name="ind-default",
+        profile_name="engineer", operator="test-op", prod=True,
+    )
+    assert result.status == "success"
+    assert _prov(result)["canon_layer"] == "industry/fsi"
+
+
+def test_operator_selects_retail_prod():
+    """engineer + --prod + --industry retail targets industry/retail."""
+    result = scaffold(
+        artifact_type="producer", name="ind-retail",
+        profile_name="engineer", operator="test-op", prod=True, industry="retail",
+    )
+    assert result.status == "success"
+    assert _prov(result)["canon_layer"] == "industry/retail"
+
+
+def test_operator_retail_nonprod_uses_dev_sandbox_tier():
+    """engineer (no --prod) + --industry retail targets the retail dev-sandbox tier."""
+    result = scaffold(
+        artifact_type="producer", name="ind-retail-dev",
+        profile_name="engineer", operator="test-op", industry="retail",
+    )
+    assert result.status == "success"
+    assert _prov(result)["canon_layer"] == "industry/retail/developer-sandbox"
+
+
+def test_unknown_industry_raises():
+    with pytest.raises(ValueError, match="Unknown industry"):
+        scaffold(
+            artifact_type="producer", name="ind-bogus",
+            profile_name="engineer", operator="test-op", prod=True, industry="nope",
+        )
+
+
+def test_resolve_industry_precedence():
+    """Explicit arg > profile field > 'fsi' default."""
+    assert scaffold_engine._resolve_industry(None, {}) == "fsi"
+    assert scaffold_engine._resolve_industry(None, {"industry": "retail"}) == "retail"
+    # Explicit arg overrides the profile field.
+    assert scaffold_engine._resolve_industry("fsi", {"industry": "retail"}) == "fsi"
+
+
+def test_industry_missing_dev_sandbox_tier_raises(tmp_path, monkeypatch):
+    """An industry with a prod overlay but no developer-sandbox tier fails loudly
+    on a non-prod scaffold instead of silently composing base-only canon."""
+    ext = tmp_path / "ext"
+    half = ext / "industry" / "telco"
+    half.mkdir(parents=True)
+    (half / "overrides.yaml").write_text(
+        'producer:\n  compression_type: "zstd"\n  override_source: "telco://adr/001"\n'
+    )  # note: no developer-sandbox/ subdir
+    monkeypatch.setenv("CFLT_CANON_EXTERNAL_PATH", str(ext))
+
+    # Prod tier exists → valid industry, scaffolds fine.
+    ok = scaffold(
+        artifact_type="producer", name="telco-prod",
+        profile_name="engineer", operator="test-op", prod=True, industry="telco",
+    )
+    assert ok.status == "success"
+    assert _prov(ok)["canon_layer"] == "industry/telco"
+
+    # Non-prod targets the missing developer-sandbox tier → raises, no silent fallback.
+    with pytest.raises(ValueError, match="no overrides.yaml"):
+        scaffold(
+            artifact_type="producer", name="telco-dev",
+            profile_name="engineer", operator="test-op", industry="telco",
+        )

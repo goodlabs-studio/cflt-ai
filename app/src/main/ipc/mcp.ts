@@ -14,8 +14,12 @@ import { getRepoRoot } from '../repo.js';
 import { loadConfig, mcpEnvFilePath } from './config.js';
 import type { McpServerStatus } from '@shared/types';
 
+// The Claude CLI emits heavy glyph variants (✔ U+2714 / ✘ U+2718); accept the
+// light variants (✓ U+2713 / ✗ U+2717) too so we don't break if the CLI changes.
+// Project-scoped .mcp.json servers report `⏸ Pending approval` (U+23F8) until
+// approved — capture that too so they surface instead of being dropped.
 const STATUS_RE =
-  /^(.+?):\s.*?\s-\s(?:(✓\s*Connected)|(!\s*Needs authentication)|(✗\s*Failed[^\n]*))$/i;
+  /^(.+?):\s.*?\s-\s(?:([✓✔]\s*Connected)|(!\s*Needs authentication)|([✗✘]\s*Failed[^\n]*)|(⏸\s*Pending[^\n]*))$/i;
 
 export function parseMcpListOutput(stdout: string): McpServerStatus[] {
   const out: McpServerStatus[] = [];
@@ -29,7 +33,9 @@ export function parseMcpListOutput(stdout: string): McpServerStatus[] {
       ? 'connected'
       : m[3]
         ? 'needs-auth'
-        : 'failed';
+        : m[4]
+          ? 'failed'
+          : 'pending';
     out.push({ name, status });
   }
   return out;

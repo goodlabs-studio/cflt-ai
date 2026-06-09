@@ -18,6 +18,7 @@ H.4b: resolve_stack() now accepts `family` and `canon_layer` keyword args.
 """
 import hashlib
 import json
+import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -25,6 +26,23 @@ import yaml
 
 
 CANON_ROOT = Path(__file__).resolve().parent
+
+
+def _layer_roots() -> List[Path]:
+    """Ordered roots to search for layer config files.
+
+    The repo-internal canon dir is always searched first. Additional roots come
+    from CFLT_CANON_EXTERNAL_PATH (os-pathsep separated, ~ expanded) — this is how
+    client/engagement overlays live in a private repo that never enters the shared
+    cflt-ai tree. External roots mirror the canon layer paths, e.g.
+    ~/clients/citi-canon/customer/citi/overrides.yaml.
+    """
+    roots = [CANON_ROOT]
+    for part in os.environ.get("CFLT_CANON_EXTERNAL_PATH", "").split(os.pathsep):
+        part = part.strip()
+        if part:
+            roots.append(Path(part).expanduser().resolve())
+    return roots
 
 
 def _layer_order_for(family: str = "operator", canon_layer: Optional[str] = None) -> List[str]:
@@ -73,20 +91,45 @@ def _deep_merge(base: dict, override: dict) -> dict:
 
 
 def _load_layer(layer_name: str) -> dict:
-    """Load a layer's YAML config. Returns empty dict if not found."""
-    layer_dir = CANON_ROOT / layer_name
+    """Load a layer's YAML config. Returns empty dict if not found.
+
+    Searches each root from _layer_roots() in order; first hit wins. This lets
+    client/engagement overlays resolve from an external private repo while base
+    and industry stay repo-internal.
+    """
     # Base uses defaults.yaml; all others use overrides.yaml
-    if layer_name == "base":
-        config_file = layer_dir / "defaults.yaml"
-    else:
-        config_file = layer_dir / "overrides.yaml"
+    filename = "defaults.yaml" if layer_name == "base" else "overrides.yaml"
+    for root in _layer_roots():
+        config_file = root / layer_name / filename
+        if config_file.exists():
+            data = yaml.safe_load(config_file.read_text())
+            return data if isinstance(data, dict) else {}
+    return {}
 
-    if not config_file.exists():
-        return {}
 
-    content = config_file.read_text()
-    data = yaml.safe_load(content)
-    return data if isinstance(data, dict) else {}
+def _resolve_layer_names(
+    layers: Optional[List[str]] = None,
+    customer: Optional[str] = None,
+    engagement: Optional[str] = None,
+    family: str = "operator",
+    canon_layer: Optional[str] = None,
+) -> List[str]:
+    """Build the concrete layer-name list, substituting customer/engagement names.
+
+    Shared by resolve_stack() and active_layers() so both agree on which layers
+    are in play for a given selection.
+    """
+    if layers is None:
+        layers = _layer_order_for(family=family, canon_layer=canon_layer)
+    resolved = []
+    for layer in layers:
+        if layer == "customer" and customer:
+            resolved.append(f"customer/{customer}")
+        elif layer == "engagement" and engagement:
+            resolved.append(f"engagement/{engagement}")
+        else:
+            resolved.append(layer)
+    return resolved
 
 
 def resolve_stack(
@@ -117,18 +160,13 @@ def resolve_stack(
     Raises:
         ValueError: If family is unknown (via _layer_order_for).
     """
-    if layers is None:
-        layers = _layer_order_for(family=family, canon_layer=canon_layer)
-
-    # Substitute customer/engagement names if provided
-    resolved_layers = []
-    for layer in layers:
-        if layer == "customer" and customer:
-            resolved_layers.append(f"customer/{customer}")
-        elif layer == "engagement" and engagement:
-            resolved_layers.append(f"engagement/{engagement}")
-        else:
-            resolved_layers.append(layer)
+    resolved_layers = _resolve_layer_names(
+        layers=layers,
+        customer=customer,
+        engagement=engagement,
+        family=family,
+        canon_layer=canon_layer,
+    )
 
     merged = {}
 
@@ -144,21 +182,91 @@ def resolve_stack(
     return merged, stack_hash
 
 
-def active_layers() -> List[str]:
-    """Return list of layers that have config files present."""
+def layer_has_overrides(layer_name: str) -> bool:
+    """True if a layer resolves to an overrides.yaml in any canon root.
+
+    Used to reject a selected industry/tier that would otherwise resolve to an
+    empty layer and silently degrade to base-only canon.
+    """
+    return any((root / layer_name / "overrides.yaml").exists() for root in _layer_roots())
+
+
+def available_industries() -> List[str]:
+    """Industry names with a prod overrides.yaml, across all roots (repo + external).
+
+    A bare directory with no overrides.yaml is not a usable industry — excluding it
+    here means validate_industry() rejects it instead of resolving to empty canon.
+    """
+    found = set()
+    for root in _layer_roots():
+        industry_dir = root / "industry"
+        if industry_dir.is_dir():
+            found.update(
+                p.name for p in industry_dir.iterdir()
+                if p.is_dir() and (p / "overrides.yaml").exists()
+            )
+    return sorted(found)
+
+
+def validate_industry(industry: Optional[str]) -> str:
+    """Return the industry name (default 'fsi'), validating it exists across canon roots.
+
+    Shared by the scaffold rail (tools/scaffold_engine.py) and the plan/apply act rail
+    (tools/act_gates.py) so industry selection fails loudly on a typo in both places
+    instead of silently falling back to base-only canon.
+    """
+    selected = industry or "fsi"
+    available = available_industries()
+    if selected not in available:
+        raise ValueError(
+            f"Unknown industry {selected!r} — available: {available}. "
+            f"Add canon/industry/{selected}/ (or set CFLT_CANON_EXTERNAL_PATH)."
+        )
+    return selected
+
+
+def active_layers(
+    layers: Optional[List[str]] = None,
+    customer: Optional[str] = None,
+    engagement: Optional[str] = None,
+    family: str = "operator",
+    canon_layer: Optional[str] = None,
+) -> List[str]:
+    """Return list of layers that have config files present (searching all roots).
+
+    With no args, reports the operator-default layers present in the repo
+    (byte-compatible with the pre-external-path behavior). Pass the same selection
+    args as resolve_stack() to reflect an active customer/engagement layer —
+    including one resolved from CFLT_CANON_EXTERNAL_PATH.
+    """
+    names = _resolve_layer_names(
+        layers=layers,
+        customer=customer,
+        engagement=engagement,
+        family=family,
+        canon_layer=canon_layer,
+    )
     present = []
-    for layer in LAYER_ORDER:
-        layer_dir = CANON_ROOT / layer
-        config = layer_dir / ("defaults.yaml" if layer == "base" else "overrides.yaml")
-        if config.exists():
+    for layer in names:
+        filename = "defaults.yaml" if layer == "base" else "overrides.yaml"
+        if any((root / layer / filename).exists() for root in _layer_roots()):
             present.append(layer)
     return present
 
 
-def provenance_footer() -> str:
+def provenance_footer(
+    customer: Optional[str] = None,
+    engagement: Optional[str] = None,
+    family: str = "operator",
+    canon_layer: Optional[str] = None,
+) -> str:
     """Generate a provenance footer string for artifact embedding."""
-    config, stack_hash = resolve_stack()
-    layers = active_layers()
+    _config, stack_hash = resolve_stack(
+        customer=customer, engagement=engagement, family=family, canon_layer=canon_layer
+    )
+    layers = active_layers(
+        customer=customer, engagement=engagement, family=family, canon_layer=canon_layer
+    )
     return f"Canon stack: {' + '.join(layers)} | Hash: {stack_hash}"
 
 

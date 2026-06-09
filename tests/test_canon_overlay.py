@@ -140,3 +140,100 @@ class TestCanonStackResolution:
         result = _deep_merge(base, override)
         assert result["a"]["b"] == 99  # Override wins
         assert result["a"]["c"] == 2   # Base preserved
+
+
+class TestExternalCanonPath:
+    """Client/engagement silos resolve from CFLT_CANON_EXTERNAL_PATH."""
+
+    def _import(self, project_root):
+        import sys
+        sys.path.insert(0, str(project_root))
+        import canon.stack as stack
+        return stack
+
+    def test_unset_env_is_backcompat(self, project_root, monkeypatch):
+        """No external path → byte-identical to pre-external-path behavior."""
+        stack = self._import(project_root)
+        monkeypatch.delenv("CFLT_CANON_EXTERNAL_PATH", raising=False)
+        _, h = stack.resolve_stack()
+        assert stack.active_layers() == ["base", "industry/fsi"]
+        # Re-resolving is deterministic.
+        _, h2 = stack.resolve_stack()
+        assert h == h2
+
+    def test_external_customer_layer_merges_and_wins(
+        self, project_root, tmp_path, monkeypatch
+    ):
+        stack = self._import(project_root)
+        client = tmp_path / "customer" / "citi"
+        client.mkdir(parents=True)
+        (client / "overrides.yaml").write_text(
+            "producer:\n"
+            '  compression_type: "zstd"\n'
+            '  override_source: "customer/citi/adr-001"\n'
+            "cluster_linking:\n"
+            '  preferred_over: "citi-override"\n'
+        )
+        monkeypatch.setenv("CFLT_CANON_EXTERNAL_PATH", str(tmp_path))
+
+        cfg, h = stack.resolve_stack(customer="citi")
+        # Client override wins over base (lz4) and over industry/fsi.
+        assert cfg["producer"]["compression_type"] == "zstd"
+        assert cfg["cluster_linking"]["preferred_over"] == "citi-override"
+        # Non-overridden base keys survive.
+        assert cfg["producer"]["acks"] == "all"
+        # The active layer list reflects the external client layer.
+        assert "customer/citi" in stack.active_layers(customer="citi")
+        # Hash differs from the unselected stack.
+        _, base_hash = stack.resolve_stack()
+        assert h != base_hash
+
+    def test_external_path_does_not_leak_without_selection(
+        self, project_root, tmp_path, monkeypatch
+    ):
+        """Setting the path but not selecting the customer keeps client data out."""
+        stack = self._import(project_root)
+        client = tmp_path / "customer" / "citi"
+        client.mkdir(parents=True)
+        (client / "overrides.yaml").write_text('producer:\n  compression_type: "zstd"\n')
+        monkeypatch.setenv("CFLT_CANON_EXTERNAL_PATH", str(tmp_path))
+
+        cfg, _ = stack.resolve_stack()  # no customer= selection
+        assert cfg["producer"]["compression_type"] == "lz4"  # base, not citi
+        assert "customer/citi" not in stack.active_layers()
+
+
+class TestIndustryRouting:
+    """Industry overlays are selectable by directory via canon_layer."""
+
+    def test_operator_routes_to_named_industry(self, project_root, tmp_path, monkeypatch):
+        import sys
+        sys.path.insert(0, str(project_root))
+        from canon.stack import resolve_stack
+        # Stand up a throwaway industry overlay (a name not present in the repo) in
+        # an external root, to prove operator routing honors an arbitrary industry.
+        telco = tmp_path / "industry" / "telco"
+        telco.mkdir(parents=True)
+        (telco / "overrides.yaml").write_text(
+            "producer:\n"
+            '  compression_type: "snappy"\n'
+            '  override_source: "industry/telco/adr-001"\n'
+        )
+        monkeypatch.setenv("CFLT_CANON_EXTERNAL_PATH", str(tmp_path))
+        cfg, _ = resolve_stack(family="operator", canon_layer="industry/telco")
+        assert cfg["producer"]["compression_type"] == "snappy"
+
+    def test_repo_industry_wins_over_external(self, project_root, tmp_path, monkeypatch):
+        """Repo-internal layer is searched first; external can't shadow it."""
+        import sys
+        sys.path.insert(0, str(project_root))
+        from canon.stack import resolve_stack
+        shadow = tmp_path / "industry" / "retail"
+        shadow.mkdir(parents=True)
+        (shadow / "overrides.yaml").write_text(
+            'producer:\n  compression_type: "snappy"\n'
+        )
+        monkeypatch.setenv("CFLT_CANON_EXTERNAL_PATH", str(tmp_path))
+        cfg, _ = resolve_stack(canon_layer="industry/retail")
+        # The committed retail overlay (zstd) wins; external cannot shadow repo IP.
+        assert cfg["producer"]["compression_type"] == "zstd"
