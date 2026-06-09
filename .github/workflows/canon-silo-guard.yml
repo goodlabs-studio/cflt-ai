@@ -1,0 +1,31 @@
+name: Canon Silo Guard
+
+# Fail if any client/engagement canon silo is tracked in the shared repo. Client
+# overlays must live in a private overlay repo loaded via CFLT_CANON_EXTERNAL_PATH
+# (see CONTRIBUTING.md). The acme-bank demo and scaffold files are allowlisted.
+# This is the CI backstop for the local .githooks/pre-push guard.
+on:
+  pull_request:
+    paths:
+      - 'canon/customer/**'
+      - 'canon/engagement/**'
+      - '.github/workflows/canon-silo-guard.yml'
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject tracked client/engagement canon
+        run: |
+          offenders=$(git ls-files 'canon/customer/*' 'canon/engagement/*' \
+            | grep -Ev '^canon/(customer|engagement)/(README\.md|\.gitkeep)$' \
+            | grep -Ev '^canon/customer/acme-bank/' || true)
+          if [ -n "$offenders" ]; then
+            echo "::error::Client/engagement canon must not be committed to the shared repo:"
+            echo "$offenders"
+            echo "Move it to a private overlay repo loaded via CFLT_CANON_EXTERNAL_PATH (see CONTRIBUTING.md)."
+            exit 1
+          fi
+          echo "OK: no client/engagement canon silos tracked."

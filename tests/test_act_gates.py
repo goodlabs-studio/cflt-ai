@@ -97,6 +97,32 @@ class TestGate1CanonCompliance:
         result = gate1_canon_compliance("configure consumer with enable.auto.commit=true")
         assert result["status"] == "fail"
 
+    def test_gate1_honors_selected_industry(self):
+        """A valid operator industry resolves that industry's canon stack and passes."""
+        result = gate1_canon_compliance(
+            "create a topic with replication factor 3", industry="retail"
+        )
+        assert result["status"] == "pass"
+
+    def test_gate1_default_industry_is_fsi(self):
+        """No industry == fsi default — byte-identical to passing industry='fsi'."""
+        a = gate1_canon_compliance("create a topic with DR replication")
+        b = gate1_canon_compliance("create a topic with DR replication", industry="fsi")
+        assert a["status"] == b["status"] == "pass"
+
+    def test_gate1_unknown_industry_fails_cleanly(self):
+        """A typo'd industry fails the gate (not a crash) with a helpful message."""
+        result = gate1_canon_compliance("create a topic", industry="bogus")
+        assert result["status"] == "fail"
+        assert "unknown industry" in result["detail"].lower()
+
+    def test_run_gate_chain_threads_industry_to_gate1(self):
+        """run_gate_chain passes industry to gate 1; a bad industry fails the chain fast."""
+        results = run_gate_chain("create a topic", industry="bogus")
+        assert results[0]["gate"] == "canon_compliance"
+        assert results[0]["status"] == "fail"
+        assert len(results) == 1  # fail-fast stops the chain
+
 
 # ---------------------------------------------------------------------------
 # TestGate2FsiDspCoverage

@@ -31,7 +31,7 @@ from tools.apply_engine import (  # noqa: E402 — after sys.path.insert
     check_skill_permitted,
     PROJECT_ROOT,
 )
-from canon.stack import resolve_stack  # noqa: E402
+from canon.stack import resolve_stack, validate_industry  # noqa: E402
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -68,6 +68,19 @@ class ScaffoldResult:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Industry selection (operator-side)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _resolve_industry(industry: Optional[str], profile: dict) -> str:
+    """Resolve the operator industry: explicit arg > profile field > 'fsi' default.
+
+    Validation (must have a directory under canon/industry/) is shared with the act
+    rail via canon.stack.validate_industry.
+    """
+    return validate_industry(industry or profile.get("industry"))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Main orchestrator
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -79,6 +92,7 @@ def scaffold(
     overlay: Optional[str] = None,
     operator: str = "unknown",
     prod: bool = False,
+    industry: Optional[str] = None,
     dry_run: bool = False,
 ) -> ScaffoldResult:
     """Orchestrate the scaffold operation. Three gates + generation + logging.
@@ -182,9 +196,21 @@ def scaffold(
         return ScaffoldResult(status="not-implemented", message=msg, duration_seconds=duration)
 
     # ── Resolve canon stack
+    # Industry selection: developer profiles encode their full canon_layer (incl.
+    # industry + developer-sandbox suffix). Operators select an industry (default fsi)
+    # via --industry or a profile `industry` field; prod targets industry/<X>, while
+    # operator non-prod targets the industry's developer-sandbox tier.
     canon_family = "operator-prod" if (prod and family == "operator") else "developer-sandbox"
     canon_stack_family_param = "developer" if canon_family == "developer-sandbox" else "operator"
-    canon_layer = profile.get("canon_layer") if family == "developer" else None
+    if family == "developer":
+        canon_layer = profile.get("canon_layer")
+    else:
+        selected_industry = _resolve_industry(industry, profile)
+        canon_layer = (
+            f"industry/{selected_industry}"
+            if canon_family == "operator-prod"
+            else f"industry/{selected_industry}/developer-sandbox"
+        )
     canon_dict, canon_hash = resolve_stack(family=canon_stack_family_param, canon_layer=canon_layer)
 
     # ── Generate output directory
@@ -224,6 +250,7 @@ def scaffold(
         "upstream_commit_sha": plugin_commit,
         "canon_stack_hash": canon_hash,
         "canon_family": canon_family,
+        "canon_layer": canon_layer,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "scaffold_dir": _safe_relative(scaffold_dir),
         "phase": "H.3c",
@@ -471,18 +498,28 @@ def main(argv=None) -> int:
     parser.add_argument("--overlay", default=None)
     parser.add_argument("--operator", default="unknown")
     parser.add_argument("--prod", action="store_true")
+    parser.add_argument(
+        "--industry", default=None,
+        help="Operator industry overlay (default: fsi, or the profile's `industry` field). "
+             "Developer profiles set their industry via canon_layer.",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
-    result = scaffold(
-        artifact_type=args.artifact_type,
-        name=args.name,
-        profile_name=args.profile,
-        overlay=args.overlay,
-        operator=args.operator,
-        prod=args.prod,
-        dry_run=args.dry_run,
-    )
+    try:
+        result = scaffold(
+            artifact_type=args.artifact_type,
+            name=args.name,
+            profile_name=args.profile,
+            overlay=args.overlay,
+            operator=args.operator,
+            prod=args.prod,
+            industry=args.industry,
+            dry_run=args.dry_run,
+        )
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     print(result.message)
     if result.scaffold_dir:
         print(f"Output: {result.scaffold_dir}")

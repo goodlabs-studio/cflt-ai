@@ -170,3 +170,55 @@ def test_manifest_entry_yaml_is_valid():
     assert entry["type"] == "scaffolded-producer"
     assert "provenance" in entry
     assert entry["provenance"]["generator_phase"] == "H.3c"
+
+
+# ── Operator-side industry selection ─────────────────────────────────────────
+
+def _prov(result):
+    return json.loads((result.scaffold_dir / "provenance.json").read_text())
+
+
+def test_industry_defaults_to_fsi_prod():
+    """Back-compat: engineer + --prod with no industry resolves industry/fsi."""
+    result = scaffold(
+        artifact_type="producer", name="ind-default",
+        profile_name="engineer", operator="test-op", prod=True,
+    )
+    assert result.status == "success"
+    assert _prov(result)["canon_layer"] == "industry/fsi"
+
+
+def test_operator_selects_retail_prod():
+    """engineer + --prod + --industry retail targets industry/retail."""
+    result = scaffold(
+        artifact_type="producer", name="ind-retail",
+        profile_name="engineer", operator="test-op", prod=True, industry="retail",
+    )
+    assert result.status == "success"
+    assert _prov(result)["canon_layer"] == "industry/retail"
+
+
+def test_operator_retail_nonprod_uses_dev_sandbox_tier():
+    """engineer (no --prod) + --industry retail targets the retail dev-sandbox tier."""
+    result = scaffold(
+        artifact_type="producer", name="ind-retail-dev",
+        profile_name="engineer", operator="test-op", industry="retail",
+    )
+    assert result.status == "success"
+    assert _prov(result)["canon_layer"] == "industry/retail/developer-sandbox"
+
+
+def test_unknown_industry_raises():
+    with pytest.raises(ValueError, match="Unknown industry"):
+        scaffold(
+            artifact_type="producer", name="ind-bogus",
+            profile_name="engineer", operator="test-op", prod=True, industry="nope",
+        )
+
+
+def test_resolve_industry_precedence():
+    """Explicit arg > profile field > 'fsi' default."""
+    assert scaffold_engine._resolve_industry(None, {}) == "fsi"
+    assert scaffold_engine._resolve_industry(None, {"industry": "retail"}) == "retail"
+    # Explicit arg overrides the profile field.
+    assert scaffold_engine._resolve_industry("fsi", {"industry": "retail"}) == "fsi"

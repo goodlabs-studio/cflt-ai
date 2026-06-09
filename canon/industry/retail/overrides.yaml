@@ -1,0 +1,24 @@
+# Retail industry overrides — TEMPLATE / illustrative placeholders.
+# Composes on top of canon/base/defaults.yaml via dict merge when
+# resolve_stack(canon_layer="industry/retail") is selected.
+# Override rule: no override without an ADR reference. The retail-* citations below
+# are placeholders — replace with real ADRs before this layer is used in practice.
+
+schema_registry:
+  format: "protobuf"                       # Retail event volume favors compact Protobuf
+  override_source: "retail://adr/001"      # TEMPLATE: Protobuf over Avro for retail scale
+
+producer:
+  compression_type: "zstd"                 # Storage-optimized for high-volume clickstream
+  override_source: "retail://adr/002"      # TEMPLATE: zstd for storage-constrained retail
+
+topic_design:
+  naming_convention: "<channel>.<entity>.<event>"  # e.g. web.cart.item-added
+  naming_source: "retail://adr/003"        # TEMPLATE: channel-first naming
+
+# Retail-specific additions (not overrides of base)
+latency_tiers:
+  storefront: "<50ms"                      # Customer-facing page/cart latency
+  inventory: "<1s"                         # Stock sync across channels
+  fulfillment: "async"
+  analytics: "async"

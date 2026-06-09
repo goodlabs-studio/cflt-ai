@@ -26,7 +26,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from canon.stack import resolve_stack  # noqa: E402 (after sys.path.insert)
+from canon.stack import resolve_stack, validate_industry  # noqa: E402 (after sys.path.insert)
 
 
 # ---------------------------------------------------------------------------
@@ -98,25 +98,32 @@ def _load_manifest() -> List[Dict]:
 def gate1_canon_compliance(
     request: str,
     overlay: Optional[str] = None,
+    industry: Optional[str] = None,
 ) -> GateResult:
     """Check that the request does not contradict Confluent Canon defaults.
 
-    Calls resolve_stack() to get the active canon config (with optional customer overlay),
-    then scans the request for known violation patterns. Returns fail with evidence if
-    any violation is detected; pass otherwise.
+    Calls resolve_stack() to get the active canon config (with optional customer overlay
+    and operator-selected industry), then scans the request for known violation patterns.
+    Returns fail with evidence if any violation is detected; pass otherwise.
 
     Args:
         request: The planning request text to evaluate.
         overlay:  Optional customer name to load customer/{name}/overrides.yaml.
+        industry: Optional operator industry (default 'fsi'). The plan/apply rail is the
+                  operator-prod tier, so this resolves to the industry/<name> layer.
 
     Returns:
         GateResult dict with gate="canon_compliance".
     """
     gate_name = "canon_compliance"
 
-    # Resolve active canon stack (customer overlay if provided)
+    # Resolve active canon stack (customer overlay + selected industry, if provided).
+    # The act rail is operator-prod, so industry maps to the prod industry/<name> layer.
     try:
-        config, _stack_hash = resolve_stack(customer=overlay)
+        industry_name = validate_industry(industry)
+        config, _stack_hash = resolve_stack(
+            customer=overlay, canon_layer=f"industry/{industry_name}"
+        )
     except Exception as exc:
         return _make_result(
             gate_name,
@@ -190,6 +197,7 @@ _CAPABILITY_KEYWORDS: List[tuple] = [
 def gate2_fsi_dsp_coverage(
     request: str,
     overlay: Optional[str] = None,
+    industry: Optional[str] = None,
 ) -> GateResult:
     """Check that a matching fsi-dsp artifact exists in MANIFEST.yaml.
 
@@ -200,6 +208,7 @@ def gate2_fsi_dsp_coverage(
     Args:
         request: The planning request text to evaluate.
         overlay:  Unused at gate 2 (kept for uniform signature).
+        industry: Unused at gate 2 (kept for uniform signature).
 
     Returns:
         GateResult dict with gate="fsi_dsp_coverage".
@@ -257,6 +266,7 @@ def gate2_fsi_dsp_coverage(
 def gate3_confluent_docs_schema(
     request: str,
     overlay: Optional[str] = None,
+    industry: Optional[str] = None,
 ) -> GateResult:
     """Validate request against Confluent documentation schema (stub).
 
@@ -267,6 +277,7 @@ def gate3_confluent_docs_schema(
     Args:
         request: The planning request text to evaluate.
         overlay:  Unused at gate 3 (kept for uniform signature).
+        industry: Unused at gate 3 (kept for uniform signature).
 
     Returns:
         GateResult dict with gate="confluent_docs_schema", status="pass".
@@ -286,6 +297,7 @@ def gate3_confluent_docs_schema(
 def gate4_mcp_confluent_state(
     request: str,
     overlay: Optional[str] = None,
+    industry: Optional[str] = None,
 ) -> GateResult:
     """Check live cluster state via mcp-confluent (stub).
 
@@ -296,6 +308,7 @@ def gate4_mcp_confluent_state(
     Args:
         request: The planning request text to evaluate.
         overlay:  Unused at gate 4 (kept for uniform signature).
+        industry: Unused at gate 4 (kept for uniform signature).
 
     Returns:
         GateResult dict with gate="mcp_confluent_state", status="pass".
@@ -324,6 +337,7 @@ def run_gate_chain(
     request: str,
     overlay: Optional[str] = None,
     bypass: Optional[List[str]] = None,
+    industry: Optional[str] = None,
 ) -> List[GateResult]:
     """Execute the four-gate validation chain in GATE_NAMES order.
 
@@ -338,6 +352,7 @@ def run_gate_chain(
         overlay: Optional customer name passed to gates that support overlay config.
         bypass:  Optional list of gate names to skip (returns status="skipped").
                  Names must match entries in GATE_NAMES exactly.
+        industry: Optional operator industry (default 'fsi') passed to gate 1.
 
     Returns:
         List of GateResult dicts, one per gate evaluated (or skipped).
@@ -356,7 +371,7 @@ def run_gate_chain(
             continue
 
         gate_fn = _GATE_FUNCTIONS[gate_name]
-        result = gate_fn(request, overlay)
+        result = gate_fn(request, overlay, industry)
         results.append(result)
 
         # Fail-fast: stop chain on first failure (per CONTEXT.md decision)
@@ -379,6 +394,10 @@ if __name__ == "__main__":
     parser.add_argument("request", help="Planning request text to evaluate")
     parser.add_argument("--overlay", default=None, help="Customer overlay name")
     parser.add_argument(
+        "--industry", default=None,
+        help="Operator industry overlay for the canon-compliance gate (default: fsi)",
+    )
+    parser.add_argument(
         "--bypass",
         nargs="*",
         default=[],
@@ -387,7 +406,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    results = run_gate_chain(args.request, overlay=args.overlay, bypass=args.bypass)
+    results = run_gate_chain(
+        args.request, overlay=args.overlay, bypass=args.bypass, industry=args.industry
+    )
     for r in results:
         icon = {"pass": "PASS", "fail": "FAIL", "skipped": "SKIP"}.get(r["status"], "???")
         print(f"[{icon}] {r['gate']}: {r['detail']}")

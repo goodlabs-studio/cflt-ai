@@ -23,7 +23,7 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from canon.stack import active_layers  # noqa: E402 (after sys.path.insert)
+from canon.stack import active_layers, _layer_roots  # noqa: E402 (after sys.path.insert)
 
 
 # ---------------------------------------------------------------------------
@@ -263,15 +263,18 @@ def load_profile(profile_name: str, *, customer: Optional[str] = None) -> Dict:
     # Check customer overlay first (ACTG-04)
     # H.4b: customer overlay also routes through _profile_path so customer-side
     # developer/sandbox.json overrides work (H.4c will exercise this path).
+    # Silos: search every canon root (repo + CFLT_CANON_EXTERNAL_PATH) so a client's
+    # profiles can live in their private overlay repo, never in the shared tree.
     if customer:
-        customer_profile = _profile_path(
-            PROJECT_ROOT / "canon" / "customer" / customer / "profiles",
-            profile_name,
-        )
-        if customer_profile.exists():
-            return _normalize_and_validate_profile(
-                json.loads(customer_profile.read_text()), profile_name
+        for root in _layer_roots():
+            customer_profile = _profile_path(
+                root / "customer" / customer / "profiles",
+                profile_name,
             )
+            if customer_profile.exists():
+                return _normalize_and_validate_profile(
+                    json.loads(customer_profile.read_text()), profile_name
+                )
 
     # Fall back to base profile (H.4b: slash-separated names resolve to nested dirs)
     profile_path = _profile_path(PROFILES_DIR, profile_name)

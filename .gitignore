@@ -19,3 +19,18 @@ outputs/runs/
 
 # Scaffolded output (H.3c) — audit trail lives in wiki/activity/, not in the file tree
 outputs/scaffolded/
+
+# Promotion candidates (tools/promote-canon.py) — transient review artifacts.
+outputs/promote/
+
+# Client/engagement canon silos are NEVER committed to the shared repo. They live in
+# a private overlay repo loaded via CFLT_CANON_EXTERNAL_PATH (see CONTRIBUTING.md).
+# Only the acme-bank demo and the scaffold README/.gitkeep stay tracked.
+canon/customer/*
+canon/engagement/*
+!canon/customer/README.md
+!canon/customer/.gitkeep
+!canon/customer/acme-bank
+!canon/customer/acme-bank/**
+!canon/engagement/README.md
+!canon/engagement/.gitkeep

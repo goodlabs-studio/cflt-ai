@@ -76,6 +76,67 @@ Adding a new type requires lock-step changes in both repos AND the validator + t
 schema doc — see the "Adding a new type" runbook in
 [`tools/manifest-schema.md`](tools/manifest-schema.md#adding-a-new-type).
 
+## Canon Overlays & Client Silos
+
+The canon stack resolves `base > industry > customer > engagement` (deep merge, later
+layer wins; see `canon/stack.py`). Two confidentiality tiers:
+
+- **Shareable canon** — `canon/base/` and `canon/industry/<name>/` (e.g. `fsi`, `retail`)
+  are IP committed to this repo. A new industry is just a new directory under
+  `canon/industry/` modeled on `fsi/`; select it with
+  `resolve_stack(canon_layer="industry/<name>")`. Operators choose the industry per
+  scaffold via `dsp-scaffold --industry <name>` (or an `industry` field in their
+  operator profile); it defaults to `fsi`. `--prod` targets `industry/<name>`,
+  otherwise the industry's `developer-sandbox` tier. The selection is recorded as
+  `canon_layer` in each scaffold's `provenance.json`.
+- **Client-confidential canon** — `customer/<client>` and `engagement/<name>` overlays
+  must **never** be committed here. They live in a **private overlay repo** loaded at
+  resolve time.
+
+### Working with a client silo
+
+1. Create a private repo whose paths mirror the canon layers, e.g.:
+   ```
+   ~/clients/citi-canon/
+     customer/citi/overrides.yaml          # only keys that differ; each cites an ADR
+     customer/citi/adrs/adr-001.md
+     customer/citi/profiles/engineer.json  # optional per-client profiles
+     engagement/citi-2026-payments/overrides.yaml
+   ```
+   (Model the contents on the committed `canon/customer/acme-bank/` demo.)
+2. Point the stack at it: `export CFLT_CANON_EXTERNAL_PATH=~/clients/citi-canon`
+   (os-pathsep list; `~` expanded). Repo-internal canon is always searched first, so
+   external roots cannot shadow shared IP.
+3. Resolve: `resolve_stack(customer="citi", engagement="citi-2026-payments")`.
+
+The shared floor bundle (`tools/canon_preload.py`) only globs the repo's `canon/` —
+client overlays enter context **only** via an explicit `resolve_stack` selection,
+never the always-on prompt prefix.
+
+### Guardrails (install once)
+
+```bash
+git config core.hooksPath .githooks   # enables .githooks/pre-push silo guard
+chmod +x .githooks/pre-push
+```
+
+`.gitignore` keeps `canon/customer/*` and `canon/engagement/*` untracked (except the
+acme-bank demo + scaffolds); the pre-push hook and the `canon-silo-guard.yml` CI job
+reject any client/engagement canon that slips into a commit.
+
+### Promoting a pattern up (the "cleanser")
+
+To lift a generalized override from a client silo into shareable canon, scrubbing
+client identifiers:
+
+```bash
+python3 tools/promote-canon.py --from customer/citi --to industry/fsi --scrub citi,acct-id
+```
+
+It writes a **paste-safe** candidate + diff to `outputs/promote/` (never into
+`canon/`), rewrites source citations to `TODO: ADR-xxx`, and reports `NOT READY`
+until you fill the target-layer ADRs. Review, add the ADR, then hand-apply.
+
 ## PR Guidelines
 
 - Use the PR template (auto-populated)

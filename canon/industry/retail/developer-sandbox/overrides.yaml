@@ -1,0 +1,26 @@
+# Retail developer-sandbox overrides — TEMPLATE / dev-tier placeholders.
+# Composes on top of canon/base/defaults.yaml via dict merge when family=developer
+# and the profile's canon_layer points here (canon_layer="industry/retail/developer-sandbox").
+# Override rule: each override references its rationale. Replace TEMPLATE sources with
+# real ADRs after a retail engagement validates these values.
+
+security:
+  auth_mechanism: "OAUTHBEARER"            # Dev-tier — easier than mTLS for fast iteration
+  override_source: "retail-sandbox://context/auth"
+  audit_log: false
+
+schema_registry:
+  format: "json"                           # JSON Schema acceptable in sandbox
+  override_source: "retail-sandbox://context/schema"
+  compatibility_mode: "BACKWARD"
+
+topic_design:
+  replication_factor: 1                    # Sandbox tolerance
+  min_insync_replicas: 1
+  naming_convention: "<owner>.<feature>.<entity>-sandbox"
+  override_source: "retail-sandbox://context/topic"
+
+producer:
+  acks: "1"                                # Performance over durability in sandbox
+  enable_idempotence: false
+  override_source: "retail-sandbox://context/producer"
