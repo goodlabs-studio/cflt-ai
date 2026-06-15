@@ -150,8 +150,9 @@ function spawnAndWire(
   child.on('close', (code) => {
     for (const ev of parser.flush()) send(ev);
     if (!session.pendingResult) {
-      const message =
-        code === 0
+      const message = isAuthFailure(stderrBuf)
+        ? 'Claude CLI not authenticated — run `claude login` in a terminal, then retry.'
+        : code === 0
           ? 'subprocess exited without a result event'
           : `subprocess exited with code ${code}${stderrBuf ? `: ${stderrBuf.trim().slice(-400)}` : ''}`;
       send({ type: 'error', message });
@@ -159,6 +160,17 @@ function spawnAndWire(
     }
     cleanup(session.sessionId);
   });
+}
+
+// Recognize Claude CLI authentication failures so a hard failure (subprocess
+// exits non-zero with no result event) surfaces an actionable message instead of
+// a raw stderr dump. Scoped to Claude-auth-specific phrasings to avoid masking an
+// unrelated error (e.g. an MCP server's own 401) with a misleading "run login".
+const AUTH_FAILURE_RE =
+  /invalid api key|not authenticated|unauthenticated|authentication (?:failed|required|error)|please run\s*`?(?:claude login|\/login)`?|run\s+`?claude login`?|oauth[^\n]*\b(?:expired|invalid|revoked)\b|(?:login|session) expired/i;
+
+function isAuthFailure(stderr: string): boolean {
+  return AUTH_FAILURE_RE.test(stderr);
 }
 
 function blankResult(success: boolean): SkillResult {

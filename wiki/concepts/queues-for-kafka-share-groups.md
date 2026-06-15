@@ -3,7 +3,7 @@ title: Queues for Kafka (Share Groups)
 tags: [kafka concepts consumer queues share-groups kip-932 fsi]
 sources: []
 related: [concepts/consumer-group-rebalancing, patterns/dead-letter-queue-design, concepts/exactly-once-semantics, concepts/consumer-lag-monitoring, concepts/sla-tiers]
-confidence: medium
+confidence: high
 last_updated: 2026-06-09
 last_validated: 2026-06-09
 ---
@@ -14,7 +14,7 @@ last_validated: 2026-06-09
 
 **Share groups** (KIP-932, "Queues for Kafka") add a second consumption model to Kafka alongside the classic consumer group. In a share group, **multiple consumers cooperatively read from the same partitions** and each record is **individually acknowledged** rather than tracked by a committed offset. This decouples consumer parallelism from partition count — you can run more consumers than partitions — and gives Kafka native queue semantics (competing consumers, per-message acknowledgement, redelivery, and poison-message rejection) that previously required the Confluent Parallel Consumer or application-level workarounds. The trade-off: delivery is **at-least-once only** (no EOS) and **per-key ordering is not preserved**, so share groups fit work-distribution workloads, not ordered state-machine processing.
 
-> **Validation status (confidence: medium).** This article is compiled from KIP-932 and the Apache Kafka share-group design. Version/GA status and exact config property names + defaults below carry inline `⚠️ unverified` markers and should be confirmed against `confluent-docs` (the dedicated Share Groups page was not resolvable via MCP at authoring time). Run `/wiki:validate` once the canonical Confluent Platform / Cloud share-groups page is reachable.
+> **Validation status (confidence: high).** Validated 2026-06-09 against `confluent-docs` (CP Share Consumers + broker-config reference, Kafka Queues enablement) and the Apache Kafka 4.2.0 release; config property names, defaults, enablement procedure, and GA status below are MCP-confirmed. See `outputs/reports/wiki-validation-2026-06-09-queues-for-kafka-share-groups.md`.
 
 ## Detail
 
@@ -49,30 +49,34 @@ When a share consumer polls, the **share-partition leader** (the broker leading 
 - **Accept** — processed successfully; the record's state advances and it will not be redelivered.
 - **Release** — return the record for redelivery to any member (e.g., transient failure, backpressure).
 - **Reject** — a poison record; do not redeliver. Archived immediately.
+- **Renew** — extend the acquisition lock for longer processing without releasing the record (added at 4.2 GA).
 
 A record is also eligible for redelivery if its **acquisition lock times out** (the consumer died or stalled). Each record carries a **delivery count**; once it exceeds the configured delivery-count limit it is **archived** (effectively a built-in poison-message terminus — see [Dead Letter Queue Design](patterns/dead-letter-queue-design.md)).
 
-The leader tracks in-flight state between the **Share-Partition Start Offset (SPSO)** and **Share-Partition End Offset (SPEO)**, and persists share-group state to an internal topic (commonly `__share_group_state`). KRaft is required.
+The **share-partition leader** tracks in-flight state between the **Share-Partition Start Offset (SPSO)** and **Share-Partition End Offset (SPEO)**; durable share-group state is persisted by the **share coordinator** to an internal state topic. KRaft is required.
 
 ### Key configuration
 
-> ⚠️ unverified — names and defaults below follow KIP-932; confirm against `confluent-docs` before treating as canonical.
+Enablement is gated by the **`share.version=1`** feature flag — not a static broker property. Enable it on a KRaft cluster (Kafka 4.1+) with:
 
-| Scope | Property | Purpose |
-|-------|----------|---------|
-| Broker enablement | `group.share.enable` | Master switch for the share-group feature (`true` to enable). ⚠️ unverified |
-| Group | `group.share.record.lock.duration.ms` | How long an acquired record stays locked before it can be redelivered. ⚠️ unverified default |
-| Group | `group.share.delivery.count.limit` | Max delivery attempts before a record is archived. ⚠️ unverified default |
-| Group | `group.share.session.timeout.ms` / `group.share.heartbeat.interval.ms` | Share-group membership liveness. ⚠️ unverified |
-| Group | `group.share.max.size` | Max members in a share group. ⚠️ unverified |
-| Client | `group.type=share` | Selects the share-group protocol for the consumer. |
-| Client | `share.acknowledgement.mode` | `implicit` (poll acks the previous batch) or `explicit` (app acks each record). ⚠️ unverified |
+```bash
+kafka-features.sh --bootstrap-server <broker> upgrade --feature share.version=1
+```
 
-Tooling: `kafka-share-groups.sh` (the share-group analogue of `kafka-consumer-groups.sh`) describes/lists share groups and resets share-group offsets; Admin API and Confluent CLI expose equivalent operations. ⚠️ unverified CLI path
+| Scope | Property | Purpose | Default |
+|-------|----------|---------|---------|
+| Broker | `group.share.record.lock.duration.ms` | How long an acquired record stays locked before it can be redelivered. | `30000` (30s) |
+| Broker | `group.share.delivery.count.limit` | Max delivery attempts before a record is archived. | `5` |
+| Broker | `group.share.session.timeout.ms` / `group.share.heartbeat.interval.ms` | Share-group membership liveness. | `45000` / `5000` |
+| Broker | `group.share.max.size` | Max members in a share group. | `200` |
+| Client | `group.type=share` | Selects the share-group protocol for the consumer. | — |
+| Client | `share.acknowledgement.mode` | `implicit` (poll acks the previous batch) or `explicit` (app acks each record). | `implicit` |
+
+Tooling: `kafka-share-groups.sh` (the share-group analogue of `kafka-consumer-groups.sh`) describes/lists share groups and resets share-group offsets; Admin API and Confluent CLI expose equivalent operations.
 
 ### Maturity
 
-KIP-932 shipped as **Early Access / Preview in Apache Kafka 4.0**, with general availability targeted for a later 4.x release. Confluent Platform / Confluent Cloud availability tracks the corresponding release train. ⚠️ unverified: exact GA version and CP/CC availability against `confluent-docs` release notes.
+KIP-932 progressed **Early Access in Apache Kafka 4.0 → Preview in 4.1 → general availability (production-ready) in Apache Kafka 4.2.0** (Feb 2026). Share groups are **GA on Confluent Cloud**; Confluent Platform support ships alongside the 4.2 release train. KRaft is required throughout.
 
 ### Share groups vs. DLQ vs. Parallel Consumer
 

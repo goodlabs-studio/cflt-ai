@@ -3,9 +3,9 @@ title: FSI Exactly-Once Pattern
 tags: [kafka fsi exactly-once transactions compliance]
 sources: []
 related: [concepts/exactly-once-semantics, concepts/sla-tiers, concepts/fsi-data-streaming-platform, patterns/dead-letter-queue-design]
-confidence: medium
-last_updated: 2026-05-18
-last_validated: 2026-05-18
+confidence: high
+last_updated: 2026-06-15
+last_validated: 2026-06-15
 ---
 
 # FSI Exactly-Once Pattern
@@ -48,6 +48,12 @@ acks=all
 # Retries are effectively infinite with idempotence enabled
 retries=2147483647
 max.in.flight.requests.per.connection=5
+# Timeout budget -- Kafka validates delivery.timeout.ms >= linger.ms + request.timeout.ms
+# at construction. Keep delivery headroom above request so in-producer idempotent retries
+# absorb transient broker slowness instead of surfacing a TimeoutException that triggers a
+# NON-idempotent application resend (duplicate risk -- see Failure Modes).
+request.timeout.ms=30000      # default
+delivery.timeout.ms=120000    # default; must be >= linger.ms + request.timeout.ms (enforced)
 ```
 
 This layer prevents duplicate writes to Kafka but does NOT prevent duplicate business effects downstream.
@@ -182,7 +188,7 @@ transaction.timeout.ms=120000
 
 **Confluent Cloud for Apache Flink:** EOS is enabled by default. Kafka transactions are committed approximately every minute. Latency under EOS is ~1 minute, dominated by the transaction commit interval. For at-least-once (sub-100ms latency), consumers can use `isolation.level=read_uncommitted` at the cost of potential duplicates.
 
-> ⚠️ unverified -- Confluent Cloud Flink transaction commit interval is not documented as user-configurable. Contact Confluent Support for current tunability.
+> **Validated 2026-06-15** against `confluent-docs` (CC Flink *Delivery Guarantees and Latency*): Flink "commits transactions periodically, approximately every minute," and EOS latency "depends on the interval at which Kafka commits transactions." The commit interval is **fixed platform behavior** with no documented user-facing knob — the only documented latency lever is consumer `isolation.level` (`read_committed` for EOS at ~1 min, `read_uncommitted` for sub-100ms at-least-once).
 
 ### Saga Pattern for Multi-Service Workflows
 
@@ -231,6 +237,24 @@ replication.factor=3
 | SOC 2 | 1 year | Tenant-level audit trails |
 
 ### Failure Modes and Mitigations
+
+#### Producer Timeout Budgeting (Duplicate Risk)
+
+`enable.idempotence=true` deduplicates **producer-internal** retries via producer ID + epoch + sequence number — it does **not** cover **application-level resends**. The duplicate path: `delivery.timeout.ms` is the upper bound on reporting success/failure after `send()`; if it is budgeted too tightly relative to `request.timeout.ms`, a request the broker actually appended but the client timed out on exhausts the delivery budget, surfaces a `TimeoutException`, and the app (or connector/framework) resends on a fresh producer session — bypassing idempotence and producing a duplicate financial event.
+
+Kafka validates `delivery.timeout.ms >= linger.ms + request.timeout.ms` at producer construction (default `delivery.timeout.ms=120000`, `request.timeout.ms=30000`, `linger.ms=0`), so a literal inversion throws `ConfigException` at startup. The real-world failure is therefore not a rejected config — it is an **under-budgeted** `delivery.timeout.ms` with no headroom for in-producer retries.
+
+**Mitigation:**
+
+```properties
+# Give delivery.timeout.ms generous headroom above request.timeout.ms (+ linger.ms) so
+# transient broker slowness is absorbed by idempotent in-producer retries, never an
+# application-level resend.
+request.timeout.ms=30000
+delivery.timeout.ms=120000   # >= linger.ms + request.timeout.ms (enforced at construction)
+```
+
+**Regulatory implication:** A timeout-driven application resend is a non-idempotent duplicate that escapes broker dedup — exactly the duplicate financial event EOS exists to prevent. Never handle a producer `TimeoutException` with a blind app-level resend; let the idempotent producer's own retries (bounded by `delivery.timeout.ms`) own the retry path.
 
 #### Transaction Timeout During Peak Load
 
