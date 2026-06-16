@@ -22,6 +22,19 @@ claude
 
 That's it. Ask a question, paste a config, or run a skill.
 
+### Desktop app (no Flox required)
+
+The Electron app in `app/` is a self-contained front-end over the same skills and is **not** gated on Flox or `bin/setup` — it only needs Node.js ≥ 20 and `pnpm`. To run it in dev:
+
+```bash
+git clone --recurse-submodules git@github.com:goodlabs-studio/cflt-ai.git
+cd cflt-ai/app
+pnpm install
+pnpm dev
+```
+
+The app shells out to your existing `claude` CLI, so Claude Code still needs to be installed and authenticated (`claude login`). Flox is only required for the Python-based canon tooling and the full CLI workflow above — not for building or running the app.
+
 ## What You Can Do
 
 ### `/ask` — Get a validated answer
@@ -396,6 +409,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. The short version:
 
 ## Requirements
 
-- **[Flox](https://flox.dev)** — manages the dev environment (Python, Node.js, etc.)
+- **[Flox](https://flox.dev)** — manages the dev environment (Python, Node.js, etc.) for the CLI/skills workflow and canon tooling. **Not required for the desktop app** — that path only needs Node.js ≥ 20 + `pnpm` (see [Desktop app](#desktop-app-no-flox-required)).
 - **Claude Code** — installed separately via `npm install -g @anthropic-ai/claude-code` or Homebrew
 - **Claude auth** — either a Claude Max/Pro subscription or an Anthropic API key
