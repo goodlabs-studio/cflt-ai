@@ -160,10 +160,13 @@ cluster via MDS/Helm REST — no parallel broker management path.
 
 ```bash
 cd accelerators/confluent-on-linuxone
-flox activate                                            # fetches upstream
+flox activate                                            # optional: pins toolchain + fetches upstream
+# Without Flox: bash base/fetch-upstream.sh               # same fetch, run manually
 kustomize build overlays/prod | oc apply --dry-run=server -f - -n confluent
 kustomize build overlays/prod | oc apply -f - -n confluent
 ```
+
+> Flox is a convenience wrapper here — it pins the CLI toolchain (`oc`, `kustomize`, `helm`, `yq`, `jq`, `confluent`) and runs `base/fetch-upstream.sh` on activation. If those tools are already on your `PATH`, run the fetch manually and skip `flox activate`.
 
 Each layer has a `validate-*.sh` that asserts its specific control surface (RBAC
 bindings, mTLS handshake, SR compatibility, audit topic continuity, Flink job

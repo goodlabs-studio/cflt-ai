@@ -10,7 +10,7 @@ No custom application code. The "app" is Claude Code itself, configured via comm
 # 1. Clone (--recurse-submodules pulls fsi-dsp if you have access)
 git clone --recurse-submodules git@github.com:goodlabs-studio/cflt-ai.git && cd cflt-ai
 
-# 2. Activate the environment (installs Python, Node.js, etc.)
+# 2. (Optional) Activate the Flox environment (installs Python, Node.js, etc.)
 flox activate
 
 # 3. Run first-time setup (auth, credentials, MCP config)
@@ -21,6 +21,8 @@ claude
 ```
 
 That's it. Ask a question, paste a config, or run a skill.
+
+> **Flox is optional.** It's a convenience wrapper that pins the toolchain (Python 3.11, Node, `uv`) so the wiki/canon tooling is reproducible. If you already have Python 3.11+ and Node 20+ on your `PATH`, skip step 2 — `bin/setup` and the skills run the same. Flox is never required for the [desktop app](#desktop-app-no-flox-required).
 
 ### Desktop app (no Flox required)
 

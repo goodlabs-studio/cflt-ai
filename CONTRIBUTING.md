@@ -6,12 +6,14 @@ cflt-ai is a shared Confluent knowledge base powered by Claude Code. Contributio
 
 ```bash
 git clone <repo-url> cflt-ai && cd cflt-ai
-flox activate
+flox activate   # optional — see note below
 bin/setup
 claude
 ```
 
 See [README.md](README.md) for full setup instructions.
+
+> **Flox is optional.** It only pins the toolchain (Python 3.11, Node, `uv`) for reproducibility. With Python 3.11+ and Node 20+ already on your `PATH`, skip `flox activate` — the setup script and skills behave identically.
 
 ## Adding Wiki Articles
 
