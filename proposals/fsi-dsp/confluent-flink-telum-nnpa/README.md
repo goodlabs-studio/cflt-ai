@@ -82,6 +82,10 @@ scaled-down figures below are deliberate and must be documented as such.
 Headroom ≈ 6 lCPU (~9%). Provision **≥ 256 GB** system memory (the gap over 216 GB is OS
 overhead + Kafka page cache, which is not a pod request but is where broker performance lives).
 
+Figures are CPU **requests** — what the scheduler actually reserves. Guaranteed pods (brokers,
+Flink JM/TM) hold their CPUs exclusively; Burstable pods (KRaft, SR, CMF, observability) draw from
+the shared pool and may burst to their limits. See the QoS table below before changing any value.
+
 ### Chip pinning: the runbook's mechanism doesn't do what it claims ⚠️
 
 > *"CPU-pinned (`static` CPU manager policy in kubelet + Guaranteed QoS on the TM pods) so each
@@ -99,19 +103,42 @@ as ordinary Kubernetes scheduling:
 - `cpuManagerPolicy: static` + `cpuManagerPolicyOptions: full-pcpus-only` → the TM gets **whole cores** (both SMT siblings), so inference threads don't contend with a co-tenant on the same core.
 - TM `cpu` requests must be **even** (whole cores) for `full-pcpus-only` to admit the pod.
 
-### Broker/TM co-residency — a decision the runbook leaves open
+### Broker/TM co-residency — DECIDED: Option A (2026-07-06)
 
 The runbook says *"do not co-schedule brokers and inference-heavy TaskManagers on the same chip
 domain if you can avoid it."* With exactly 4 chips and a goal of using all 4 accelerators, **you
-cannot avoid it.** Resolve it explicitly:
+cannot avoid it.**
 
-- **Option A (recommended, this proposal).** 4 inference TMs, one per chip; brokers co-resident but
-  on **disjoint pinned cores**. Rationale: NNPA is a *separate on-chip functional unit* — brokers
-  never issue NNPA instructions. Contention is for cores and L2/LLC, which exclusive pinning
-  addresses. Uses all 4 accelerators.
-- **Option B.** Platform (brokers/KRaft/SR) on chips 0–1, inference TMs on chips 2–3. Cleaner
-  isolation, **halves inference capacity to 2 accelerators**. Choose only if benchmark noise from
-  cache contention proves material in Phase 7.
+**Decision: Option A.** 4 inference TMs, one per chip; brokers co-resident but on **disjoint
+exclusive cores**. Rationale: NNPA is a *separate on-chip functional unit* — brokers never issue
+NNPA instructions. The contention is for cores and L2/LLC, which whole-core pinning
+(`full-pcpus-only`) addresses. Uses all 4 accelerators.
+
+*Rejected:* Option B (platform on chips 0–1, inference on chips 2–3) — cleaner isolation but
+**halves inference capacity to 2 accelerators**.
+
+*Falsification condition:* if Phase 7 shows cache contention from broker co-residency is material
+at the target p99, revisit. Until then, Option A holds.
+
+#### The QoS consequence — read before editing any `cpu:` value
+
+Option A only works if brokers and inference TMs never share a **physical core**. That comes from
+`full-pcpus-only`, which carries a trap: **any Guaranteed pod (requests == limits) whose CPU request
+is not a whole physical core is rejected at admission with `SMTAlignmentError`.** Under SMT-2 the
+count must be **even**.
+
+| Pod | QoS | cpu | Why |
+|---|---|---:|---|
+| Kafka broker | **Guaranteed** | 4 | Exclusive whole cores (2 cores) |
+| Flink JobManager | **Guaranteed** | 2 | Exclusive whole core |
+| Flink inference TaskManager | **Guaranteed** | 6 | Exclusive whole cores (3), one TM per chip |
+| KRaft controller | Burstable | 1→2 | Metadata-only; shared pool |
+| Schema Registry | Burstable | 1→2 | Not CPU-bound (Confluent's own reference) |
+| CMF | Burstable | 2→3 | Control plane; shared pool |
+| Prometheus / Grafana / CFK operator | Burstable | — | Shared pool |
+
+Do **not** "tidy" a Burstable control-plane pod into `requests == limits` with an odd `cpu` — it will
+fail to schedule, and the failure reads as a capacity problem rather than an alignment one.
 
 ### Smaller notes
 

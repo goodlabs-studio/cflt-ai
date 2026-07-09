@@ -43,9 +43,14 @@ affinity:
             matchLabels:
               goodlabs.io/workload: flink-inference
 
+# DELIBERATELY Burstable (requests != limits). A Guaranteed pod with `cpu: 3` is
+# rejected with SMTAlignmentError under `full-pcpus-only`: 3 is not a whole number
+# of physical cores at SMT-2. CMF is a control-plane component — it belongs in the
+# shared CPU pool, not on exclusive cores taken from an inference TaskManager.
+# (Confluent's reference for CMF is 3 cores / 4 GB to manage 150 apps; we run one.)
 resources:
   requests:
-    cpu: "3"
+    cpu: "2"
     memory: 4Gi
   limits:
     cpu: "3"

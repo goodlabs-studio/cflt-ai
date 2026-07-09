@@ -27,9 +27,16 @@ spec:
     application: confluentinc/cp-server:8.2.0     # >= 8.2.0: first CP with s390x
     init: confluentinc/confluent-init-container:3.2.2
   podTemplate:
+    # DELIBERATELY Burstable (requests != limits), not Guaranteed.
+    # `full-pcpus-only` rejects any Guaranteed pod whose CPU request is not a whole
+    # physical core -- under SMT-2 that means an EVEN count. A Guaranteed `cpu: 1`
+    # here fails admission with SMTAlignmentError.
+    # Controllers are metadata-only and not latency-critical: they belong in the
+    # shared CPU pool. Exclusive whole cores are reserved for brokers and the
+    # inference TaskManagers (Option A, README §1).
     resources:
       requests: { cpu: "1", memory: 4Gi }
-      limits:   { cpu: "1", memory: 4Gi }
+      limits:   { cpu: "2", memory: 4Gi }
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
@@ -85,6 +92,10 @@ spec:
       # lz4 over zstd: this box is CPU-budgeted, not storage-constrained.
       - compression.type=lz4
   podTemplate:
+    # Guaranteed QoS (requests == limits) + EVEN cpu => exclusive whole cores.
+    # This is what makes Option A safe: brokers co-reside with inference TMs on the
+    # same Telum chip but never share a physical core with one, so an inference
+    # thread is never contending with a broker thread for an SMT sibling.
     resources:
       # 4 lCPU = 2 whole cores under SMT-2. EVEN, so `full-pcpus-only` admits it.
       requests: { cpu: "4", memory: 32Gi }
@@ -125,9 +136,12 @@ spec:
       # A silent schema drift here becomes a silent accuracy regression.
       - schema.compatibility.level=full
   podTemplate:
+    # Burstable by design — see the KRaftController note above. SR is not
+    # CPU-bound (Confluent's own reference says so) and must not claim a whole
+    # physical core away from an inference TaskManager.
     resources:
       requests: { cpu: "1", memory: 4Gi }
-      limits:   { cpu: "1", memory: 4Gi }
+      limits:   { cpu: "2", memory: 4Gi }
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:

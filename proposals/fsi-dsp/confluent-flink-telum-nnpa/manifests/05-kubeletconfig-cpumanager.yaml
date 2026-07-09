@@ -14,8 +14,17 @@
 #   cpuManagerPolicyOptions: full-pcpus-only
 #     Allocates whole physical cores (both SMT-2 siblings) rather than individual
 #     threads. Without it, an inference thread can share a core with a Kafka
-#     broker thread and your p99 quietly doubles.
-#     => TaskManager `cpu` requests MUST be EVEN, or the pod is rejected.
+#     broker thread and your p99 quietly doubles. This is what makes broker/TM
+#     chip co-residency (Option A) safe.
+#
+#     THE TRAP: any *Guaranteed* pod (requests == limits) whose CPU request is not
+#     a whole number of physical cores is REJECTED AT ADMISSION with
+#     SMTAlignmentError. Under SMT-2 that means the count must be EVEN.
+#       Guaranteed + even cpu  -> exclusive whole cores:  Kafka (4), Flink JM (2), TM (6)
+#       Burstable (req != lim) -> shared pool, unaffected: KRaft, Schema Registry, CMF,
+#                                                          Prometheus, Grafana, CFK operator
+#     Do NOT "simplify" a Burstable control-plane pod to requests == limits with an
+#     odd cpu; it will fail to schedule and the failure reads as a capacity problem.
 #
 # Chip locality itself comes from topology, not from kubelet: one Telum chip per
 # worker node + podAntiAffinity on hostname (see manifests/12). On Telum gen-1
