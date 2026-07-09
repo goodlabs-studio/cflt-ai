@@ -16,6 +16,7 @@ The LLM maintains this file. Do not edit manually.
 
 ## Concepts
 
+[Confluent on s390x — Support Matrix and IFL Sizing](concepts/confluent-on-s390x-support-and-ifl-sizing.md) — CP 8.2.0+ s390x support (CFK + CP Flink in; FIPS/IPv6/USM/native-lib connectors "not yet", all CP-layer claims); IFL vs vCPU vs Pod, SMT-2 ÷2 translation, Confluent's architecture-agnostic hardware reference, throughput→IFL bands (field heuristic), and the full-pcpus-only SMTAlignmentError trap — #linuxone #ibm #s390x #confluent-platform #cfk #sizing #ifl #smt #fsi
 [FSI Data Streaming Platform](concepts/fsi-data-streaming-platform.md) — Universal automation-first platform for governed Kafka/Flink/SR across six deployment models (CC, CFK, CP) — #kafka #fsi #confluent-cloud #confluent-platform #cfk
 [SLA Tiers](concepts/sla-tiers.md) — Four tiers (critical, standard, best-effort, compliance) driving governance defaults: compatibility, partitions, retention, DR targets — #kafka #fsi #governance #sla
 [Schema Evolution Strategies](concepts/schema-evolution-strategies.md) — Avro-first schema governance with tier-based compatibility modes, evolution runbooks, and versioned topic migration — #schema-registry #avro #fsi #governance
