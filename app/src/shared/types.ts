@@ -431,6 +431,12 @@ export interface ParsedPlan {
 export interface CfltDialogAPI {
   /** Open a file picker for review document input. Returns absolute paths. */
   openReviewFiles(): Promise<string[]>;
+  /**
+   * Resolve the absolute filesystem path of a dropped File. Electron removed
+   * the legacy `File.path` property in v32; this wraps `webUtils.getPathForFile`
+   * from the preload context. Returns '' if the path cannot be resolved.
+   */
+  pathForFile(file: File): string;
 }
 
 // ─── Concurrency guard (Phase B.2) ────────────────────────────────────────

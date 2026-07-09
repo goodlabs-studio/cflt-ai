@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import type {
   CfltAPI,
   ConcurrencyState,
@@ -64,6 +64,9 @@ const api: CfltAPI = {
   },
   dialog: {
     openReviewFiles: () => ipcRenderer.invoke('dialog:openReviewFiles'),
+    // webUtils.getPathForFile must run in the preload/renderer context (not main).
+    // Replaces the legacy File.path removed in Electron 32.
+    pathForFile: (file: File) => webUtils.getPathForFile(file),
   },
   config: {
     get: () => ipcRenderer.invoke('config:get'),

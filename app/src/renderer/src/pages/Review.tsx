@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -17,26 +17,35 @@ import type { ReportMeta } from '@shared/types';
 import { runSkill } from '@/lib/skill';
 import { parseReview } from '@/lib/review-parse';
 import { ClaimTable } from '@/components/review/ClaimTable';
+import { useReview, type OutputFormat } from '@/store/review';
 import { cn } from '@/lib/utils';
 
-type OutputFormat = 'md' | 'docx' | 'both';
-
-interface Status {
-  kind: 'idle' | 'running' | 'complete' | 'error' | 'cancelled';
-  message?: string;
-}
-
 export function ReviewPage(): React.JSX.Element {
-  const [files, setFiles] = useState<string[]>([]);
-  const [overlay, setOverlay] = useState<string>('');
+  // Run/document state lives in a module-scoped store so an in-flight /review
+  // survives navigating away from this page and back (see store/review.ts).
+  const {
+    files,
+    overlay,
+    output,
+    status,
+    errorMessage,
+    response,
+    view,
+    docxPath,
+    addFiles,
+    removeFile,
+    setOverlay,
+    setOutput,
+    setView,
+    setDocxPath,
+    start,
+    appendText,
+    complete,
+    fail,
+    cancel,
+  } = useReview();
   const [overlays, setOverlays] = useState<string[]>([]);
-  const [output, setOutput] = useState<OutputFormat>('md');
-  const [status, setStatus] = useState<Status>({ kind: 'idle' });
-  const [response, setResponse] = useState('');
   const [reports, setReports] = useState<ReportMeta[]>([]);
-  const [view, setView] = useState<'response' | 'claims'>('response');
-  const [docxPath, setDocxPath] = useState<string | null>(null);
-  const cancelRef = useRef<(() => void) | null>(null);
 
   const parsed = useMemo(() => parseReview(response), [response]);
 
@@ -61,33 +70,27 @@ export function ReviewPage(): React.JSX.Element {
     };
   }, []);
 
-  const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const dropped: string[] = [];
-    for (const f of Array.from(e.dataTransfer.files)) {
-      // electron exposes the absolute path on File via legacy `path`
-      const path =
-        (f as File & { path?: string }).path ?? '';
-      if (path) dropped.push(path);
-    }
-    if (dropped.length > 0) setFiles((cur) => [...cur, ...dropped]);
-  }, []);
+  const onDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const dropped: string[] = [];
+      for (const f of Array.from(e.dataTransfer.files)) {
+        // Electron removed File.path in v32; resolve via webUtils in the preload.
+        const path = window.cflt.dialog.pathForFile(f);
+        if (path) dropped.push(path);
+      }
+      if (dropped.length > 0) addFiles(dropped);
+    },
+    [addFiles],
+  );
 
   const onBrowse = useCallback(async () => {
     const picked = await window.cflt.dialog.openReviewFiles();
-    if (picked.length > 0) setFiles((cur) => [...cur, ...picked]);
-  }, []);
-
-  const removeFile = useCallback((idx: number) => {
-    setFiles((cur) => cur.filter((_, i) => i !== idx));
-  }, []);
+    if (picked.length > 0) addFiles(picked);
+  }, [addFiles]);
 
   const submit = useCallback(async () => {
-    if (files.length === 0 || status.kind === 'running') return;
-    setStatus({ kind: 'running' });
-    setResponse('');
-    setView('response');
-    setDocxPath(null);
+    if (files.length === 0 || status === 'running') return;
 
     const handle = runSkill({
       kind: 'review',
@@ -95,7 +98,7 @@ export function ReviewPage(): React.JSX.Element {
       output,
       ...(overlay ? { overlay } : {}),
     });
-    cancelRef.current = handle.cancel;
+    start(handle);
 
     let buffer = '';
     try {
@@ -103,60 +106,44 @@ export function ReviewPage(): React.JSX.Element {
         switch (ev.type) {
           case 'assistant_text':
             buffer += ev.text;
-            setResponse(buffer);
+            appendText(ev.text);
             break;
           case 'error':
-            setStatus({ kind: 'error', message: ev.message });
+            fail(ev.message);
             break;
           case 'result':
-            cancelRef.current = null;
             if (!ev.result.success) {
-              setStatus({
-                kind: 'error',
-                message: ev.result.text || 'Skill returned non-success',
-              });
+              fail(ev.result.text || 'Skill returned non-success');
             } else {
-              setStatus({ kind: 'complete' });
-              // Auto-flip to claim view if any claims were extracted
-              setView((v) =>
-                parsed.claims.length > 0 || /```yaml/.test(buffer) ? 'claims' : v,
-              );
+              // Auto-flip to claim view if any claims were extracted.
+              const flip =
+                parseReview(buffer).claims.length > 0 || /```yaml/.test(buffer);
+              complete(flip ? 'claims' : undefined);
             }
             break;
         }
       }
     } catch (err) {
-      setStatus({
-        kind: 'error',
-        message: err instanceof Error ? err.message : String(err),
-      });
+      fail(err instanceof Error ? err.message : String(err));
     }
-  }, [files, overlay, output, status.kind, parsed.claims.length]);
-
-  const cancel = useCallback(() => {
-    cancelRef.current?.();
-    setStatus({ kind: 'cancelled' });
-  }, []);
+  }, [files, overlay, output, status, start, appendText, complete, fail]);
 
   const exportDocx = useCallback(async () => {
     // Find the most recent /review report; assume it was just written.
     const latest = reports.find((r) => r.sourceSkill === '/review');
     if (!latest) {
-      setStatus({ kind: 'error', message: 'No /review report on disk to export.' });
+      fail('No /review report on disk to export.');
       return;
     }
     try {
       const path = await window.cflt.tools.reviewToDocx(latest.path);
       setDocxPath(path);
     } catch (err) {
-      setStatus({
-        kind: 'error',
-        message: err instanceof Error ? err.message : String(err),
-      });
+      fail(err instanceof Error ? err.message : String(err));
     }
-  }, [reports]);
+  }, [reports, fail, setDocxPath]);
 
-  const isRunning = status.kind === 'running';
+  const isRunning = status === 'running';
 
   return (
     <div className="grid h-full grid-cols-[20rem_minmax(0,1fr)] gap-4 overflow-hidden p-4">
@@ -237,7 +224,7 @@ export function ReviewPage(): React.JSX.Element {
         <header className="flex items-center justify-between border-b border-border bg-muted/20 px-3 py-2">
           <ViewToggle view={view} onChange={setView} parsedHasClaims={parsed.claims.length > 0} />
           <div className="flex items-center gap-2">
-            {status.kind === 'complete' && (
+            {status === 'complete' && (
               <button
                 type="button"
                 onClick={exportDocx}
@@ -254,9 +241,9 @@ export function ReviewPage(): React.JSX.Element {
             )}
           </div>
         </header>
-        {status.kind === 'error' && status.message && (
+        {status === 'error' && errorMessage && (
           <div className="m-3 rounded border border-danger/40 bg-danger/10 p-3 text-xs text-danger">
-            {status.message}
+            {errorMessage}
           </div>
         )}
         <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
@@ -272,7 +259,7 @@ export function ReviewPage(): React.JSX.Element {
               </div>
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                {status.kind === 'running'
+                {status === 'running'
                   ? 'streaming /review response…'
                   : 'Drop or browse documents on the left, then run /review.'}
               </div>
