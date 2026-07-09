@@ -1,0 +1,83 @@
+name: Telum SMT Alignment
+
+# Guards the confluent-flink-telum-nnpa accelerator against SMTAlignmentError.
+#
+# `cpuManagerPolicyOptions: full-pcpus-only` rejects any Guaranteed pod whose
+# integer CPU request is not a multiple of threads-per-core (2 under SMT-2 on
+# LinuxONE). Kubelet surfaces that as a scheduling failure that reads like a
+# capacity problem — so it gets fixed by adding IFLs instead of fixing the config.
+# Catch it here instead.
+#
+# Runs on push to main as well as PRs: this repo is pushed to directly, so a
+# pull_request-only trigger would never fire.
+on:
+  pull_request:
+    paths:
+      - 'proposals/fsi-dsp/confluent-flink-telum-nnpa/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'proposals/fsi-dsp/confluent-flink-telum-nnpa/**'
+
+jobs:
+  smt-alignment:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proposals/fsi-dsp/confluent-flink-telum-nnpa
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      # SMT-2 is the LinuxONE default for Linux workloads and what the accelerator's
+      # 64-lCPU slot math assumes. Do not lower --threads-per-core to make a failure
+      # go away: that silently disables the chip pinning Option A depends on.
+      - name: Check SMT alignment of Guaranteed pods
+        run: python ci/smt-alignment-gate.py manifests helm --threads-per-core 2
+
+      - name: Verify the gate itself still detects a violation
+        # A gate that cannot fail is worse than no gate — it reads as a green check.
+        # Feed it a known-bad spec and require a non-zero exit.
+        run: |
+          mkdir -p /tmp/regression
+          cat >/tmp/regression/bad.yaml <<'EOF'
+          apiVersion: platform.confluent.io/v1beta1
+          kind: KRaftController
+          metadata:
+            name: regression-probe
+          spec:
+            podTemplate:
+              resources:
+                requests: { cpu: "1", memory: 4Gi }
+                limits:   { cpu: "1", memory: 4Gi }
+          EOF
+          if python ci/smt-alignment-gate.py /tmp/regression --threads-per-core 2; then
+            echo "::error::smt-alignment-gate.py passed a known-bad spec — the gate is broken."
+            exit 1
+          fi
+          echo "Gate correctly rejected the known-bad spec."
+
+      - name: Compile CI gates
+        run: python -m compileall -q ci/
+
+      - name: Parse all YAML
+        run: |
+          python - <<'EOF'
+          import pathlib, sys, yaml
+          bad = []
+          for p in sorted(pathlib.Path('.').rglob('*.y*ml')):
+              try:
+                  list(yaml.safe_load_all(p.read_text()))
+              except yaml.YAMLError as e:
+                  bad.append(f"{p}: {e}")
+          if bad:
+              print("\n".join(bad)); sys.exit(1)
+          print("All YAML parses.")
+          EOF
