@@ -65,6 +65,7 @@ The LLM maintains this file. Do not edit manually.
 
 ## Patterns
 
+[Archival Storage for Long-Retention Topics (CC on Azure)](patterns/archival-storage-long-retention-topics.md) — Keep an explicit replay window hot on CC (total retention.ms; CC has no local.retention.*), sink older data as Parquet/Avro to ADLS Gen2 via managed connector or Tableflow as the compliance system of record; replay = re-ingestion — #kafka #confluent-cloud #azure #tiered-storage #retention #archival #adls #tableflow #fsi
 [FSI Governance Automation](patterns/fsi-governance-automation.md) — Governance-as-code: single Terraform module produces fully governed topic with SLA-tier defaults; Ansible parity for CP/CFK — #kafka #fsi #terraform #ansible #ci-cd #governance
 [Topic Naming Convention](patterns/topic-naming.md) — `{domain}.{application}.{version}.{entity}` with dot separators, regex validation, and prefix-based RBAC — #kafka #governance #naming #fsi
 [DR — Cluster Linking](patterns/dr-cluster-linking.md) — Active-passive DR for CC using bidirectional CL; 6-step failover with Consul atomic endpoint flip — #kafka #confluent-cloud #dr #cluster-linking #fsi
