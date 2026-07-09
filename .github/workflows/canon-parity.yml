@@ -5,8 +5,18 @@ name: Canon Parity
 # - raw/repos/fsi-dsp/** (fsi-dsp submodule pointer updates — covers both repos without
 #   duplicating this workflow in fsi-dsp, which would require duplicating canon/ context there)
 # - the parity script itself
+#
+# main is pushed to directly on this repo, so a pull_request-only trigger would
+# never fire. Mirror the same path filter on push.
 on:
   pull_request:
+    paths:
+      - 'canon/**'
+      - 'raw/repos/fsi-dsp/**'
+      - 'tools/check-canon-parity.py'
+  push:
+    branches:
+      - main
     paths:
       - 'canon/**'
       - 'raw/repos/fsi-dsp/**'

@@ -4,12 +4,21 @@ name: Canon Silo Guard
 # overlays must live in a private overlay repo loaded via CFLT_CANON_EXTERNAL_PATH
 # (see CONTRIBUTING.md). The acme-bank demo and scaffold files are allowlisted.
 # This is the CI backstop for the local .githooks/pre-push guard.
+#
+# main is pushed to directly on this repo, so a pull_request-only trigger would
+# never fire. The push trigger is deliberately NOT path-filtered: this is a
+# security backstop, and `git ls-files` audits the whole tree. A path-filtered run
+# would only catch the commit that leaks a client overlay, not a leak already
+# sitting in the tree (e.g. committed before this guard existed). It costs seconds.
 on:
   pull_request:
     paths:
       - 'canon/customer/**'
       - 'canon/engagement/**'
       - '.github/workflows/canon-silo-guard.yml'
+  push:
+    branches:
+      - main
 
 jobs:
   guard:

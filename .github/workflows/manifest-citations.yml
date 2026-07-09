@@ -1,7 +1,16 @@
 name: Manifest Citations
 
+# main is pushed to directly on this repo, so a pull_request-only trigger would
+# never fire. Mirror the same path filter on push.
 on:
   pull_request:
+    paths:
+      - 'wiki/**'
+      - 'raw/repos/fsi-dsp/MANIFEST.yaml'
+      - 'tools/check-citations.py'
+  push:
+    branches:
+      - main
     paths:
       - 'wiki/**'
       - 'raw/repos/fsi-dsp/MANIFEST.yaml'
