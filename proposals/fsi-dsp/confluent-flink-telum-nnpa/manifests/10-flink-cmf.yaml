@@ -1,0 +1,69 @@
+---
+# =============================================================================
+# 10-flink-cmf.yaml — CMFRestClass + FlinkEnvironment
+# =============================================================================
+# CMFRestClass is the mTLS-secured control channel CFK uses to drive Flink job
+# lifecycle through CMF. Unauthenticated management-plane access to job submit/
+# cancel/savepoint is an FSI audit finding.
+# =============================================================================
+apiVersion: platform.confluent.io/v1beta1
+kind: CMFRestClass
+metadata:
+  name: telum-cmf-rest
+  namespace: confluent
+  labels:
+    goodlabs.io/accelerator: confluent-flink-telum-nnpa
+spec:
+  cmfRest:
+    endpoint: https://cmf.confluent.svc.cluster.local:8443
+    authentication:
+      type: mtls
+      mtls:
+        secretRef: cmf-mtls-credentials
+    tls:
+      secretRef: cmf-mtls-credentials
+
+---
+# The FlinkEnvironment spec is intentionally thin. Defaults for image /
+# flinkVersion / flinkConfiguration / podTemplate live under
+# spec.flinkApplicationDefaults.spec, NOT at the spec root (that root is the
+# upstream FKO FlinkDeployment shape — a different CRD). Verify with
+# `oc explain flinkenvironment.spec`.
+apiVersion: platform.confluent.io/v1beta1
+kind: FlinkEnvironment
+metadata:
+  name: telum-flink-env
+  namespace: confluent
+  labels:
+    goodlabs.io/accelerator: confluent-flink-telum-nnpa
+spec:
+  kubernetesNamespace: confluent
+  cmfRestClassRef:
+    name: telum-cmf-rest
+    namespace: confluent
+
+  flinkApplicationDefaults:
+    spec:
+      # CP 8.2.0 -> CMF 2.3.x -> Apache Flink 1.20.x. These move together.
+      flinkVersion: "v1_20"
+      image: <PLACEHOLDER_FRAUD_SCORING_IMAGE>
+
+      flinkConfiguration:
+        metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
+        metrics.reporter.prom.port: "9249"
+        state.backend: rocksdb
+        # Checkpoint state MUST be on an encrypted StorageClass / SSE-KMS bucket.
+        # Unencrypted checkpoint state contains transaction features — a finding.
+        state.checkpoints.dir: <PLACEHOLDER_ENCRYPTED_CHECKPOINT_STORAGE_URI>
+        execution.checkpointing.interval: "30000"
+
+      podTemplate:
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/arch
+                        operator: In
+                        values: [s390x]

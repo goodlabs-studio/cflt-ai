@@ -1,0 +1,30 @@
+# Every image this accelerator deploys, tag-pinned. Fed to image-arch-gate.sh.
+#   ./image-arch-gate.sh images.txt
+#
+# CP >= 8.2.0 is the first release with s390x artifacts. Do not downgrade.
+#
+# REMINDER: an s390x manifest is necessary but NOT sufficient for connectors.
+# Confluent does not support "connectors that rely on native OS libraries" on
+# s390x — a connector can ship a valid s390x image and still fail at runtime.
+# Screen each connector individually before adding it here.
+
+confluentinc/confluent-operator:3.2.0
+confluentinc/confluent-init-container:3.2.2
+confluentinc/cp-server:8.2.0
+confluentinc/cp-schema-registry:8.2.0
+confluentinc/cp-cmf:2.3.0
+
+# Observability
+quay.io/prometheus/prometheus:v2.53.0
+quay.io/prometheus/node-exporter:v1.8.1
+quay.io/prometheus/alertmanager:v0.27.0
+registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.13.0
+docker.io/grafana/grafana:11.1.0
+
+# Model toolchain (build-time, not deployed)
+icr.io/ibmz/zdlc:5.0.0
+
+# Custom job image — built by CI, tagged with the op-coverage hash:
+#   registry/fraud-scoring:<version>-cov-<hash>
+# Uncomment once the first build lands.
+# <PLACEHOLDER_FRAUD_SCORING_IMAGE>

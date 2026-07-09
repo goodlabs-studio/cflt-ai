@@ -1,0 +1,100 @@
+# =============================================================================
+# kube-prometheus-stack-values.yaml — observability on s390x
+# =============================================================================
+#   helm upgrade --install kube-prometheus-stack \
+#     prometheus-community/kube-prometheus-stack \
+#     -n monitoring --create-namespace -f kube-prometheus-stack-values.yaml
+#
+# All core images publish multi-arch manifests including s390x. Pin versions and
+# run them through ci/image-arch-gate.sh anyway — "publishes multi-arch" is a
+# property of a tag, not of a repository.
+#
+# Budget: this whole stack gets ~4 lCPU of the 64 (README §1). It is observability,
+# not a workload; it must never contend with a pinned inference TaskManager.
+# =============================================================================
+
+defaultRules:
+  create: true
+  rules:
+    # Provided by ../observability/prometheus-rules-nnpa-fallback.yaml instead.
+    alertmanager: true
+    kubelet: true
+
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    # Discover the PodMonitor/PrometheusRule CRs in the confluent namespace, not
+    # just monitoring/. Without this the Flink scrape and the fallback rules are
+    # silently ignored — the most common way this stack "works" but shows nothing.
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorNamespaceSelector: {}
+    ruleNamespaceSelector: {}
+
+    nodeSelector:
+      kubernetes.io/arch: s390x
+
+    resources:
+      requests: { cpu: "1", memory: 4Gi }
+      limits:   { cpu: "2", memory: 8Gi }
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: <PLACEHOLDER_ENCRYPTED_STORAGE_CLASS>
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 100Gi
+
+    # Keep Prometheus off the inference chips wherever the scheduler can manage it.
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  goodlabs.io/workload: flink-inference
+
+grafana:
+  enabled: true
+  nodeSelector:
+    kubernetes.io/arch: s390x
+  resources:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits:   { cpu: "1", memory: 1Gi }
+  # Dashboards are managed by ../terraform/, not by sidecar-scraped ConfigMaps.
+  # Two sources of truth for a dashboard is one too many.
+  sidecar:
+    dashboards:
+      enabled: false
+  service:
+    type: ClusterIP
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    nodeSelector:
+      kubernetes.io/arch: s390x
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+      limits:   { cpu: 500m, memory: 512Mi }
+
+# node_exporter is load-bearing here: IFL burn is half of the fallback triad.
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+# kube-state-metrics must expose pod labels, or the "one inference TM per chip"
+# alert and dashboard panel cannot see goodlabs.io/workload at all.
+kube-state-metrics:
+  nodeSelector:
+    kubernetes.io/arch: s390x
+  metricLabelsAllowlist:
+    - pods=[goodlabs.io/workload,goodlabs.io/telum-chip]
+    - nodes=[goodlabs.io/telum-chip,goodlabs.io/nnpa]

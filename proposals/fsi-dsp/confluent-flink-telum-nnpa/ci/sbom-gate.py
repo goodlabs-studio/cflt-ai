@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+"""
+sbom-gate.py — the four SBOM CI gates, plus BOM.md rendering.
+
+Extends the Phase 2 manifest-inspect gate (image-arch-gate.sh) with supply-chain
+assertions. Runbook §10.
+
+Gates:
+  1. Every BOM row with an image reference has a digest recorded  -> fail on any unpinned tag.
+  2. Every digest has a corresponding s390x-platform SBOM artifact -> fail if missing.
+  3. The model SBOM carries the NNPA coverage-report attestation   -> fail if absent.
+     (This is the supply-chain twin of the Phase 4 fallback gate. A model that reaches
+      production without an op-coverage attestation is a model whose latency regime is
+      unattributable — publish nothing from it.)
+  4. Vulnerability scan runs against the SBOMs, not the images     -> fast and reproducible.
+
+BOM.md is rendered from the same data the gates read, so the human-readable table
+(runbook §9) and the machine-readable SBOMs cannot drift apart.
+
+    python3 sbom-gate.py --sbom-dir ../sbom --render-bom ../BOM.md
+
+Exit codes: 0 pass | 1 gate failure | 2 bad input
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+REQUIRED_PLATFORM = "linux/s390x"
+SEVERITY_THRESHOLD = "high"   # grype fails at or above this
+
+
+def load_refs(sbom_dir: Path) -> list[dict]:
+    refs = sorted((sbom_dir / "images").glob("*.ref.json"))
+    if not refs:
+        sys.exit(f"[FAIL] no image refs under {sbom_dir}/images — did sbom-generate.sh run?")
+    return [json.loads(p.read_text()) for p in refs]
+
+
+def gate_1_digests_pinned(refs: list[dict]) -> list[str]:
+    """Every image reference must carry a digest, and no tag may be :latest."""
+    errs = []
+    for r in refs:
+        if not r.get("digest", "").startswith("sha256:"):
+            errs.append(f"{r['image']}: no sha256 digest recorded")
+        if r["image"].endswith(":latest") or ":" not in r["image"]:
+            errs.append(f"{r['image']}: unpinned tag")
+    return errs
+
+
+def gate_2_sbom_per_digest(refs: list[dict], sbom_dir: Path) -> list[str]:
+    """Each digest needs an s390x-platform SBOM. An amd64 SBOM of a multi-arch tag
+    describes the wrong binary set — the classic multi-arch SBOM failure mode."""
+    errs = []
+    for r in refs:
+        safe = r["image"].replace("/", "_").replace(":", "_")
+        sbom = sbom_dir / "images" / f"{safe}.cdx.json"
+        if not sbom.exists():
+            errs.append(f"{r['image']}: missing SBOM {sbom.name}")
+            continue
+        if r.get("platform") != REQUIRED_PLATFORM:
+            errs.append(f"{r['image']}: SBOM platform is {r.get('platform')}, want {REQUIRED_PLATFORM}")
+    return errs
+
+
+def gate_3_model_attestation(sbom_dir: Path) -> list[str]:
+    """The model component must reference its NNPA op-coverage report."""
+    models = list(sbom_dir.glob("model-*.cdx.json"))
+    if not models:
+        return ["no model SBOM found — the fraud-scoring model must be attested"]
+
+    errs = []
+    for m in models:
+        doc = json.loads(m.read_text())
+        for comp in doc.get("components", []):
+            refs = comp.get("externalReferences", [])
+            if not any(x.get("type") == "attestation" for x in refs):
+                errs.append(f"{m.name}: component '{comp.get('name')}' has no coverage attestation")
+
+            props = {p["name"]: p["value"] for p in comp.get("properties", [])}
+            if not props.get("nnpa.coverage.hash"):
+                errs.append(f"{m.name}: missing nnpa.coverage.hash property")
+            # A model compiled for the wrong machine generation silently falls back:
+            # INT8 lowering only exists on Telum II. Make the target explicit.
+            if not props.get("zdlc.target.march"):
+                errs.append(f"{m.name}: missing zdlc.target.march — cannot prove the "
+                            f"compile target matched the deployed machine generation")
+    return errs
+
+
+def gate_4_vulnerability_scan(sbom_dir: Path) -> list[str]:
+    """Scan the SBOMs rather than re-scanning images: faster, and reproducible
+    because it is pinned to the exact component set the BOM records."""
+    if not shutil.which("grype"):
+        return ["grype not installed — vulnerability gate cannot run (do not skip in CI)"]
+
+    errs = []
+    for sbom in sorted(sbom_dir.rglob("*.cdx.json")):
+        proc = subprocess.run(
+            ["grype", f"sbom:{sbom}", "--fail-on", SEVERITY_THRESHOLD, "-o", "table"],
+            capture_output=True, text=True,
+        )
+        if proc.returncode != 0:
+            errs.append(f"{sbom.name}: vulnerabilities at/above {SEVERITY_THRESHOLD}\n"
+                        f"{proc.stdout.strip()[:800]}")
+    return errs
+
+
+def render_bom(sbom_dir: Path, out: Path, refs: list[dict]) -> None:
+    """Render BOM.md from the same data the gates read, so §9 can never drift."""
+    lines = [
+        "# Bill of Materials (generated)",
+        "",
+        "Generated by `ci/sbom-gate.py --render-bom`. Do not hand-edit: this table and the",
+        "CycloneDX SBOMs in `sbom/` are rendered from one source and must reconcile 1:1.",
+        "",
+        "## Container images",
+        "",
+        "| Image | Digest | Platform |",
+        "|---|---|---|",
+    ]
+    for r in sorted(refs, key=lambda x: x["image"]):
+        lines.append(f"| `{r['image']}` | `{r['digest'][:19]}…` | {r['platform']} |")
+
+    models = sorted(sbom_dir.glob("model-*.cdx.json"))
+    if models:
+        lines += ["", "## Model artifacts", "",
+                  "| Model | Coverage hash | NNPA coverage | Compile target |",
+                  "|---|---|---|---|"]
+        for m in models:
+            for comp in json.loads(m.read_text()).get("components", []):
+                p = {x["name"]: x["value"] for x in comp.get("properties", [])}
+                lines.append(
+                    f"| {comp.get('name')} | `{p.get('nnpa.coverage.hash', '?')}` "
+                    f"| {p.get('nnpa.coverage.pct', '?')}% | {p.get('zdlc.target.march', '?')} |"
+                )
+
+    out.write_text("\n".join(lines) + "\n")
+    print(f"[ok] rendered {out}")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--sbom-dir", type=Path, default=Path("../sbom"))
+    ap.add_argument("--render-bom", type=Path, help="write BOM.md here")
+    ap.add_argument("--skip-vuln", action="store_true",
+                    help="skip gate 4 (local dev only; never in CI)")
+    args = ap.parse_args()
+
+    if not args.sbom_dir.is_dir():
+        sys.exit(f"[FAIL] {args.sbom_dir} not found — run sbom-generate.sh first")
+
+    refs = load_refs(args.sbom_dir)
+
+    gates = [
+        ("1: image digests pinned", gate_1_digests_pinned(refs)),
+        ("2: s390x SBOM per digest", gate_2_sbom_per_digest(refs, args.sbom_dir)),
+        ("3: model coverage attestation", gate_3_model_attestation(args.sbom_dir)),
+    ]
+    if not args.skip_vuln:
+        gates.append(("4: vulnerability scan", gate_4_vulnerability_scan(args.sbom_dir)))
+
+    failed = False
+    for name, errs in gates:
+        if errs:
+            failed = True
+            print(f"[FAIL] gate {name}")
+            for e in errs:
+                print(f"    - {e}")
+        else:
+            print(f"[ ok ] gate {name}")
+
+    if args.render_bom and not failed:
+        render_bom(args.sbom_dir, args.render_bom, refs)
+
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,75 @@
+# =============================================================================
+# cmf-values.yaml — Confluent Manager for Apache Flink (CMF)
+# =============================================================================
+# CMF is the *only* supported way to run Confluent Platform for Apache Flink, and
+# it is Kubernetes-only by design — which is why k8s is mandatory for this stack.
+# "Confluent Platform for Apache Flink" is explicitly listed as s390x-supported
+# from CP 8.2.0.
+#
+# PREREQUISITE: the Apache Flink Kubernetes Operator (FKO) must be installed
+# first — CMF delegates pod lifecycle to it.
+#
+#   helm upgrade --install cmf confluentinc/confluent-manager-for-apache-flink \
+#     -n confluent -f cmf-values.yaml
+#
+# Sizing: Confluent's reference for CMF is 3 cores / 4 GB to manage 150 Flink
+# applications. We run one. 3 lCPU is therefore generous, not tight.
+# =============================================================================
+
+image:
+  registry: docker.io
+  repository: confluentinc/cp-cmf
+  tag: 2.3.0            # CMF 2.3.x pairs with CP 8.2.0 / Apache Flink 1.20
+
+nodeSelector:
+  kubernetes.io/arch: s390x
+
+# CMF is a control-plane component. Keep it OFF the inference chips where
+# possible so it never competes with a pinned TaskManager for cores.
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/arch
+              operator: In
+              values: [s390x]
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              goodlabs.io/workload: flink-inference
+
+resources:
+  requests:
+    cpu: "3"
+    memory: 4Gi
+  limits:
+    cpu: "3"
+    memory: 4Gi
+
+cmf:
+  # mTLS on the CFK -> CMF control channel. Unauthenticated management-plane
+  # access to Flink job lifecycle is an FSI audit finding, not a convenience.
+  # The Secret is consumed by manifests/10-flink-cmf.yaml (CMFRestClass).
+  tls:
+    enabled: true
+    secretRef: cmf-mtls-credentials
+  authentication:
+    type: mtls
+
+  # Persist CMF's environment/application metadata.
+  persistence:
+    enabled: true
+    size: 10Gi
+    # Must be an encrypted StorageClass — CMF metadata includes job configuration.
+    storageClassName: <PLACEHOLDER_ENCRYPTED_STORAGE_CLASS>
+
+# Scraped by kube-prometheus-stack.
+metrics:
+  prometheus:
+    enabled: true
+    port: 9090

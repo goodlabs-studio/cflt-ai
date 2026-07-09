@@ -1,0 +1,112 @@
+---
+# =============================================================================
+# 01-node-baseline.yml — node tuning + chip labelling
+# =============================================================================
+# RHEL + OCP are assumed installed. This playbook does the s390x-specific node
+# prep that OCP's default MachineConfig does not, and labels each worker with its
+# Telum chip identity so manifests/12 can pin one inference TaskManager per chip.
+#
+#   ansible-playbook -i inventory.ini 01-node-baseline.yml
+#
+# Kubelet CPU-manager config is NOT set here — on OCP that is a KubeletConfig CR
+# (manifests/05-kubeletconfig-cpumanager.yaml), not a host file. Setting it here
+# would be silently reverted by the Machine Config Operator.
+# =============================================================================
+- name: Baseline tuning for Confluent + Flink inference on LinuxONE
+  hosts: linuxone_workers
+  become: true
+  gather_facts: true
+  vars:
+    # RocksDB off-heap + Flink managed memory benefit from hugepages; Kafka does
+    # not (it wants page cache). Sized for the 4 inference TMs (64 GB total).
+    hugepages_gb: 16
+    kafka_log_mount: /var/lib/kafka
+
+  tasks:
+    # ---- Memory behaviour ---------------------------------------------------
+    # swappiness=1 (not 0): keep the OOM killer as a last resort rather than
+    # letting the kernel swap JVM heap, which turns a GC pause into a disk stall.
+    - name: Set VM sysctls for JVM + page-cache workloads
+      ansible.posix.sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        sysctl_file: /etc/sysctl.d/99-confluent-telum.conf
+        state: present
+        reload: true
+      loop:
+        - { name: vm.swappiness, value: "1" }
+        # Kafka keeps many open segments; the default max_map_count starves it.
+        - { name: vm.max_map_count, value: "262144" }
+        # Flush dirty pages steadily instead of in stalling bursts under load.
+        - { name: vm.dirty_ratio, value: "20" }
+        - { name: vm.dirty_background_ratio, value: "5" }
+        # Kafka relies on page cache; do not let the kernel reclaim it eagerly.
+        - { name: vm.vfs_cache_pressure, value: "50" }
+
+    - name: Reserve hugepages for Flink off-heap / RocksDB
+      ansible.posix.sysctl:
+        name: vm.nr_hugepages
+        value: "{{ (hugepages_gb * 1024 / 2) | int }}"   # 2 MiB pages
+        sysctl_file: /etc/sysctl.d/99-confluent-telum.conf
+        state: present
+        reload: true
+
+    # ---- Storage ------------------------------------------------------------
+    # XFS for Kafka log dirs: better behaviour than ext4 under many-file,
+    # append-heavy, large-directory workloads.
+    - name: Verify Kafka log directory is XFS
+      ansible.builtin.command: findmnt -n -o FSTYPE --target {{ kafka_log_mount }}
+      register: kafka_fs
+      changed_when: false
+      failed_when: false
+
+    - name: Warn if Kafka log dir is not XFS
+      ansible.builtin.debug:
+        msg: >-
+          {{ kafka_log_mount }} is {{ kafka_fs.stdout | default('unknown') }}, not xfs.
+          Recommended: XFS on NVMe/FCP-attached flash with noatime.
+      when: kafka_fs.stdout | default('') != 'xfs'
+
+    # ---- Network ------------------------------------------------------------
+    - name: Increase socket buffers for Kafka replication throughput
+      ansible.posix.sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        sysctl_file: /etc/sysctl.d/99-confluent-telum.conf
+        state: present
+        reload: true
+      loop:
+        - { name: net.core.rmem_max, value: "16777216" }
+        - { name: net.core.wmem_max, value: "16777216" }
+        - { name: net.ipv4.tcp_rmem, value: "4096 87380 16777216" }
+        - { name: net.ipv4.tcp_wmem, value: "4096 65536 16777216" }
+        - { name: net.core.somaxconn, value: "4096" }
+
+    - name: Disable irqbalance (pinned inference threads must not chase IRQs)
+      ansible.builtin.systemd:
+        name: irqbalance
+        enabled: false
+        state: stopped
+      failed_when: false
+
+    # ---- Chip identity ------------------------------------------------------
+    # One chip per node (asserted in 00-platform-validate). Label the node so the
+    # FlinkApplication's podAntiAffinity lands exactly one inference TM per chip,
+    # and therefore one per NNPA accelerator.
+    - name: Derive chip id from the LPAR/node ordinal
+      ansible.builtin.set_fact:
+        telum_chip_id: "{{ inventory_hostname | regex_search('(\\d+)$', '\\1') | first | default('0') }}"
+
+    - name: Label node with its Telum chip and NNPA capability
+      ansible.builtin.command: >-
+        oc label node {{ inventory_hostname }}
+        goodlabs.io/telum-chip={{ telum_chip_id }}
+        goodlabs.io/nnpa=true
+        --overwrite
+      delegate_to: localhost
+      become: false
+      changed_when: true
+
+    - name: Baseline summary
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: chip={{ telum_chip_id }}, hugepages={{ hugepages_gb }}GB, nnpa=true"

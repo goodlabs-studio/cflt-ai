@@ -1,0 +1,139 @@
+---
+# =============================================================================
+# 00-platform-crs.yaml — KRaftController + Kafka + SchemaRegistry
+# =============================================================================
+# CPU/memory here are DELIBERATELY scaled down from Confluent's per-component
+# reference. That reference broker is 24 cores / 64 GB; three of them is 72 lCPU,
+# more than this entire 32-IFL machine (64 lCPU under SMT-2). Reference-sized
+# brokers are not achievable on this box. See README §1 "Sizing".
+#
+# Budget honoured here: brokers 3x4=12, KRaft 3x1=3, SR 2x1=2 lCPU.
+#
+# Brokers are co-resident with inference TaskManagers (Option A, README §1):
+# NNPA is a separate on-chip functional unit that brokers never touch, so the
+# contention is for cores/LLC — which `full-pcpus-only` pinning addresses.
+# =============================================================================
+apiVersion: platform.confluent.io/v1beta1
+kind: KRaftController
+metadata:
+  name: kraftcontroller
+  namespace: confluent
+  labels:
+    goodlabs.io/accelerator: confluent-flink-telum-nnpa
+spec:
+  replicas: 3                       # quorum; do not reduce
+  dataVolumeCapacity: 10Gi
+  image:
+    application: confluentinc/cp-server:8.2.0     # >= 8.2.0: first CP with s390x
+    init: confluentinc/confluent-init-container:3.2.2
+  podTemplate:
+    resources:
+      requests: { cpu: "1", memory: 4Gi }
+      limits:   { cpu: "1", memory: 4Gi }
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - { key: kubernetes.io/arch, operator: In, values: [s390x] }
+      # Spread the quorum across chips/nodes so one node loss never breaks it.
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels: { app: kraftcontroller }
+
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Kafka
+metadata:
+  name: kafka
+  namespace: confluent
+  labels:
+    goodlabs.io/accelerator: confluent-flink-telum-nnpa
+spec:
+  replicas: 3
+  dataVolumeCapacity: 500Gi         # XFS on NVMe/FCP flash (ansible/01)
+  image:
+    application: confluentinc/cp-server:8.2.0
+    init: confluentinc/confluent-init-container:3.2.2
+  dependencies:
+    kRaftController:
+      clusterRef:
+        name: kraftcontroller
+  configOverrides:
+    server:
+      # FSI canon: RF=3, min.insync=2. Non-negotiable for a regulated path.
+      - default.replication.factor=3
+      - min.insync.replicas=2
+      - unclean.leader.election.enable=false
+      - auto.create.topics.enable=false
+
+      # ---- CP FIPS mode -------------------------------------------------
+      # BC-FIPS provider + BCFKS keystores (staged by ansible/02-fips-mode.yml).
+      # CPACF makes FIPS-mode TLS on Z cost nearly nothing — fold into the cost story.
+      - enable.fips=true
+      - ssl.provider=BCFIPS
+      - ssl.keystore.type=BCFKS
+      - ssl.truststore.type=BCFKS
+      # Restrict listeners to FIPS-approved protocol versions and cipher suites.
+      # NOTE: RHEL 9 FIPS mode enforces TLS 1.2 Extended Master Secret (RFC 7627).
+      # Clients lacking EMS or TLS 1.3 will fail to connect — audit the fleet first.
+      - ssl.enabled.protocols=TLSv1.3,TLSv1.2
+      - ssl.cipher.suites=TLS_AES_256_GCM_SHA384,TLS_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+
+      # lz4 over zstd: this box is CPU-budgeted, not storage-constrained.
+      - compression.type=lz4
+  podTemplate:
+    resources:
+      # 4 lCPU = 2 whole cores under SMT-2. EVEN, so `full-pcpus-only` admits it.
+      requests: { cpu: "4", memory: 32Gi }
+      limits:   { cpu: "4", memory: 32Gi }
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - { key: kubernetes.io/arch, operator: In, values: [s390x] }
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels: { app: kafka }
+  metrics:
+    prometheus:
+      # First-party JMX exporter injection — no sidecar hackery.
+      enabled: true
+
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: SchemaRegistry
+metadata:
+  name: schemaregistry
+  namespace: confluent
+  labels:
+    goodlabs.io/accelerator: confluent-flink-telum-nnpa
+spec:
+  replicas: 2
+  image:
+    application: confluentinc/cp-schema-registry:8.2.0
+    init: confluentinc/confluent-init-container:3.2.2
+  configOverrides:
+    server:
+      # FULL compatibility: the fraud model's feature schema is a shared contract
+      # between the producer, Flink, and the model's expected tensor layout.
+      # A silent schema drift here becomes a silent accuracy regression.
+      - schema.compatibility.level=full
+  podTemplate:
+    resources:
+      requests: { cpu: "1", memory: 4Gi }
+      limits:   { cpu: "1", memory: 4Gi }
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - { key: kubernetes.io/arch, operator: In, values: [s390x] }
+  metrics:
+    prometheus:
+      enabled: true

@@ -1,0 +1,123 @@
+---
+# =============================================================================
+# 12-flinkapplication-fraud-scoring.yaml — chip-pinned in-stream inference
+# =============================================================================
+# This is where the Telum thesis is either proven or quietly lost.
+#
+# Topology: 4 Telum chips, 1 NNPA accelerator each, 1 OCP worker node per chip.
+#   parallelism 16 / numberOfTaskSlots 4  => 4 TaskManager pods
+#   podAntiAffinity on hostname           => exactly 1 TM per node => 1 per chip
+#   Guaranteed QoS + even cpu (6)         => whole cores via full-pcpus-only
+#
+# On Telum gen-1 (z16) a core CANNOT reach another chip's accelerator, so the
+# anti-affinity below is a CORRECTNESS constraint, not an optimisation. If two
+# TMs land on one node, one of them contends for a single NNPA and its p99 blows
+# out while the 4th accelerator sits idle.
+#
+# Verify field paths with `oc explain flinkapplication.spec` — the CMF CR is not
+# the upstream FKO FlinkDeployment shape.
+# =============================================================================
+apiVersion: platform.confluent.io/v1beta1
+kind: FlinkApplication
+metadata:
+  name: fraud-scoring-telum
+  namespace: confluent
+  labels:
+    goodlabs.io/accelerator: confluent-flink-telum-nnpa
+    goodlabs.io/workload: flink-inference
+spec:
+  flinkEnvironment: telum-flink-env
+  cmfRestClassRef:
+    name: telum-cmf-rest
+    namespace: confluent
+
+  # Custom image: CP Flink s390x base + scoring job JAR + zDLC-compiled model JAR
+  # (which carries the onnx-mlir Java runtime API, so there is no hand-rolled JNI).
+  # The tag MUST embed the model's op-coverage report hash — see ci/nnpa-coverage-gate.py.
+  # That hash is what lets Grafana join "which model build" to "which latency regime".
+  image: <PLACEHOLDER_FRAUD_SCORING_IMAGE>   # e.g. registry/fraud-scoring:1.4.0-cov-a1b2c3d
+
+  job:
+    jarURI: local:///opt/flink/usrlib/fraud-scoring.jar
+    entryClass: com.goodlabs.fsi.flink.FraudScoringJob
+    # 4 TMs x 4 slots. Changing this without changing numberOfTaskSlots changes
+    # the TM count and silently breaks the one-TM-per-chip invariant.
+    parallelism: 16
+    upgradeMode: savepoint
+    state: running
+
+  flinkConfiguration:
+    taskmanager.numberOfTaskSlots: "4"
+
+    # EOS: a duplicated fraud alert is a regulatory event, not a nuisance.
+    execution.checkpointing.mode: EXACTLY_ONCE
+    execution.checkpointing.interval: "30000"
+
+    state.backend: rocksdb
+    state.backend.incremental: "true"
+    # Off-heap managed memory for RocksDB + the direct byte buffers used for the
+    # tensor handoff across the JNI boundary. Keep GC out of the inference path.
+    taskmanager.memory.managed.fraction: "0.4"
+    taskmanager.memory.task.off-heap.size: "2048m"
+
+    metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
+    metrics.reporter.prom.port: "9249"
+
+    # OpenJ9 (Semeru) flags. balanced GC coexists with a large off-heap RocksDB
+    # footprint; the shared class cache cuts TaskManager restart time materially.
+    env.java.opts.taskmanager: >-
+      -Xgcpolicy:balanced
+      -Xshareclasses:name=flinktm,cacheDir=/tmp/j9cache
+      -XX:+UseCompressedRefs
+
+  jobManager:
+    resource:
+      memory: "4096m"
+      cpu: 2                       # even => whole cores
+
+  taskManager:
+    resource:
+      memory: "16384m"
+      cpu: 6                       # even => 3 whole cores under full-pcpus-only
+    podTemplate:
+      metadata:
+        labels:
+          goodlabs.io/workload: flink-inference
+      spec:
+        # QoS=Guaranteed requires requests == limits on every container; the
+        # `resource` block above drives that. The affinity is what pins to chips.
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - { key: kubernetes.io/arch, operator: In, values: [s390x] }
+                    # Only nodes where 00-platform-validate.yml proved NNPA is
+                    # visible *inside the guest*.
+                    - { key: goodlabs.io/nnpa, operator: In, values: ["true"] }
+          # One inference TM per node == one per Telum chip == one per accelerator.
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    goodlabs.io/workload: flink-inference
+        containers:
+          - name: flink-main-container
+            env:
+              # zDNN performs the DLFLOAT16 "stickification"; do not hand-convert.
+              - name: ZDNN_LOGLEVEL
+                value: "warn"
+              # Fail loudly rather than fall back to CPU at runtime. Belt to the
+              # CI gate's braces: the gate catches it at build, this catches a
+              # model swapped in at runtime.
+              - name: OM_DISABLE_CPU_FALLBACK
+                value: "1"
+            volumeMounts:
+              - name: flink-kafka-client-tls
+                mountPath: /opt/certs
+                readOnly: true
+        volumes:
+          - name: flink-kafka-client-tls
+            secret:
+              secretName: flink-kafka-client-tls

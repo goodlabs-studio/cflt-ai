@@ -1,0 +1,128 @@
+---
+# =============================================================================
+# prometheus-rules-nnpa-fallback.yaml
+# =============================================================================
+# There is NO direct NNPA utilization counter surfaced to Linux. Fallback to the
+# IFLs is therefore detected INDIRECTLY, from the shape of the latency
+# distribution and its correlation with CPU burn.
+#
+# The signal is not the mean. NNPA-resident scoring is sub-millisecond and tight;
+# CPU fallback shows up as a 5-50x shift with high variance. So we alert on the
+# p99/p50 SPREAD, not on any absolute threshold — a threshold would have to be
+# retuned per model, and would miss a fallback that happens to be fast.
+#
+# The triad that distinguishes fallback from ordinary load:
+#     latency up + CPU up + throughput FLAT  =>  fallback or accelerator contention
+#     latency up + CPU up + throughput UP    =>  you are simply busy
+#
+# Metrics assumed emitted by the Flink scoring function via Flink's metric group
+# API, labelled with model_version and coverage_hash (from ci/nnpa-coverage-gate.py
+# --print-hash). That label is what lets you join "which model build" to "which
+# latency regime" in Grafana.
+# =============================================================================
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: nnpa-fallback-detection
+  namespace: confluent
+  labels:
+    goodlabs.io/accelerator: confluent-flink-telum-nnpa
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: telum-nnpa
+      interval: 15s
+      rules:
+        # ---- Derived series -------------------------------------------------
+        - record: fsi:inference_latency_seconds:p50
+          expr: histogram_quantile(0.50, sum by (le, model_version, coverage_hash) (rate(flink_taskmanager_job_task_operator_inference_latency_seconds_bucket[5m])))
+
+        - record: fsi:inference_latency_seconds:p99
+          expr: histogram_quantile(0.99, sum by (le, model_version, coverage_hash) (rate(flink_taskmanager_job_task_operator_inference_latency_seconds_bucket[5m])))
+
+        # The tripwire. NNPA-resident inference has a tight distribution; a
+        # blown-out tail/median ratio is the earliest honest fallback signal.
+        - record: fsi:inference_latency:tail_ratio
+          expr: fsi:inference_latency_seconds:p99 / fsi:inference_latency_seconds:p50
+
+        - record: fsi:inference:throughput_rps
+          expr: sum by (model_version, coverage_hash) (rate(flink_taskmanager_job_task_operator_inference_count[5m]))
+
+        # ---- Alerts ---------------------------------------------------------
+        - alert: NnpaLikelyCpuFallback
+          # Distribution shift, not absolute latency: the ratio blowing out while
+          # throughput is flat is the fallback fingerprint.
+          expr: |
+            fsi:inference_latency:tail_ratio > 10
+            and
+            fsi:inference_latency_seconds:p99 > 0.005
+            and
+            (
+              rate(flink_taskmanager_job_task_operator_inference_count[5m])
+              /
+              (rate(flink_taskmanager_job_task_operator_inference_count[5m] offset 10m) > 0)
+            ) < 1.1
+          for: 5m
+          labels:
+            severity: critical
+            component: telum-nnpa
+          annotations:
+            summary: "Inference likely fell back to CPU (model {{ $labels.model_version }}, coverage {{ $labels.coverage_hash }})"
+            description: >-
+              p99/p50 latency ratio is {{ $value | printf "%.1f" }} with p99 > 5ms and flat throughput.
+              NNPA-resident scoring is sub-ms and tight. Check the coverage report for build
+              {{ $labels.coverage_hash }} and confirm the model image was not swapped.
+              Cross-check node CPU: fallback burns visible IFL cycles.
+
+        - alert: NnpaInferenceTaskManagerNotChipPinned
+          # If two inference TMs land on one node, they share ONE accelerator while
+          # another chip's sits idle. On Telum gen-1 this cannot self-correct.
+          expr: |
+            count by (node) (
+              kube_pod_info{namespace="confluent"}
+              * on (pod) group_left()
+              kube_pod_labels{label_goodlabs_io_workload="flink-inference"}
+            ) > 1
+          for: 2m
+          labels:
+            severity: critical
+            component: telum-nnpa
+          annotations:
+            summary: "More than one inference TaskManager on node {{ $labels.node }}"
+            description: >-
+              Two TaskManagers on one node means two share a single NNPA accelerator while
+              another Telum chip is idle. On z16 (gen-1) a core cannot reach an adjacent
+              chip's accelerator. Check podAntiAffinity in manifests/12.
+
+        - alert: NnpaFallbackTriad
+          # latency up + CPU up + throughput flat.
+          expr: |
+            fsi:inference_latency_seconds:p99 > 0.005
+            and on ()
+            avg(rate(node_cpu_seconds_total{mode!="idle"}[5m])) > 0.7
+            and on ()
+            deriv(fsi:inference:throughput_rps[10m]) < 1
+          for: 10m
+          labels:
+            severity: warning
+            component: telum-nnpa
+          annotations:
+            summary: "Fallback triad: latency up, CPU up, throughput flat"
+            description: >-
+              Accelerator-resident inference barely moves IFL cycles. Sustained CPU burn with
+              flat throughput indicates CPU fallback or accelerator contention.
+
+        - alert: InferenceModelCoverageUnattested
+          # Never let an un-gated model reach production. The absence of a
+          # coverage_hash label means the CI gate was bypassed.
+          expr: |
+            count(flink_taskmanager_job_task_operator_inference_count{coverage_hash=""}) > 0
+          for: 1m
+          labels:
+            severity: critical
+            component: telum-nnpa
+          annotations:
+            summary: "Inference running from a model with no op-coverage attestation"
+            description: >-
+              ci/nnpa-coverage-gate.py was bypassed. Publish nothing from this run — the
+              Phase 7 benchmark protocol requires the coverage report as an artifact.

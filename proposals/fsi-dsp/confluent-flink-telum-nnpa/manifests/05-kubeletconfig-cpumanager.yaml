@@ -1,0 +1,62 @@
+---
+# =============================================================================
+# 05-kubeletconfig-cpumanager.yaml — the config that makes chip pinning real
+# =============================================================================
+# WARNING: applying this rolls the worker MachineConfigPool (node reboots, one at
+# a time). Apply BEFORE CFK/CMF, during a maintenance window.
+#
+# What this buys, and what it does NOT:
+#
+#   cpuManagerPolicy: static
+#     Guaranteed-QoS pods with INTEGER cpu requests get EXCLUSIVE CPUs.
+#     It does NOT let you choose which chip those CPUs are on.
+#
+#   cpuManagerPolicyOptions: full-pcpus-only
+#     Allocates whole physical cores (both SMT-2 siblings) rather than individual
+#     threads. Without it, an inference thread can share a core with a Kafka
+#     broker thread and your p99 quietly doubles.
+#     => TaskManager `cpu` requests MUST be EVEN, or the pod is rejected.
+#
+# Chip locality itself comes from topology, not from kubelet: one Telum chip per
+# worker node + podAntiAffinity on hostname (see manifests/12). On Telum gen-1
+# (z16) a core cannot reach another chip's accelerator, so this is a correctness
+# requirement, not a tuning knob. See README §1.
+#
+# Topology Manager is set to `best-effort` deliberately: on s390x each Telum chip
+# is not guaranteed to surface as a distinct NUMA node, so `single-numa-node`
+# would reject pods for a guarantee the platform cannot express. Do not "fix"
+# this to restricted/single-numa-node without first checking `lscpu -e` output.
+# =============================================================================
+apiVersion: machineconfiguration.openshift.io/v1
+kind: KubeletConfig
+metadata:
+  name: telum-inference-cpumanager
+  labels:
+    goodlabs.io/accelerator: confluent-flink-telum-nnpa
+spec:
+  machineConfigPoolSelector:
+    matchLabels:
+      pools.operator.machineconfiguration.openshift.io/worker: ""
+  kubeletConfig:
+    cpuManagerPolicy: static
+    cpuManagerPolicyOptions:
+      full-pcpus-only: "true"
+    cpuManagerReconcilePeriod: 5s
+
+    topologyManagerPolicy: best-effort
+    topologyManagerScope: pod
+
+    # Carve the OCP/system slice out of the 16 lCPU on each node so the static
+    # CPU manager has a clean exclusive pool for Guaranteed pods. 2 lCPU (1 whole
+    # core) per node for kubelet + CRI-O + OVN — matches README §1 budget.
+    systemReserved:
+      cpu: "1"
+      memory: 2Gi
+    kubeReserved:
+      cpu: "1"
+      memory: 2Gi
+
+    # Do not let a burstable pod evict a pinned inference TaskManager.
+    evictionHard:
+      memory.available: "500Mi"
+      nodefs.available: "10%"

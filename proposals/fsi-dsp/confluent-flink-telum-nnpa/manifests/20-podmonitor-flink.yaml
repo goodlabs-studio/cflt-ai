@@ -1,0 +1,46 @@
+---
+# =============================================================================
+# 20-podmonitor-flink.yaml — scrape Flink JM/TM metrics (incl. inference)
+# =============================================================================
+# The native flink-metrics-prometheus reporter is enabled in the FlinkApplication
+# flinkConfiguration on port 9249. This PodMonitor makes Prometheus find it.
+#
+# The relabel rules below carry `model_version` and `coverage_hash` from pod
+# labels onto every inference series. That join — build -> latency regime — is
+# what the fallback alerts and the Grafana dashboard depend on. Without it you
+# can see that latency regressed but not which model build did it.
+#
+# Requires kube-prometheus-stack's podMonitorNamespaceSelector: {} (see helm values),
+# otherwise this CR in the `confluent` namespace is silently ignored.
+# =============================================================================
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: flink-inference
+  namespace: confluent
+  labels:
+    goodlabs.io/accelerator: confluent-flink-telum-nnpa
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames: [confluent]
+  selector:
+    matchLabels:
+      goodlabs.io/workload: flink-inference
+  podMetricsEndpoints:
+    - port: metrics          # named port 9249 on the TM/JM pod
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s
+      relabelings:
+        # Attribute every series to the node, hence to the Telum chip.
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+        - sourceLabels: [__meta_kubernetes_pod_label_goodlabs_io_telum_chip]
+          targetLabel: telum_chip
+        # The attestation join key, emitted by ci/nnpa-coverage-gate.py --print-hash
+        # and stamped onto the pod by the image tag / downward API.
+        - sourceLabels: [__meta_kubernetes_pod_label_goodlabs_io_coverage_hash]
+          targetLabel: coverage_hash
+        - sourceLabels: [__meta_kubernetes_pod_label_goodlabs_io_model_version]
+          targetLabel: model_version

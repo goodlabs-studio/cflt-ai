@@ -1,0 +1,159 @@
+---
+# =============================================================================
+# 02-fips-mode.yml — FIPS validation chain + BCFKS keystore pipeline
+# =============================================================================
+# Two distinct layers, deliberately kept separate because they have different
+# certification bases and different owners:
+#
+#   1. OS/platform FIPS  — VALIDATED. RHEL 9's FIPS 140-3 modules were tested on
+#      IBM z16 as one of the certified operational environments (Z is on the
+#      certificate, not vendor-affirmed onto it). RHCOS/OCP inherits them.
+#      This playbook VERIFIES; it never enables. `fips=1` is an install-time
+#      kernel argument — retrofitting yields fips_enabled=1 on an unvalidated
+#      boot chain, which is worse than being honestly non-FIPS.
+#
+#   2. CP FIPS mode      — BC-FIPS provider + BCFKS keystores. Pure Java, so it is
+#      configuration and certification sequencing, not architecture. We build the
+#      keystore pipeline in from day one so flipping `fipsmode: true` is a values
+#      change, not a re-architecture. Confirm CP-on-Z status with the IBM/Confluent
+#      partner team at kickoff and record it in the BOM.
+#
+# The AI inference path is OUTSIDE the FIPS boundary by construction: zDLC/zDNN/
+# NNPA perform no cryptographic functions. Say so in the client doc.
+#
+#   ansible-playbook -i inventory.ini 02-fips-mode.yml
+# =============================================================================
+- name: FIPS validation chain and BCFKS keystore material
+  hosts: linuxone_workers
+  become: true
+  gather_facts: true
+  vars:
+    bcfks_dir: /etc/confluent/fips
+    # Emitted as evidence for the FSI security review. This document — mapping each
+    # layer to its certificate or affirmation basis — is the actual deliverable.
+    validation_chain_out: /etc/confluent/fips/validation-chain.json
+
+  tasks:
+    # ---- Layer 1: verify the validated OS boot chain ------------------------
+    - name: Confirm kernel FIPS flag
+      ansible.builtin.slurp:
+        src: /proc/sys/crypto/fips_enabled
+      register: fips_enabled
+
+    - name: Confirm fips=1 was present at install time
+      ansible.builtin.command: grep -q 'fips=1' /proc/cmdline
+      register: fips_cmdline
+      changed_when: false
+      failed_when: false
+
+    - name: Fail closed on a retrofitted FIPS host
+      ansible.builtin.fail:
+        msg: >-
+          fips_enabled={{ fips_enabled.content | b64decode | trim }} but fips=1 is absent from
+          /proc/cmdline. The boot chain is not the validated one. Reinstall with fips=1;
+          do not paper over this for an FSI engagement.
+      when:
+        - (fips_enabled.content | b64decode | trim) == "1"
+        - fips_cmdline.rc != 0
+
+    - name: Read system crypto policy
+      ansible.builtin.command: update-crypto-policies --show
+      register: crypto_policy
+      changed_when: false
+
+    - name: Verify OpenSSL is using the FIPS provider
+      ansible.builtin.command: openssl list -providers
+      register: openssl_providers
+      changed_when: false
+
+    - name: Assert the OpenSSL FIPS provider is active
+      ansible.builtin.assert:
+        that: "'fips' in openssl_providers.stdout | lower"
+        fail_msg: >-
+          OpenSSL is not loading the FIPS provider. MongoDB Enterprise FIPS mode rides this
+          provider; so does host/OCP platform crypto. Fix before proceeding.
+
+    # ---- Layer 2: BCFKS keystore material for CP FIPS mode ------------------
+    # CP FIPS mode requires BCFKS (Bouncy Castle FIPS keystore) rather than JKS/PKCS12.
+    # Generated here so `fipsmode: true` in the CFK values is a flip, not a project.
+    - name: Ensure keystore directory exists
+      ansible.builtin.file:
+        path: "{{ bcfks_dir }}"
+        state: directory
+        mode: "0750"
+        owner: root
+        group: root
+
+    - name: Check whether BCFKS keystores already exist
+      ansible.builtin.stat:
+        path: "{{ bcfks_dir }}/kafka.server.bcfks"
+      register: bcfks_stat
+
+    # keytool ships with Semeru. -storetype BCFKS requires the BC-FIPS provider on
+    # the classpath; the CP images carry it. On the host we only stage material.
+    - name: Convert PKCS12 material to BCFKS
+      ansible.builtin.command: >-
+        keytool -importkeystore
+        -srckeystore {{ bcfks_dir }}/kafka.server.p12 -srcstoretype PKCS12
+        -destkeystore {{ bcfks_dir }}/kafka.server.bcfks -deststoretype BCFKS
+        -providername BCFIPS
+        -providerclass org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider
+        -srcstorepass {{ keystore_password }} -deststorepass {{ keystore_password }}
+      args:
+        creates: "{{ bcfks_dir }}/kafka.server.bcfks"
+      when: not bcfks_stat.stat.exists
+      no_log: true
+
+    - name: Lock down keystore permissions
+      ansible.builtin.file:
+        path: "{{ bcfks_dir }}/kafka.server.bcfks"
+        mode: "0640"
+        owner: root
+        group: root
+      when: bcfks_stat.stat.exists or not ansible_check_mode
+
+    # ---- Evidence: the document FSI security review actually wants ----------
+    - name: Emit the FIPS validation chain
+      ansible.builtin.copy:
+        dest: "{{ validation_chain_out }}"
+        mode: "0640"
+        content: |
+          {
+            "host": "{{ inventory_hostname }}",
+            "machine_type": "{{ ansible_machine_id | default('unknown') }}",
+            "layers": {
+              "os": {
+                "component": "RHEL 9 FIPS 140-3 modules",
+                "basis": "validated",
+                "note": "Tested on IBM z16 as a certified operational environment; Z is on the certificate.",
+                "fips_enabled": "{{ fips_enabled.content | b64decode | trim }}",
+                "install_time_fips": {{ (fips_cmdline.rc == 0) | lower }},
+                "crypto_policy": "{{ crypto_policy.stdout }}"
+              },
+              "confluent_platform": {
+                "component": "CP FIPS mode (BC-FIPS provider, BCFKS keystores)",
+                "basis": "configuration; pure-Java provider",
+                "note": "Confirm CP-on-Z FIPS status with the IBM/Confluent partner team; record here.",
+                "status": "{{ cp_fips_status | default('PENDING_PARTNER_CONFIRMATION') }}"
+              },
+              "jvm": {
+                "component": "IBM Semeru Certified Edition",
+                "basis": "IBM-validated crypto provider on IBM platforms"
+              },
+              "hsm": {
+                "component": "Crypto Express",
+                "basis": "FIPS 140 Level 4",
+                "note": "Strongest hardware crypto certification available. Optional; use if keystore material must be HSM-resident."
+              },
+              "observability": {
+                "component": "Prometheus / Grafana (Go)",
+                "basis": "no FIPS build (equally true on x86)",
+                "mitigation": "FIPS-mode TLS termination in front; telemetry, not transaction data."
+              },
+              "ai_inference": {
+                "component": "zDLC / zDNN / NNPA",
+                "basis": "out of scope by construction",
+                "note": "Performs no cryptographic functions; the FIPS boundary does not touch the Telum accelerator path."
+              }
+            }
+          }

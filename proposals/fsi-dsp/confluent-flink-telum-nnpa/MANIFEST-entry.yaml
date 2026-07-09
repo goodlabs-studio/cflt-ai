@@ -1,0 +1,65 @@
+# Proposed capability entry to append to raw/repos/fsi-dsp/MANIFEST.yaml under
+# `capabilities:` (bump MANIFEST version minor when landing — IDs are append-only
+# per CNTR-04). This is an accelerator, not a Terraform module, so there is no
+# MODULE_TO_CANON_KEY pairing and no canon/base/defaults.yaml key required.
+#
+# Depends on: accelerator/confluent-on-linuxone (shares the s390x nodeAffinity,
+# CFK layering, and CMF/Flink CR conventions).
+
+- id: "accelerator/confluent-flink-telum-nnpa"
+  type: accelerator
+  name: "confluent-flink-telum-nnpa"
+  path: "accelerators/confluent-flink-telum-nnpa"
+  description: >-
+    Confluent Platform (Kafka + Flink via CMF) fraud-scoring pipeline on OpenShift/s390x
+    with model inference offloaded to the Telum on-chip AI accelerator (NNPA). Provides a
+    fail-fast platform gate (NNPA guest visibility, SMT-2, chip topology, and the
+    s390x FIPS/IPv6 blockers), chip-pinned inference TaskManagers (one per Telum chip,
+    one per accelerator), a zDLC op-coverage CI gate that fails the build on silent CPU
+    fallback, and indirect NNPA-fallback detection via latency-distribution alerting.
+  capabilities:
+    - platform-validation-s390x
+    - nnpa-inference-pinning
+    - nnpa-fallback-detection
+    - cfk-cmf-flink-s390x
+    - fips-mode-s390x
+    - sbom-model-attestation
+  constraints:
+    min_cp_version: "8.2.0"          # s390x floor; pin no lower
+    architecture: "s390x"
+    entitlement: "IBM Confluent Platform for Z and LinuxONE (GA 2026-03-17), entitled through IBM"
+
+    # confluent-docs ("Linux on IBM Z (s390x) support") lists these under "not yet
+    # supported on s390x". They are CP-LAYER statements, not platform statements —
+    # s390x/RHEL/OCP support all of them. The public matrix lags actual state; this
+    # POC runs with the IBM/Confluent partner team, who are authoritative. Treat each
+    # as a recorded posture item confirmed at kickoff, NOT a design-time blocker.
+    posture_items_confirm_with_partner_team:
+      fips_mode:
+        status: "enabled"
+        basis: >-
+          OS FIPS is validated ON z16 (RHEL 9 FIPS 140-3 modules tested on z16 as a certified
+          operational environment). CP FIPS mode is BC-FIPS — pure Java, so enabling it on Z is
+          configuration + certification sequencing, not architecture.
+        implemented_by: ["ansible/02-fips-mode.yml", "helm/cfk-operator-values.yaml"]
+      ipv6:
+        status: "recorded, not gated"
+        note: "Confirm CP-on-Z IPv6 listener support at kickoff; absence surfaces as broker bind failures, not a clean error."
+      connectors_with_native_os_libraries:
+        status: "runtime fact, not a support-matrix fact"
+        note: "Connectors in scope (Mongo sink, CDC) are pure-Java. Audit native deps per plugin and record in the BOM."
+      unified_stream_manager_agent:
+        status: "not deployed; values are USMAgent-ready"
+
+    notes:
+      fips_boundary: "The AI inference path is outside the FIPS boundary by construction — zDLC/zDNN/NNPA perform no cryptographic functions."
+      fips_operational_gotcha: "RHEL 9 FIPS mode enforces TLS 1.2 Extended Master Secret (RFC 7627); audit the Kafka client fleet before enabling."
+      crypto_express: "FIPS 140 Level 4 HSM available for keystore material — best-in-industry, not a compromise."
+
+    requires:
+      - "Kubernetes (CMF is k8s-only; no systemd path exists for this stack)"
+      - "Apache Flink Kubernetes Operator (FKO) — CMF prerequisite"
+      - "Host booted with fips=1 at INSTALL time (never retrofitted)"
+    telum_generation_notes:
+      gen1: "z16 / machine type 3931,3932 — DLFLOAT16 only, no INT8, no cross-chip NNPA access (chip pinning is a correctness requirement)"
+      gen2: "z17 / machine type 9175 — adds INT8 and cross-chip accelerator reach (pinning becomes an optimization)"

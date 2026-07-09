@@ -1,0 +1,239 @@
+---
+# =============================================================================
+# 00-platform-validate.yml — read-only, fail-fast platform gate
+# =============================================================================
+# Runs BEFORE any Confluent artifact is applied. Every task is a check; nothing
+# is mutated. Rationale for each assertion is in ../README.md §1.
+#
+#   ansible-playbook -i inventory.ini 00-platform-validate.yml
+#
+# Failing here is cheap. Discovering that NNPA isn't visible in the guest, or
+# that the cluster is dual-stack IPv6, AFTER standing up CFK is not.
+# =============================================================================
+- name: Validate LinuxONE platform for Confluent + Telum NNPA
+  hosts: linuxone_workers
+  gather_facts: true
+  any_errors_fatal: true          # one bad node invalidates the whole benchmark
+  vars:
+    # Telum gen-1 (DLFLOAT16, no INT8, no cross-chip NNPA)
+    telum_gen1_machine_types: ["3931", "3932"]
+    # Telum II (adds INT8 + cross-chip accelerator reach)
+    telum_gen2_machine_types: ["9175"]
+    expected_ifls: 32
+    expected_chips: 4
+
+  tasks:
+    - name: Assert we are on s390x
+      ansible.builtin.assert:
+        that: ansible_architecture == "s390x"
+        fail_msg: >-
+          Host is {{ ansible_architecture }}, not s390x. This accelerator targets
+          Linux on IBM Z only. Confluent does not support z/OS.
+
+    # ---- Machine generation -------------------------------------------------
+    # /proc/sysinfo carries the machine Type on s390x. This branches the Phase 4
+    # quantization strategy: gen-1 is DLFLOAT16-only (no INT8).
+    - name: Read /proc/sysinfo
+      ansible.builtin.slurp:
+        src: /proc/sysinfo
+      register: sysinfo_raw
+
+    - name: Parse machine type
+      ansible.builtin.set_fact:
+        machine_type: >-
+          {{ (sysinfo_raw.content | b64decode)
+             | regex_search('^Type:\s+(\d+)', '\1') | first }}
+
+    - name: Assert machine type is a known Telum generation
+      ansible.builtin.assert:
+        that: machine_type in (telum_gen1_machine_types + telum_gen2_machine_types)
+        fail_msg: "Unrecognized machine type {{ machine_type }} — cannot determine NNPA capabilities."
+
+    - name: Record Telum generation
+      ansible.builtin.set_fact:
+        telum_generation: "{{ 'gen1' if machine_type in telum_gen1_machine_types else 'gen2' }}"
+
+    - name: Report generation and its consequences
+      ansible.builtin.debug:
+        msg: >-
+          Machine type {{ machine_type }} → Telum {{ telum_generation }}.
+          {{ 'DLFLOAT16 only, NO INT8, NO cross-chip accelerator access — chip pinning is a CORRECTNESS requirement.'
+             if telum_generation == 'gen1'
+             else 'INT8 eligible; cross-chip accelerator reach available — pinning is an optimization.' }}
+
+    # ---- NNPA visibility INSIDE the guest -----------------------------------
+    # Facility bit 165. If this is absent the fault is at the z/VM guest
+    # definition or KVM cpu-model layer, NOT in Linux. Fix it there.
+    - name: Check NNPA facility is exposed to this guest
+      ansible.builtin.command: grep -qw nnpa /proc/cpuinfo
+      register: nnpa_check
+      changed_when: false
+      failed_when: false
+
+    - name: Assert NNPA is visible in the guest
+      ansible.builtin.assert:
+        that: nnpa_check.rc == 0
+        fail_msg: >-
+          NNPA facility not present in /proc/cpuinfo. The accelerator is not reachable
+          from this guest. This is a hypervisor problem: require z/VM >= 7.3 (or 7.2 + PTFs),
+          or KVM with `host-model`/`host-passthrough` CPU. Do not proceed.
+
+    # ---- SMT and logical CPU count ------------------------------------------
+    - name: Read threads per core
+      ansible.builtin.command: lscpu --parse=CPU,CORE,SOCKET
+      register: lscpu_parse
+      changed_when: false
+
+    - name: Compute topology facts
+      ansible.builtin.set_fact:
+        lcpu_count: "{{ ansible_processor_vcpus }}"
+        chip_count: >-
+          {{ lscpu_parse.stdout_lines
+             | reject('match', '^#')
+             | map('split', ',') | map('last') | unique | list | length }}
+
+    - name: Assert SMT-2 is enabled (slot math depends on it)
+      ansible.builtin.assert:
+        that: (lcpu_count | int) == (expected_ifls * 2)
+        fail_msg: >-
+          Expected {{ expected_ifls * 2 }} logical CPUs ({{ expected_ifls }} IFLs x SMT-2),
+          found {{ lcpu_count }}. Either SMT is off or the IFL count differs.
+          TaskManager slot math in manifests/12 assumes 64 lCPU.
+
+    # ---- IFL dedication -----------------------------------------------------
+    # Shared IFLs are acceptable for dev; benchmarking on shared weights produces
+    # numbers you cannot defend.
+    - name: Parse LPAR CPU dedication
+      ansible.builtin.set_fact:
+        lpar_dedicated: >-
+          {{ (sysinfo_raw.content | b64decode)
+             | regex_search('LPAR CPUs Dedicated:\s+(\d+)', '\1') | default(['0'], true) | first }}
+
+    - name: Warn if IFLs are not dedicated
+      ansible.builtin.fail:
+        msg: >-
+          LPAR reports {{ lpar_dedicated }} dedicated CPUs, expected {{ expected_ifls }}.
+          Shared IFLs make Phase 7 benchmark numbers indefensible. Set dedicated in PR/SM,
+          or set -e allow_shared_ifls=true to proceed for dev only.
+      when:
+        - (lpar_dedicated | int) != expected_ifls
+        - not (allow_shared_ifls | default(false) | bool)
+
+    # ---- FIPS: REQUIRED, and it must have been set at install time ----------
+    # RHEL 9's FIPS 140-3 modules were tested on IBM z16 as a certified operational
+    # environment -- Z is on the certificate, not vendor-affirmed onto it. FIPS mode
+    # must be enabled at install (`fips=1` on the kernel cmdline); retrofitting it
+    # produces a host that reports fips_enabled=1 without a validated boot chain.
+    - name: Read kernel FIPS state
+      ansible.builtin.slurp:
+        src: /proc/sys/crypto/fips_enabled
+      register: fips_raw
+      failed_when: false
+
+    - name: Assert the node is booted in FIPS mode
+      ansible.builtin.assert:
+        that: (fips_raw.content | default('MA==') | b64decode | trim) == "1"
+        fail_msg: >-
+          FIPS mode is OFF. This stack targets a FIPS-mode host OS (RHEL 9 modules validated
+          on z16). Enable with `fips=1` at INSTALL time -- never retrofit. Set
+          -e require_fips=false only for a non-FSI dev box.
+        success_msg: "FIPS mode enabled (validated modules on z16)."
+      when: require_fips | default(true) | bool
+
+    - name: Verify FIPS was set at install, not retrofitted
+      ansible.builtin.command: grep -q 'fips=1' /proc/cmdline
+      register: fips_cmdline
+      changed_when: false
+      failed_when: false
+
+    - name: Warn if FIPS is on but absent from the kernel cmdline
+      ansible.builtin.debug:
+        msg: >-
+          fips_enabled=1 but `fips=1` is not on /proc/cmdline. This host was likely
+          retrofitted; the boot chain is not the validated one. Reinstall with fips=1.
+      when:
+        - require_fips | default(true) | bool
+        - fips_cmdline.rc != 0
+
+    # RHEL 9 FIPS mode enforces TLS 1.2 Extended Master Secret (RFC 7627). Legacy
+    # clients without EMS or TLS 1.3 cannot connect. The first symptom is mystery
+    # producer connection failures -- audit the client fleet before enabling FIPS.
+    - name: Record system crypto policy (drives the EMS/cipher posture)
+      ansible.builtin.command: update-crypto-policies --show
+      register: crypto_policy
+      changed_when: false
+      failed_when: false
+
+    - name: Report crypto policy and the EMS gotcha
+      ansible.builtin.debug:
+        msg: >-
+          crypto-policy={{ crypto_policy.stdout | default('unknown') }}.
+          FIPS mode enforces TLS 1.2 Extended Master Secret (RFC 7627) --
+          audit the Kafka client fleet for EMS/TLS 1.3 support before go-live.
+
+    # ---- IPv6: recorded posture item, NOT a gate ----------------------------
+    # confluent-docs lists IPv6 under "not yet supported on s390x" -- a CP-layer
+    # statement at the same scope as the FIPS line, which the partner team has
+    # since moved. s390x/RHEL/OCP themselves support IPv6 fine. We therefore
+    # RECORD the cluster network mode rather than block on it. If CP's s390x build
+    # genuinely lacks IPv6 listener support, it surfaces as broker bind failures,
+    # not a clean error -- so this value belongs in the BOM either way.
+    - name: Check IPv6 state
+      ansible.builtin.slurp:
+        src: /proc/sys/net/ipv6/conf/all/disable_ipv6
+      register: ipv6_raw
+      failed_when: false
+
+    - name: Record IPv6 posture for the BOM
+      ansible.builtin.debug:
+        msg: >-
+          IPv6 {{ 'ENABLED' if (ipv6_raw.content | default('MQ==') | b64decode | trim) == '0' else 'disabled' }}
+          on this node. Confluent lists IPv6 under "not yet supported on s390x" (CP-layer).
+          Confirm CP-on-Z IPv6 listener support with the IBM/Confluent partner team at kickoff
+          and record the answer in the BOM. Do not hardcode the public matrix into design.
+
+    # ---- Chip topology (drives inference TM placement) ----------------------
+    - name: Assert one Telum chip per worker node
+      ansible.builtin.assert:
+        that: (chip_count | int) == 1
+        fail_msg: >-
+          This node exposes {{ chip_count }} sockets/chips. The recommended topology is
+          ONE chip (8 IFLs / 16 lCPU) per OCP worker node, so podAntiAffinity yields exactly
+          one inference TaskManager per NNPA accelerator. See README §1 "Chip pinning".
+        success_msg: "One chip per node — chip locality is expressible via podAntiAffinity."
+
+    # ---- Bonus: crypto/compression offload ----------------------------------
+    - name: Detect CPACF (crypto offload — makes Kafka TLS nearly free)
+      ansible.builtin.command: grep -qw msa /proc/cpuinfo
+      register: cpacf_check
+      changed_when: false
+      failed_when: false
+
+    - name: Report CPACF availability
+      ansible.builtin.debug:
+        msg: "CPACF {{ 'available — enable accelerated OpenSSL/JSSE for Kafka TLS' if cpacf_check.rc == 0 else 'NOT detected' }}"
+
+    # Crypto Express HSM — FIPS 140 Level 4, the strongest hardware crypto
+    # certification available. Bonus, not blocker: if the client wants keystore
+    # material in an HSM, Z is best-in-industry, not a compromise.
+    - name: Detect Crypto Express adapters
+      ansible.builtin.command: ls /sys/bus/ap/devices
+      register: cryptoexpress
+      changed_when: false
+      failed_when: false
+
+    - name: Report Crypto Express availability
+      ansible.builtin.debug:
+        msg: >-
+          Crypto Express {{ 'present (FIPS 140 Level 4 HSM available for keystore material)'
+          if cryptoexpress.rc == 0 and cryptoexpress.stdout | length > 0 else 'not detected' }}
+
+    # These lines are the Phase 0 rows of the BOM (runbook §9). Capture them.
+    - name: Platform validation summary (record in BOM)
+      ansible.builtin.debug:
+        msg:
+          - "machine_type={{ machine_type }} telum={{ telum_generation }}"
+          - "lcpu={{ lcpu_count }} chips_on_node={{ chip_count }} dedicated_ifls={{ lpar_dedicated }}"
+          - "nnpa=visible fips={{ (fips_raw.content | default('MA==') | b64decode | trim) }}"
+          - "ipv6_enabled={{ (ipv6_raw.content | default('MQ==') | b64decode | trim) == '0' }}"
+          - "crypto_policy={{ crypto_policy.stdout | default('unknown') }}"
