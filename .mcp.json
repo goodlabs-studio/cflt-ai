@@ -8,6 +8,7 @@
       "command": "uvx",
       "args": [
         "--from", "mcpdoc",
+        "--with", "mcp[cli]<2",
         "mcpdoc",
         "--urls", "Confluent:https://docs.confluent.io/llms.txt",
         "--transport", "stdio"
