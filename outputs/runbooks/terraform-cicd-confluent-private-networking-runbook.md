@@ -29,7 +29,9 @@ landing zone** through it.
   - **If PrivateLink:** know your tier's model — Enterprise = ingress PrivateLink Gateway
     (`confluent_gateway` + `confluent_access_point`); Dedicated = `confluent_network` +
     `confluent_private_link_access`. PL endpoints are **per-AZ (≤10/gateway)** — the ARC node
-    pool must span the AZs that have an endpoint. See [Private Networking](../../wiki/concepts/private-networking.md).
+    pool must span the AZs that have an endpoint. The endpoint's **security group must allow
+    `tcp/443` inbound from the runner CIDR** — the most common cause of a private-IP-resolves-
+    but-times-out failure (§7). See [Private Networking](../../wiki/concepts/private-networking.md).
 - A **VPC (or peered CI subnet)** with the private path to Confluent Cloud — the same one
   Precisely CDC agents use.
 - **EKS cluster** (or ASG host pool) in that VPC to run **Actions Runner Controller (ARC)**.
@@ -45,7 +47,8 @@ landing zone** through it.
 infra/
 ├── platform/            # MANAGEMENT plane — public api.confluent.cloud, any runner
 │   ├── backend.tf       #   remote state: platform/terraform.tfstate
-│   ├── network.tf       #   confluent_network, confluent_private_link_attachment
+│   ├── network.tf       #   PL plane-A: confluent_gateway + confluent_access_point (Enterprise)
+│   │                    #   or confluent_network + confluent_private_link_access (Dedicated)
 │   ├── cluster.tf       #   confluent_kafka_cluster (+ prevent_destroy)
 │   ├── identity.tf      #   confluent_identity_provider / _identity_pool (GitHub OIDC)
 │   ├── accounts.tf      #   confluent_service_account, confluent_role_binding, confluent_api_key
@@ -55,7 +58,8 @@ infra/
     ├── remote_state.tf  #   terraform_remote_state -> platform outputs
     ├── topics.tf        #   confluent_kafka_topic
     ├── schemas.tf       #   confluent_schema, confluent_subject_config
-    └── acls.tf          #   confluent_kafka_acl
+    ├── acls.tf          #   confluent_kafka_acl
+    └── flink.tf         #   confluent_flink_statement (needs Flink provider block + principal, see §2)
 ```
 
 ---
@@ -84,6 +88,27 @@ provider "confluent" {
   schema_registry_rest_endpoint = data.terraform_remote_state.platform.outputs.sr_rest_endpoint
   schema_registry_api_key       = var.sr_api_key
   schema_registry_api_secret    = var.sr_api_secret
+
+  # Flink (also private under PrivateLink — same gateway as Kafka+SR). REQUIRED if the data
+  # plane manages any confluent_flink_statement. Omitting flink_principal_id (or a per-resource
+  # principal {} block) fails with "one of provider.flink principal id ... must be set".
+  organization_id       = data.confluent_organization.main.id
+  environment_id        = var.environment_id
+  flink_compute_pool_id = data.terraform_remote_state.platform.outputs.flink_compute_pool_id
+  flink_rest_endpoint   = data.terraform_remote_state.platform.outputs.flink_rest_endpoint  # private
+  flink_api_key         = var.flink_api_key
+  flink_api_secret      = var.flink_api_secret
+  flink_principal_id    = var.flink_principal_id  # the SA statements run as; or env FLINK_PRINCIPAL_ID
+}
+```
+
+If you prefer not to set a provider-wide `flink_principal_id`, set it per statement instead:
+
+```terraform
+resource "confluent_flink_statement" "create_table" {
+  principal { id = var.flink_principal_id }   # <-- satisfies the same requirement
+  statement = "CREATE TABLE ..."
+  # ...
 }
 ```
 
@@ -249,11 +274,17 @@ resource "confluent_kafka_acl" "precisely_write" {
    Console; `terraform output cluster_rest_endpoint` shows a **private** hostname.
 2. **Runner resolves private DNS** → from a runner pod: `nslookup <cluster_rest_endpoint host>`
    and the SR host both return **private** IPs. This is the make-or-break check.
-3. **Plane B applies from CI** → a test topic + schema + ACL created; confirm in the Console.
-   A `dial tcp … i/o timeout` here means the job ran off the in-VPC pool (§7).
-4. **OIDC, no static keys** → confirm no `CONFLUENT_CLOUD_API_KEY` in GitHub repo/org secrets;
+3. **Runner can actually reach the private endpoint (not just resolve it)** → from a runner
+   pod: `nc -vz <private-IP> 443` against the IP the host resolved to. A timeout here — even
+   though DNS returned a private `10.x` address — means a security-group / AZ / route problem,
+   not DNS (§7). Confirm the endpoint's SG allows `tcp/443` from the runner CIDR and that the
+   pod's AZ has an endpoint ENI.
+4. **Plane B applies from CI** → a test topic + schema + ACL created; confirm in the Console.
+   If you also manage Flink, a test `confluent_flink_statement` applies (needs the Flink
+   provider block + principal, §2).
+5. **OIDC, no static keys** → confirm no `CONFLUENT_CLOUD_API_KEY` in GitHub repo/org secrets;
    creds come from the secrets manager at run time.
-5. **Precisely path** → the CDC agent SA can WRITE to its topics (produce a test CDC record);
+6. **Precisely path** → the CDC agent SA can WRITE to its topics (produce a test CDC record);
    ACLs deny everything else.
 
 ---
@@ -262,8 +293,10 @@ resource "confluent_kafka_acl" "precisely_write" {
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `dial tcp … i/o timeout` on topic/ACL/schema apply | Job ran on a GitHub-hosted (public) runner | Pin the `data` job to `[self-hosted, confluent-arc]` |
+| `dial tcp <public-IP>:443 i/o timeout`, or no route at all | Job ran on a GitHub-hosted (public) runner | Pin the `data` job to `[self-hosted, confluent-arc]` |
+| `dial tcp <private-IP e.g. 10.x>:443 i/o timeout` — **DNS resolved to a private IP but the connection times out** | Reachability, not DNS: endpoint SG blocks 443 from the runner CIDR, **or** the runner pod is in an AZ with no endpoint ENI, **or** missing route/NACL | Allow `tcp/443` from the runner CIDR on the PrivateLink endpoint SG; ensure the ARC node pool spans the endpoint AZs; check route table/NACL. Verify with `nc -vz <private-IP> 443` |
 | `no such host` for `rest_endpoint` or SR host | Private DNS not resolvable from runner pods | Forward the Confluent private hosted zone through CoreDNS / `confluent_dns_forwarder` |
+| `error creating Flink Statement: one of provider.flink principal id … or resource.principal.id must be set` | `confluent_flink_statement` has no principal to run as | Set `flink_principal_id` on the data-plane provider (or `FLINK_PRINCIPAL_ID` env), **or** a `principal { id = … }` block on the resource (§2) |
 | Half-applied (cluster made, topics failed) | Single apply, both planes, public runner | Split state; `data` `needs: platform` |
 | Plane-A `403` from CI | `confluent_ip_filter` excludes runner egress IP | Add NAT EIP to an allowlisted `confluent_ip_group` |
 | Topic "can't authenticate" despite valid cloud key | `cloud_api_key` used where a cluster-scoped key + `rest_endpoint` is required | Use the data-plane provider alias with the cluster key |
