@@ -8,12 +8,17 @@ sources:
   - https://docs.confluent.io/private-cloud-gateway/current/gateway-migrate.html
   - https://docs.confluent.io/private-cloud-gateway/current/gateway-custom-domains.html
   - https://docs.confluent.io/operator/current/gateway/co-gateway-deploy.html
+  - https://docs.confluent.io/operator/current/gateway/co-gateway-overview.html
+  - https://docs.confluent.io/operator/current/gateway/co-gateway-troubleshoot.html
   - https://www.confluent.io/blog/kafka-client-failover-poc-confluent-cloud-gateway/
   - https://www.confluent.io/blog/client-migration-kcp-gateway/
-related: [concepts/private-networking, patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-application-routing, concepts/cluster-linking-topology, concepts/network-connectivity-by-tier, concepts/schema-registry-best-practices]
+  - outputs/reports/confluent-cloud-gateway-review-2026-08-05.md
+  - outputs/reports/confluent-gateway-iac-cc-connectivity-ha-2026-08-06.md
+  - outputs/reports/confluent-gateway-review-2026-08-06.md
+related: [concepts/confluent-cloud-private-networking, patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-application-routing, concepts/cluster-linking-topology, concepts/network-connectivity-by-tier, concepts/schema-registry-best-practices]
 confidence: high
-last_updated: 2026-08-05
-last_validated: 2026-08-05
+last_updated: 2026-08-06
+last_validated: 2026-08-06
 ---
 
 # Confluent Gateway — Protocol-Aware Kafka Proxy
@@ -22,26 +27,26 @@ last_validated: 2026-08-05
 
 **Confluent Gateway** is a self-managed, stateless, Kafka-protocol-aware proxy that sits between clients and one or more Kafka clusters. Because it speaks the Kafka wire protocol on both sides (not L4 TCP load balancing), it can rewrite `Metadata` responses in-band, swap authentication mechanisms, present a single custom domain to clients, and re-target traffic to a different cluster — **without changing client configuration**. The load-bearing use cases are **client migration** (move a client estate to Confluent Cloud without app redeploys), **DR switchover**, **secure external/partner access** to private brokers, and **centralized governance** (schema/contract enforcement at the proxy).
 
-It ships as one product across two doc surfaces and **two images**: `confluentinc/cpc-gateway` (Confluent Private Cloud Gateway, for self-managed Kafka) and `confluentinc/confluent-gateway-for-cloud` (Confluent Cloud Gateway). Deployment is **Docker or Confluent for Kubernetes (CFK)** — there is no fully-managed Confluent Cloud SKU. Current release is **1.3.0** (July 2026).
+It ships as **one product with two backend flavors**, differing only in which container image you deploy: `confluentinc/cpc-gateway` fronting a **self-managed / Confluent Platform** Kafka cluster, or `confluentinc/confluent-gateway-for-cloud` fronting a **Confluent Cloud** Kafka cluster. Confluent's docs call the second flavor "Confluent Cloud Gateway," but it is the same architecture, the same CR/compose schema, and the same mechanics — not a different product, and this article covers both. Deployment is **Docker or Confluent for Kubernetes (CFK)** either way — there is no fully-managed Confluent Cloud SKU; you deploy and operate it yourself regardless of backend. Current release is **1.3.0** (July 2026).
 
-**Two hard constraints to check before scoping any work:** (1) client switchover **requires a gateway restart** — it is not a hot route repoint; (2) the docs explicitly direct you **not** to use switchover for strict-ordering applications such as **Kafka Streams**.
+**Two hard constraints to check before scoping any work:** (1) client switchover **requires a gateway restart** — it is not a hot route repoint; this holds identically for both backend flavors; (2) the docs explicitly direct you **not** to use switchover for strict-ordering applications such as **Kafka Streams**.
 
-**Do not confuse** this product with the **Confluent Cloud Ingress PrivateLink Gateway** (a CC networking resource) — see [Private Networking](private-networking.md).
+**Do not confuse this with the Confluent Cloud Ingress PrivateLink Gateway** — a completely unrelated CC networking resource (VPC PrivateLink termination), not a Kafka-protocol proxy at all — see [Private Networking](confluent-cloud-private-networking.md). The disambiguation note below is the fast way to check which one you're looking at.
 
 ## Detail
 
 ### Naming and disambiguation
 
-The wiki filename `confluent-cloud-gateway.md` is historical; the canonical product name is **Confluent Gateway**.
-
 | Product | What it is | Where it runs |
 |---|---|---|
-| **Confluent Gateway** (this article) | Kafka-protocol-aware proxy; rewrites metadata, swaps auth, re-targets clusters, enforces governance | Self-managed on CFK / Docker |
+| **Confluent Gateway** (this article — both backend flavors) | Kafka-protocol-aware proxy; rewrites metadata, swaps auth, re-targets clusters, enforces governance | Self-managed on CFK / Docker |
 | **Confluent Cloud Ingress PrivateLink Gateway** | CC networking resource — terminates VPC private endpoints, multiplexes traffic to CC services | Confluent-managed inside CC |
 
 The CC PrivateLink Gateway operates at the **network layer** (VPC endpoints, DNS). Confluent Gateway operates at the **Kafka protocol layer** — it parses `Metadata`, `Produce`, `Fetch`, `SaslHandshake`, and makes per-request routing decisions. They solve different problems and compose well (PrivateLink for private reach; Confluent Gateway for protocol-level routing).
 
-There is also a third, unrelated use of the word: **"one gateway per environment per region"** is the PrivateLink/PNI access-point rule in CC networking. If someone says "one gateway" in a Terraform/networking context, they mean that — not this product. See [Private Networking](private-networking.md).
+Two concrete tells that you're actually looking at the PrivateLink Gateway, not this product:
+- **A `confluent_gateway` Terraform resource.** That name belongs to the PrivateLink Gateway (paired with `confluent_access_point` + a cloud VPC-endpoint resource) — see [Private Networking](confluent-cloud-private-networking.md). Confluent Gateway (this product, either backend flavor) has **no native Terraform resource at all** — it's deployed via `docker compose` or `kubectl apply` only.
+- **"One gateway per environment per region."** That's the PrivateLink/PNI access-point rule in CC networking, unrelated to this product's Routes/Streaming Domains model.
 
 ### What "protocol-aware" buys you
 
@@ -91,7 +96,7 @@ spec:
 |---|---|
 | **Custom domains** | Stable client-facing FQDN decoupled from cluster identity; gateway rewrites advertised listeners. |
 | **Network isolation** | Brokers stay entirely private; the gateway is the only reachable endpoint. Three documented patterns: same-VPC (private hosted zone), cross-VPC (peering/TGW + shared zone), external (public hosted zone). |
-| **Auth swapping** | Terminate one mechanism client-side, present another broker-side. Supported pairs include SASL/SCRAM→SASL/PLAIN (CC API keys), OIDC→SASL, OAuth→OAuth (1.3.0), and NONE. Credentials come from external secret stores: AWS Secrets Manager, HashiCorp Vault, Azure Key Vault, **CyberArk Conjur** (1.3.0). |
+| **Auth swapping** | Terminate one mechanism client-side, present another broker-side. Supported client-side mechanisms: SASL/PLAIN, SASL/SCRAM, SASL/OAUTHBEARER, **mTLS**, and NONE — swapped to broker-side SASL/PLAIN (CC API keys), SASL/OAUTHBEARER (OAuth, including OAuth→OAuth as of 1.3.0), or NONE. **mTLS clients cannot use identity passthrough** (TLS terminates at the gateway) — swapping is mandatory for them, not optional. Credentials come from external secret stores: AWS Secrets Manager, HashiCorp Vault, Azure Key Vault, **CyberArk Conjur** (1.3.0). |
 | **Fencing** | Route-level filter: `fence.scope: ALL\|NONE`, with configurable `errorCode` (default `BROKER_NOT_AVAILABLE`) and `errorMessage`. Quiesce traffic before a cutover, or blast-radius a rogue client. As of 1.3.0 the fencing filter runs **before** the auth-swap filter, so fenced clients get the error immediately. |
 | **Centralized governance** | 1.3.0, **Early Access, Docker-only.** Four independent enforcement policy types for record keys and values — schema ID enforcement, deep schema validation, field-level encryption, and full payload encryption — across Avro, JSON Schema, and Protobuf, with per-topic overrides. |
 | **Blue/green upgrades** | Route repoint between old and new cluster versions. |
@@ -137,6 +142,8 @@ Self-managed only. Stateless with respect to Kafka data — offsets, transaction
 
 **CFK deployment** uses a `kind: Gateway` custom resource — a plain `kubectl apply -f gateway.yaml`. Reuse an existing CFK license; no separate CFK license purchase is needed for the gateway. Requires Docker Engine 20.10+ / Compose v2 on the Docker path.
 
+**No Terraform resource exists for either edition.** Deployment is always `docker compose` or `kubectl apply` against the CR shown below — never confuse this with the `confluent_gateway` Terraform resource, which manages the unrelated PrivateLink Gateway (see disambiguation table above). Since the CFK path is a plain Kubernetes CRD, it *can* be brought under Terraform state generically via `kubernetes_manifest` or `kubectl_manifest` — just not natively or Confluent-documented the way `confluent_kafka_topic` is.
+
 ```yaml
 # CFK Gateway CR — top-level shape
 kind: Gateway
@@ -169,6 +176,72 @@ spec:
 **Observability:** admin endpoint on port **9190** — `/metrics` (Prometheus scrape target) and `/livez`. JVM metrics (`JvmGcMetrics`, `JvmMemoryMetrics`, `JvmThreadMetrics`, `ProcessorMetrics`, `UptimeMetrics`) are enabled by default; `commonTags` adds host/region labels. Wire into the CFK/on-prem Grafana tier alongside broker JMX (see [Observability Metrics Mapping](observability-metrics-mapping.md)).
 
 **HA:** multiple replicas behind a TCP load balancer, or a multi-endpoint bootstrap list. Failover between replicas is connection-level.
+
+### Backend flavor: connecting to a Confluent Cloud cluster
+
+Same product, same CR/compose schema — swap the image and license type, then point the streaming domain at a Confluent Cloud bootstrap endpoint instead of a self-managed one:
+
+```yaml
+kind: Gateway
+metadata:
+  name: cc-gateway
+  namespace: confluent
+spec:
+  image:
+    application: confluentinc/confluent-gateway-for-cloud:<version-tag>   # CC-flavor image
+    init: confluentinc/confluent-init-container:3.3.0
+  streamingDomains:
+    - name: cc-prod
+      type: kafka
+      kafkaCluster:
+        name: cc-prod-cluster
+        bootstrapServers:
+          - id: SASL_SSL-1
+            endpoint: "SASL_SSL://pkc-xxxxx.us-east-1.aws.confluent.cloud:9092"
+            # CC endpoints use publicly-trusted CA certs — omit a custom truststore
+            # unless your org pins a private CA.
+  routes:
+    - name: cc-route
+      endpoint: "kafka.fsifirm.com:9092"      # what your clients put in bootstrap.servers
+      streamingDomain:
+        name: cc-prod
+        bootstrapServerId: SASL_SSL-1
+      security:
+        auth: swap                             # or "passthrough" — see below
+        swapConfig:
+          clientAuth:
+            mtls:                               # however your clients authenticate today
+              ssl:
+                principalMappingRules: "RULE:^CN=([a-zA-Z0-9._-]+),OU=.*$/$1/,DEFAULT"
+          secretStore: cc-secrets
+          clusterAuth:
+            sasl:
+              mechanism: PLAIN                  # CC API key as username, secret as password
+              callbackHandlerClass: "org.apache.kafka.common.security.authenticator.SaslClientCallbackHandler"
+              jaasConfig:
+                file: /opt/gateway/cc-cluster-jaas.conf
+  secretStores:
+    - name: cc-secrets
+      provider:
+        type: Vault   # or AWS / Azure / CyberArk
+        config:
+          address: https://vault.fsifirm.internal
+          authMethod: AppRole
+          role: gateway-cc-role
+          path: secret/gateway/cc
+```
+
+Two auth choices, pick based on what your clients already do:
+- **Authentication swapping** (shown above): clients keep whatever they already use (mTLS, SASL/SCRAM, etc.); the gateway swaps to CC's API key/secret (`SASL_SSL` + `PLAIN`) or CC's OAuth/Identity Pools (`SASL_SSL` + `OAUTHBEARER`) pulled from a secret store. Right choice for a migration where you don't want to touch client config at all.
+- **Identity passthrough**: only valid if clients already speak a CC-compatible SASL mechanism (PLAIN/SCRAM/OAUTHBEARER) directly. mTLS clients cannot use passthrough — see Core Capabilities above.
+
+> **FSI note:** the `clusterAuth` example above uses `SASL_SSL` + `PLAIN` with a CC API key/secret — a static credential pair, which the canon security default (`mTLS + RBAC`; never username/password in FSI) does not permit for regulated workloads. For FSI, use `SASL_SSL` + `OAUTHBEARER` against CC's OAuth/Identity Pools instead: same `clusterAuth.sasl` block, `mechanism: OAUTHBEARER` with a `tokenEndpointUri`, no static secret pulled for the cluster leg. Reserve the `PLAIN`/API-key path shown above for non-FSI environments.
+
+> ⚠️ **Documented failure mode: SASL/OAUTHBEARER passthrough breaks after a Client Switchover.** Clients using identity passthrough to Confluent Cloud send a logical cluster (`lkc`) extension in the token to identify the target cluster. After a switchover, the active cluster changes, so a client-supplied `lkc` value goes stale and authentication fails. Fix: set `passthroughConfig.sasl.extensionHeaders.logicalCluster` on the route so Confluent Gateway injects the correct `lkc` value on the client's behalf, keeping client configuration independent of which cluster is currently active.
+
+**Governance target:** if you enable centralized governance (above) on the Confluent Cloud flavor, it validates records against **Confluent Cloud Schema Registry** specifically; the self-managed flavor validates against a self-managed Schema Registry. Same Early-Access/Docker-only caveat applies either way.
+
+**License key differs by flavor too** (see Licensing above): a Confluent Private Cloud Enterprise license for `cpc-gateway`, a Confluent Cloud Gateway license for `confluent-gateway-for-cloud` — using the wrong license type against a given image is a documented failure mode, not just a labeling mismatch.
 
 ### Client Switchover — the mechanism, and its real cost
 
@@ -248,6 +321,8 @@ Confluent's 60-second-RTO POC is explicitly **not production software**. Read it
 
 **FSI read:** the gateway moves *connections*, not *state*. For stateless producer/consumer apps, gateway + CL is a sound sub-minute RTO story *if* you budget the restart. For Kafka Streams (changelog/repartition topics, RocksDB) or in-flight EOS transactions, it is not — and Confluent's own docs now say so directly. Pair with an explicit state-rebuild plan or budget the reset into your RTO.
 
+> ⚠️ **"Sub-minute" is not an FSI SLA tier.** Canon's FSI latency tiers are sub-millisecond (market data), <10ms (risk), <100ms (compliance), and async (reconciliation) — all but reconciliation are far tighter than "sub-minute" (tens of seconds). Do not cite this RTO as satisfying a risk- or compliance-tier requirement; it realistically scopes to reconciliation-tier (async) workloads only.
+
 ### Use case 3 — secure external/partner access
 
 Brokers stay private; the gateway is the only public surface, terminating mTLS and enforcing policy centrally. Combined with fencing and per-route auth swapping, this is a cleaner partner-access story than punching broker-level ACLs plus public endpoints.
@@ -280,7 +355,7 @@ Brokers stay private; the gateway is the only public surface, terminating mTLS a
 
 ## Related
 
-- [Private Networking — PrivateLink Gateway, PNI, Peering, TGW](private-networking.md) — disambiguation: CC PrivateLink Gateway is a networking resource, and "one gateway per environment per region" is that rule, not this product
+- [Private Networking — PrivateLink Gateway, PNI, Peering, TGW](confluent-cloud-private-networking.md) — disambiguation: CC PrivateLink Gateway is a networking resource (and the owner of the `confluent_gateway` Terraform resource name), and "one gateway per environment per region" is that rule, not this product
 - [DR Application Routing](../patterns/dr-application-routing.md) — routing-pattern view of the gateway's DR use case
 - [DR — Cluster Linking](../patterns/dr-cluster-linking.md) — the replication substrate; a prerequisite for switchover, and not administrable through the gateway
 - [DR — MirrorMaker 2](../patterns/dr-mirrormaker2.md) — alternative replication backend for CFK/CP topologies

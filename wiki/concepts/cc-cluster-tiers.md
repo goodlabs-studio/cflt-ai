@@ -4,8 +4,8 @@ tags: [kafka, confluent-cloud, cluster-types, basic, standard, enterprise, dedic
 sources: [outputs/reports/confluent-best-practices-quickstart.md]
 related: [concepts/network-connectivity-by-tier, patterns/dr-cluster-linking, concepts/fsi-data-streaming-platform, concepts/sla-tiers]
 confidence: high
-last_updated: 2026-05-14
-last_validated: 2026-05-14
+last_updated: 2026-08-18
+last_validated: 2026-08-18
 ---
 
 # Confluent Cloud Cluster Tiers
@@ -22,18 +22,18 @@ Verified against `confluent-docs` MCP (cluster-types.md) on 2026-05-14. Numbers 
 
 | Type | Use it when | Networking | Notable limits / features |
 |---|---|---|---|
-| **Basic** | Dev/test, demos | Public only | 99.5% SLA only, no RBAC inside the cluster, **can source a Cluster Link but cannot destination one**, no audit log, no mTLS. Never prod. |
-| **Standard** | Smaller prod workloads | Public only | 99.9% or 99.99% SLA (99.99% requires 2 eCKU), RBAC, audit log, OAuth, Cluster Linking source, eCKU-elastic (max 10 eCKU). |
-| **Enterprise** | Prod with elastic + private + zero capacity planning | Private only (PrivateLink / PSC / PNI on AWS) | Serverless/auto-scaling (max 32 eCKU on AWS PNI; 10 eCKU on AWS PrivateLink), 99.9% or 99.99% SLA, BYOK, mTLS, audit log, can source and destination Cluster Links. Strong default for new private prod workloads. |
-| **Dedicated** | Need highest limits, single-tenant isolation, VPC peering / Transit Gateway, schema validation, ksqlDB, or Cluster Linking at scale | Public, PrivateLink/PSC, VPC peering, AWS Transit Gateway | Single-tenant, **CKU-sized** (manual capacity), BYOK, all networking modes, schema validation, ksqlDB. The "I need control on CC" option. |
-| **Freight** | High-throughput firehose (logs, telemetry, clickstream) where ms-to-seconds latency is fine | Private (AWS PNI today) | Cheaper $/GB, **latency in seconds rather than milliseconds**. Does **not** support idempotent producers, transactions, or EOS — wrong choice for transactional / low-latency / audit-grade workloads. |
+| **Basic** | Dev/test, demos | Public only | 99.5% SLA only, no RBAC inside the cluster, eCKU-elastic (1–50 eCKU) same capacity model as Standard/Enterprise/Freight, **can source a Cluster Link but cannot destination one**, no audit log, no mTLS, has ksqlDB. Never prod. |
+| **Standard** | Smaller prod workloads | Public only | 99.9% or 99.99% SLA (99.99% requires 2 eCKU), RBAC, audit log, OAuth, Cluster Linking source only (never destination), eCKU-elastic (max 10 eCKU), has ksqlDB. |
+| **Enterprise** | Prod with elastic + private + zero capacity planning | Private only (PrivateLink / PSC / PNI on AWS) | Serverless/auto-scaling (max 32 eCKU on AWS PNI; 10 eCKU on AWS PrivateLink), 99.9% or 99.99% SLA, BYOK, mTLS, audit log, can source and destination Cluster Links (networking-dependent). Strong default for new private prod workloads. **Lacks ksqlDB** — the one tier that doesn't have it. |
+| **Dedicated** | Need highest limits, single-tenant isolation, VPC peering / Transit Gateway, or schema validation | Public, PrivateLink/PSC, VPC peering, AWS Transit Gateway | Single-tenant, **CKU-sized** (manual capacity, no eCKU auto-scaling), BYOK, all networking modes, schema validation (Dedicated-exclusive), ksqlDB, can source and destination Cluster Links (networking-dependent). The "I need control on CC" option. |
+| **Freight** | High-throughput firehose (logs, telemetry, clickstream) where ms-to-seconds latency is fine | Private (AWS PNI today) | Cheaper $/GB, eCKU-elastic (2–152 eCKU), **latency in seconds rather than milliseconds**. Does **not** support idempotent producers, transactions, or EOS — wrong choice for transactional / low-latency / audit-grade workloads. Can source **and destination** Cluster Links (per current cluster-types.md, unconditionally — no networking caveat, unlike Enterprise/Dedicated). Lacks ksqlDB. |
 
 ### Decision rule
 
 1. **Standard** if it fits the ceilings (max 10 eCKU) and you don't need private networking.
-2. **Enterprise** for most new private prod workloads (no capacity math, serverless, BYOK, mTLS on AWS, audit log).
-3. **Dedicated** if you need VPC peering / AWS Transit Gateway, schema validation, ksqlDB, the highest limits, or single-tenant isolation.
-4. **Freight** only for latency-tolerant firehoses (no transactions, no EOS).
+2. **Enterprise** for most new private prod workloads (no capacity math, serverless, BYOK, mTLS on AWS, audit log) — note it's the one tier without ksqlDB.
+3. **Dedicated** if you need VPC peering / AWS Transit Gateway, schema validation, the highest limits, or single-tenant isolation. (ksqlDB is *not* a reason to need Dedicated specifically — it's also on Basic and Standard; only Enterprise lacks it.)
+4. **Freight** only for latency-tolerant firehoses (no transactions, no EOS, no ksqlDB).
 
 See `concepts/network-connectivity-by-tier.md` for how networking maps to each tier; `patterns/dr-cluster-linking.md` for Cluster Linking topology and which tiers can source vs sink.
 
@@ -57,7 +57,7 @@ The hard part of CP (replication math, durability invariants, OS tuning) is the 
 ### When the tier choice forces an FSI conversation
 
 - **BYOK / customer-managed keys** → Enterprise or Dedicated only.
-- **Cluster Linking source** → Basic, Standard, Enterprise, Dedicated all support being a *source*. Only Enterprise and Dedicated can be a *destination*. Freight can be neither.
+- **Cluster Linking source** → all five tiers can be a *source*. Basic and Standard can only ever be a source, never a destination. Enterprise and Dedicated can be a *destination* (networking-mode dependent). Freight can be a destination too — per current `cluster-types.md`, unconditionally (no networking caveat listed, unlike Enterprise/Dedicated). Corrected 2026-08-18 — this table previously said "Freight can be neither," which was wrong; see `concepts/cluster-linking-topology.md` for the more detailed source/destination matrix.
 - **VPC peering or AWS Transit Gateway** → Dedicated only. Enterprise on AWS supports PrivateLink and PNI; Azure/GCP Enterprise is PrivateLink/PSC only.
 - **Custom Connectors on private networking** → supported on Dedicated and on Enterprise AWS via PrivateLink egress access points (dedicated, newly provisioned egress gateway required); not available on Freight, and not on Enterprise outside AWS-with-PrivateLink-egress.
 - **Sub-ms market-data tier** → no CC tier meets a sub-ms SLA across AZs. This is a single-AZ co-location or self-managed conversation.

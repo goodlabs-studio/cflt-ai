@@ -1,0 +1,65 @@
+{
+  "generators": [
+    {
+      "topic": "datagen.users.enterprise",
+      "connection": "confluentCloud",
+      "key": {
+        "_gen": "sequentialString",
+        "startingFrom": 1,
+        "expr": "User_~d"
+      },
+      "value": {
+        "registertime": {
+          "_gen": "now"
+        },
+        "userid": {
+          "_gen": "sequentialString",
+          "startingFrom": 1,
+          "expr": "User_~d"
+        },
+        "regionid": {
+          "_gen": "oneOf",
+          "choices": [
+            "Region_1",
+            "Region_2",
+            "Region_3",
+            "Region_4",
+            "Region_5",
+            "Region_6",
+            "Region_7",
+            "Region_8",
+            "Region_9"
+          ]
+        },
+        "gender": {
+          "_gen": "oneOf",
+          "choices": ["MALE", "FEMALE", "OTHER"]
+        }
+      },
+      "localConfigs": {
+        "schemaRegistrySubject": {
+          "value": "datagen.users-value"
+        },
+        "throughput": {
+          "_gen": "env",
+          "var": "EVENTS_PER_SECOND",
+          "as": "integer",
+          "default": 5
+        }
+      }
+    }
+  ],
+  "connections": {
+    "confluentCloud": {
+      "kind": "kafka",
+      "producerConfigs": {
+        "_gen": "loadPropertiesFile",
+        "file": "/home/config/client.properties",
+        "overrides": {
+          "key.serializer": "org.apache.kafka.common.serialization.StringSerializer",
+          "value.serializer": "io.confluent.kafka.serializers.KafkaAvroSerializer"
+        }
+      }
+    }
+  }
+}

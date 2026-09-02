@@ -4,8 +4,8 @@ tags: [schema-registry, avro, protobuf, compatibility, governance, fsi, csfle]
 sources: [outputs/reports/confluent-best-practices-quickstart.md]
 related: [concepts/schema-evolution-strategies, patterns/fsi-governance-automation, patterns/topic-naming, patterns/producer-config-fsi, concepts/fsi-compliance, patterns/schema-registry-shared-types]
 confidence: high
-last_updated: 2026-05-14
-last_validated: 2026-05-14
+last_updated: 2026-08-18
+last_validated: 2026-08-18
 ---
 
 # Schema Registry Best Practices
@@ -27,7 +27,7 @@ Schema Registry is the data contract authority for Kafka. This article captures 
 - **Schema IDs in the wire format** — magic byte + 4-byte ID. **IDs are not portable across environments** (dev ID 100 ≠ prod ID 100). Use **Schema Linking** for CC↔CC / CC↔CP, or export/import — never assume IDs match.
 - **References** — compose schemas instead of shipping one 4000-line Avro file. Versioned, reusable, governable.
 - **Data Contracts** (Confluent's feature) — schema + **rules** (validation, domain constraints) + **migration rules** (transform on read across breaking versions) + metadata/tags. This is where CSFLE tags live too.
-- **CSFLE** (client-side field-level encryption) — tag PII fields in the schema; the client encrypts those fields against a KMS *before* the record hits the broker. Even Confluent can't read them. The FSI PII answer. See `fsi-dsp:docs/csfle-guide.md`.
+- **CSFLE** (client-side field-level encryption) — tag PII fields in the schema; the client encrypts those fields against a KMS *before* the record hits the broker. Whether Confluent itself can decrypt depends on the KEK-sharing mode: with shared KEK access, Confluent's own systems (DEK Registry, RBAC'd connectors) can decrypt temporarily for processing — no Confluent *employee* can, but the platform can. Only the no-shared-access mode gives the stronger "not even Confluent" guarantee. The FSI PII answer. See `fsi-dsp:docs/csfle-guide.md`.
 
 ### Best practices (opinionated)
 
@@ -37,7 +37,7 @@ Schema Registry is the data contract authority for Kafka. This article captures 
 - **`auto.register.schemas=false` in prod.** Register schemas in **CI** (fail the build on incompatibility — `mvn schema-registry:test-compatibility`); clients use `use.latest.version=true` or a pinned version. Auto-register from clients = governance bypass + a race where two instances register slightly different "latest" schemas.
 - **Set compatibility per subject**, not just globally, when you have mixed requirements. Consider `latest.compatibility.strict=true`.
 - **Pre-register before deploy** — never let the first message in production be the thing that registers the schema.
-- **Stream Governance package (CC)** — Essentials vs **Advanced** (both confirmed in `cloud/current/stream-governance/packages.html`). Advanced adds Stream Lineage, Stream Catalog (business metadata/tags), more schemas, Data Contracts, and Schema Linking. For FSI governance, Advanced is the baseline. Re-check the live package matrix for current schema/lineage retention limits — those numerical caps tune more often than the feature split itself.
+- **Stream Governance package (CC)** — Essentials vs **Advanced** (confirmed against `cloud/current/stream-governance/packages.html` on 2026-08-18). Corrected: Stream Lineage (10-min point-in-time view) and Stream Catalog tags now ship in **Essentials** too — Advanced only adds the longer 7-day Lineage window and Catalog's business-metadata/GraphQL layer. Schema Linking is available in both tiers, just at a lower exporter quota (10 vs 100), not an absence. The only genuinely Advanced-exclusive feature is **Data Contracts** (data rules). For FSI governance, Advanced remains the baseline (for Data Contracts and the longer retention windows), but don't describe Lineage/Catalog-tags/Schema-Linking as Advanced-only — that feature split moved, not just the numerical caps.
 
 ### CC vs CP
 

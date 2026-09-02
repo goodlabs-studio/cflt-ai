@@ -2,17 +2,17 @@
 title: Confluent Cloud Cluster SKU Selection
 tags: [kafka, confluent-cloud, cluster-types, sku, cli, ephemeral, basic, standard, enterprise, dedicated, freight, gcp, aws, azure, fsi]
 sources: [wiki/concepts/cc-cluster-tiers.md, wiki/concepts/network-connectivity-by-tier.md]
-related: [concepts/cc-cluster-tiers, concepts/network-connectivity-by-tier, concepts/private-networking, concepts/fsi-data-streaming-platform, concepts/sla-tiers, patterns/dr-cluster-linking]
+related: [concepts/cc-cluster-tiers, concepts/network-connectivity-by-tier, concepts/confluent-cloud-private-networking, concepts/fsi-data-streaming-platform, concepts/sla-tiers, patterns/dr-cluster-linking]
 confidence: medium
-last_updated: 2026-05-18
-last_validated: 2026-05-18
+last_updated: 2026-08-18
+last_validated: 2026-08-18
 ---
 
 # Confluent Cloud Cluster SKU Selection
 
 ## Summary
 
-Picking a Confluent Cloud (CC) cluster SKU is a workflow problem distinct from understanding what each SKU *is*. `concepts/cc-cluster-tiers.md` owns the tier mental model; this article owns the **decision path** from a request like *"create a Basic Kafka cluster named `franz-smoke-01` in `env-9y7opm` on GCP `us-east1`"* to a validated `confluent kafka cluster create` invocation, plus the routing logic for production work. It captures the ephemeral / smoke-test pattern (Basic on any cloud, deleted within the day) versus the FSI prod path (Enterprise default, Dedicated when CL destination / VPC peering / ksqlDB / schema validation is needed). Cloud and region availability vary slightly per type and shift frequently — confirm against `confluent-docs` MCP before quoting a customer.
+Picking a Confluent Cloud (CC) cluster SKU is a workflow problem distinct from understanding what each SKU *is*. `concepts/cc-cluster-tiers.md` owns the tier mental model; this article owns the **decision path** from a request like *"create a Basic Kafka cluster named `franz-smoke-01` in `env-9y7opm` on GCP `us-east1`"* to a validated `confluent kafka cluster create` invocation, plus the routing logic for production work. It captures the ephemeral / smoke-test pattern (Basic on any cloud, deleted within the day) versus the FSI prod path (Enterprise default, Dedicated when CL destination / VPC peering / schema validation is needed). Note: ksqlDB is NOT a Dedicated-only feature — it's on Basic, Standard, and Dedicated; Enterprise is the one tier that lacks it. Cloud and region availability vary slightly per type and shift frequently — confirm against `confluent-docs` MCP before quoting a customer.
 
 ## Detail
 
@@ -24,7 +24,7 @@ Walk top-to-bottom; pick the first matching row. Numbers in parentheses cite per
 |---|---|---|---|
 | 1 | Ephemeral, dev/test, demo, or smoke-test? Public networking is fine? Workload will be deleted within days? | **Basic** | Step 2 |
 | 2 | Latency-tolerant firehose (logs, telemetry, clickstream); seconds-of-latency acceptable; *no* transactions, *no* EOS, *no* idempotent producers required? | **Freight** | Step 3 |
-| 3 | Production workload — needs **VPC peering**, **AWS Transit Gateway**, **schema validation**, **ksqlDB**, **CL destination at scale**, or **single-tenant isolation**? | **Dedicated** | Step 4 |
+| 3 | Production workload — needs **VPC peering**, **AWS Transit Gateway**, **schema validation**, **CL destination at scale**, or **single-tenant isolation**? | **Dedicated** | Step 4 |
 | 4 | Production workload — needs **private networking** (PrivateLink / PSC / PNI), elastic capacity (no capacity math), mTLS, BYOK, audit log? | **Enterprise** | Step 5 |
 | 5 | Smaller production workload — public networking acceptable, fits under 10 eCKU? | **Standard** | Re-examine — workload doesn't map to a public CC SKU; likely a CFK/CP conversation |
 
@@ -62,7 +62,7 @@ confluent kafka cluster create franz-smoke-01 \
 
 > ⚠️ unverified — `--availability single-zone` is the canonical flag for Basic (Basic is single-AZ); `confluent kafka cluster create --help` or `confluent-docs` MCP for the current CLI surface is the source of truth. Standard/Enterprise/Dedicated require `--availability multi-zone` for prod.
 
-**For prod (Enterprise default).** Same shape, different flags — and a different mental model. Enterprise is private-only; the cluster needs a network resource (PrivateLink / PSC / PNI) attached. The single-line `cluster create` does not provision that network resource; the PrivateLink Gateway / PNI is a separate `confluent network` workflow tracked in `concepts/private-networking.md`.
+**For prod (Enterprise default).** Same shape, different flags — and a different mental model. Enterprise is private-only; the cluster needs a network resource (PrivateLink / PSC / PNI) attached. The single-line `cluster create` does not provision that network resource; the PrivateLink Gateway / PNI is a separate `confluent network` workflow tracked in `concepts/confluent-cloud-private-networking.md`.
 
 ```bash
 # Prod skeleton — Enterprise, multi-zone, GCP, attached to a PSC network
@@ -108,7 +108,7 @@ A common mistake is asking "which SKU?" and answering "Dedicated, because we nee
 
 - [Confluent Cloud Cluster Tiers](cc-cluster-tiers.md) — tier matrix and per-SKU feature ceiling (MCP-validated 2026-05-14)
 - [Network Connectivity by Cluster Tier](network-connectivity-by-tier.md) — networking modes mapped to each tier
-- [Private Networking](private-networking.md) — PrivateLink Gateway / PSC / PNI provisioning workflow
+- [Private Networking](confluent-cloud-private-networking.md) — PrivateLink Gateway / PSC / PNI provisioning workflow
 - [FSI Data Streaming Platform](fsi-data-streaming-platform.md) — six deployment models including CC tier selection
 - [SLA Tiers](sla-tiers.md) — FSI SLA tier definitions driving multi-zone / RPO / RTO
 - [DR — Cluster Linking](../patterns/dr-cluster-linking.md) — which SKUs can source vs destination a CL

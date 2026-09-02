@@ -148,7 +148,7 @@ Mitigations, in order of preference:
 
 1. **PrivateLink architectural bypass** — if the CC cluster is reachable via Confluent
    Cloud PrivateLink Gateway from the OCI VCN, the ILB hop is removed entirely. See
-   [Private Networking](private-networking.md).
+   [Private Networking](confluent-cloud-private-networking.md).
 2. **`connections.max.idle.ms=180000`** in the OIC Additional Properties table — closes
    the client-side socket before the ILB does, forcing a clean reconnect on next use.
 3. **librdkafka users only:** `socket.keepalive.enable=true` to send TCP keepalives
@@ -223,5 +223,5 @@ validate end-to-end before relying on transactional semantics from OIC:
   that bound OIC throughput
 - [Exactly-Once Semantics](exactly-once-semantics.md) — idempotence and
   transactional producer mechanics
-- [Private Networking](private-networking.md) — PrivateLink as the architectural
+- [Private Networking](confluent-cloud-private-networking.md) — PrivateLink as the architectural
   bypass for the ILB hop

@@ -164,7 +164,7 @@ metadata:
     service.beta.kubernetes.io/azure-load-balancer-tcp-idle-timeout: "4"
 ```
 
-**Best mitigation: Private Link.** Private Link eliminates the ILB hop entirely — traffic stays on Azure backbone. See [Private Networking](../concepts/private-networking.md) (stub) for setup.
+**Best mitigation: Private Link.** Private Link eliminates the ILB hop entirely — traffic stays on Azure backbone. See [Private Networking](../concepts/confluent-cloud-private-networking.md) (stub) for setup.
 
 #### Follower Fetching (`client.rack`)
 

@@ -1,11 +1,11 @@
 ---
 title: DR Application Routing — Pointing Clients at the Surviving Cluster
 tags: [kafka, dr, gateway, proxy, dns, consul, cluster-linking, fsi]
-sources: [outputs/reports/wiki-validation-2026-05-15.md, outputs/reports/wiki-validation-2026-05-18-orka-guarantees.md]
-related: [patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster, concepts/confluent-cloud-gateway, concepts/cluster-linking-topology, concepts/sla-tiers]
+sources: [outputs/reports/wiki-validation-2026-05-15.md, outputs/reports/wiki-validation-2026-05-18-orka-guarantees.md, outputs/reports/confluent-cloud-gateway-review-2026-08-05.md]
+related: [patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster, concepts/confluent-gateway, concepts/cluster-linking-topology, concepts/sla-tiers]
 confidence: medium
-last_updated: 2026-05-18
-last_validated: 2026-05-18
+last_updated: 2026-08-05
+last_validated: 2026-08-05
 ---
 
 # DR Application Routing — Pointing Clients at the Surviving Cluster
@@ -69,7 +69,7 @@ How clients pick up the change:
 
 ### Solution 2 — Protocol proxy (Confluent Gateway, ORKA, Kroxylicious)
 
-A Kafka-protocol-aware proxy sits in front of the cluster. Clients connect to the proxy address, not the broker. On failover, the proxy is re-pointed at the DR cluster; clients see a brief disconnect, reconnect to the same proxy address, and resume. See [Confluent Gateway](../concepts/confluent-cloud-gateway.md) for the canonical product description.
+A Kafka-protocol-aware proxy sits in front of the cluster. Clients connect to the proxy address, not the broker. On failover, the proxy's route is re-pointed at the DR cluster. **For Confluent Gateway specifically, this re-point requires a full gateway restart** (edit the route config, then stop and restart the gateway container/pod) — not a hot reconfiguration on the running process, and this holds for both the Docker and CFK deployment paths. Clients disconnect during the restart window and reconnect once the gateway is back up. See [Confluent Gateway](../concepts/confluent-gateway.md#client-switchover--the-mechanism-and-its-real-cost) for the canonical product description and the restart-impact-by-component table (consumer rebalance risk, producer duplication risk, in-flight-transaction abort risk). Kroxylicious's and ORKA's restart-vs-hot-reload behavior has **not** been independently verified and should not be assumed to match Confluent Gateway's restart requirement — treat as a per-vendor question, not a Solution-2-wide property.
 
 What "protocol-aware" enables that DNS abstraction cannot:
 
@@ -77,9 +77,9 @@ What "protocol-aware" enables that DNS abstraction cannot:
 - The proxy can **pause** clients during the cutover window (e.g., return empty `FetchResponse` payloads so consumers idle without rebalancing). The Kroxylicious `FetchResponseFilter` extension point demonstrates this is a sound protocol mechanism — empty fetches are indistinguishable from a quiet topic, and the heartbeat path is decoupled from fetch so group membership is preserved.
 - The proxy can **swap authentication** (e.g., client mTLS → broker SASL/OAUTHBEARER) so credentials don't need to be re-issued for the DR cluster.
 
-**RTO floor**: seconds (~5–30s for connection re-establishment), assuming the proxy is already running and the route flip is operator-initiated against a synced DR cluster.
+**RTO floor (Confluent Gateway)**: restart-bound, not reconnect-bound. Confluent's own docs state Client Switchover requires a full gateway restart, and publish no restart-duration SLA. The floor is (time to edit + reapply route config) + (gateway container/pod restart time, unpublished — load-test it) + (client reconnection, on the order of seconds). The previously-stated "~5–30s" figure covered reconnection only and did not budget the restart step — do not use it for RTO sizing.
 
-**Application restart**: Not required. This is the load-bearing benefit.
+**Application restart**: The client *application binary* does not need a code change or redeploy — this part is real. However, Kafka client *connections* disconnect and reconnect during the gateway's restart window, and consumers may trigger a group rebalance if the restart exceeds `session.timeout.ms` (default 45s); producers may see duplicate-inducing retries. This is a real, budgetable disruption, not a zero-impact cutover. See the restart-impact-by-component table in [Confluent Gateway](../concepts/confluent-gateway.md#client-switchover--the-mechanism-and-its-real-cost).
 
 **Vendor landscape**:
 - **Confluent Gateway** — Confluent-supported product (CFK / Docker), satisfies the FSI vendor-contract rule. Confluent's own DR guidance for the gateway explicitly cautions against client switchover for Kafka Streams / correctness-sensitive workloads.
@@ -101,8 +101,8 @@ This is the cleanest path for **CC-native deployments** where Cluster Linking is
 
 | Criterion | DNS abstraction (Consul) | Protocol proxy (Gateway/ORKA) | One-Click DR (CC managed) |
 |---|---|---|---|
-| **RTO floor** | 30–90 s (TTL + reconnect) | 5–30 s (reconnect only) | seconds (managed, opaque) |
-| **Application restart required** | No, but timeouts may surface to app | No | No |
+| **RTO floor** | 30–90 s (TTL + reconnect) | Confluent Gateway: restart-bound, no published SLA (load-test it); Kroxylicious/ORKA: unverified | seconds (managed, opaque) |
+| **Application restart required** | No, but timeouts may surface to app | Client app binary: No. Confluent Gateway *process*: Yes (mandatory) — causes client disconnect/reconnect, possible consumer rebalance | No |
 | **Advertised-listener config required on brokers** | Yes (logical FQDN) | No (proxy rewrites in-band) | Managed by CC |
 | **Consumer-pause during cutover** | No (clients keep polling failed cluster until reset) | Yes (Kroxylicious-class proxies) | Managed by CC |
 | **Auth swapping** | No | Yes | N/A (uniform CC auth) |
@@ -137,10 +137,10 @@ The discriminator must be applied at design time, per application, not as a blan
 - Adding another protocol-aware component is operationally expensive (small platform team, regulated change-management).
 
 **Pick a protocol proxy (Confluent Gateway) when**:
-- RTO target is sub-30-seconds and applications cannot tolerate even brief produce/fetch errors.
-- Custom domains / auth swapping have independent value (multi-tenant cluster fronting, mTLS termination at the edge).
+- Custom domains / auth swapping have independent value (multi-tenant cluster fronting, mTLS termination at the edge) — this value holds regardless of the RTO number.
 - Consumer-pause-during-cutover is required to narrow the duplicate window beyond what CL offset-sync alone provides.
 - FSI vendor-contract rule applies and Confluent Gateway is acceptable (it is — it's a Confluent product). ORKA requires a separate GoodLabs contract.
+- **Do not** pick it purely on an assumed sub-30-second RTO advantage over DNS abstraction — for Confluent Gateway, the switchover restart is unbudgeted (no vendor SLA) and may erode or eliminate that advantage. Load-test the restart step before committing to an RTO number in a customer-facing design.
 
 **Pick One-Click DR when**:
 - Topology is CC-only and Cluster Linking is already deployed.
@@ -152,13 +152,13 @@ The discriminator must be applied at design time, per application, not as a blan
 - **Stateful applications are the universal hard case.** No routing solution closes the state-replication gap unilaterally. Either design the stateful application for re-bootstrap on the DR side (long RTO, accept changelog replay) or use [DR — Multi-Region Cluster](dr-multi-region-cluster.md) for RPO=0 synchronous replication on Confluent Platform.
 - **Advertised listeners matter.** Solution 1 (DNS) breaks past the bootstrap call if broker advertised listeners point at cluster-specific names. Solution 2 (proxy) rewrites them in-band and is robust to this. Verify advertised-listener config explicitly in DR runbooks.
 - **`mirror failover` vs `mirror promote` is independent of the routing solution.** Unplanned failover (`mirror failover`) has a non-zero RPO regardless of how clients are routed. Planned migration (`mirror promote`, drained to zero lag) is the only path with the "no duplicates, no missed messages" property — and only for stateless workloads.
-- **Proxy capacity sizing.** A Kafka-protocol proxy parses and re-encodes every frame. Plan for 1.5–2× the broker CPU surface as a starting point (see [Confluent Gateway](../concepts/confluent-cloud-gateway.md)); right-size from load test.
+- **Proxy capacity sizing.** A Kafka-protocol proxy parses and re-encodes every frame. For Confluent Gateway, use the vendor-published per-instance sizing (2 vCPU/4GB RAM minimum, 4 vCPU/8GB RAM recommended, 45 MB/s sustained per 1 Gbps link, 10GB disk — see [Confluent Gateway](../concepts/confluent-gateway.md#deployment-sizing-and-licensing)) rather than a generic "1.5–2× broker CPU" heuristic; that heuristic is superseded and should not be used for Confluent Gateway sizing. Still load-test against your own p99 budget — the parse-and-re-encode hop is real.
 - **Vendor-internal claims must be cited.** ORKA's stateful-preservation framing is currently outside what public MCP scope can verify. Do not author such claims into FSI-facing material without a GoodLabs citation, NDA-disclosure path, or empirical wireshark capture.
 - **One-Click DR friction in hybrid topologies.** A CC-only managed switchover doesn't help a portfolio that includes self-managed CFK clusters. Multi-platform FSI estates typically converge on Solution 1 or 2 for the lowest-common-denominator runbook.
 
 ## Related
 
-- [Confluent Gateway — Protocol-Aware Kafka Proxy](../concepts/confluent-cloud-gateway.md) — the canonical product for Solution 2; this article is the routing-pattern view, that one is the product view
+- [Confluent Gateway — Protocol-Aware Kafka Proxy](../concepts/confluent-gateway.md) — the canonical product for Solution 2; this article is the routing-pattern view, that one is the product view
 - [DR — Cluster Linking](dr-cluster-linking.md) — the data-plane replication this article complements
 - [DR — MirrorMaker 2](dr-mirrormaker2.md) — alternative data-plane backend for CFK/CP
 - [DR — Multi-Region Cluster](dr-multi-region-cluster.md) — RPO=0 synchronous alternative when stateful correctness is non-negotiable

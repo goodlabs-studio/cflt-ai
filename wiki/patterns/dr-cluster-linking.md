@@ -4,8 +4,8 @@ tags: [kafka confluent-cloud dr cluster-linking fsi]
 sources: [fsi-dsp://adr/005, fsi-dsp://script/mirror-failover]
 related: [patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster, concepts/sla-tiers, concepts/cluster-linking-topology, concepts/fsi-data-streaming-platform]
 confidence: high
-last_updated: 2026-04-11
-last_validated: 2026-05-14
+last_updated: 2026-08-18
+last_validated: 2026-08-18
 ---
 
 # DR — Cluster Linking
@@ -69,9 +69,11 @@ Always run `fsi-dr.sh failover --dry-run` before execution. Reports per-topic mi
 | Tier | RPO | RTO | Lag Warn | Lag Alert |
 |------|-----|-----|----------|-----------|
 | critical | < 5 min | < 15 min | 30s | 60s |
-| compliance | = 0 | < 15 min | 10s | 30s |
+| compliance | near-zero† | < 15 min | 10s | 30s |
 | standard | < 2 hours | < 1 hour | 5 min | 15 min |
 | best-effort | < 24 hours | < 4 hours | 1 hour | 4 hours |
+
+† Compliance tier's governance *target* is RPO=0 (see [SLA Tiers](../concepts/sla-tiers.md)), but Cluster Linking is asynchronous and cannot deliver it — see Caveats below. This pattern only bounds RPO to near-zero via the tightest lag-alert threshold in the table. A true RPO=0 requirement must escalate to Multi-Region Clusters on Confluent Platform.
 
 ## When to Use
 
