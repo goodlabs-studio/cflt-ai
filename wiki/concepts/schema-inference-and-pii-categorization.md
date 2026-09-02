@@ -6,8 +6,8 @@ sources:
   - raw/vendor/confluent-agent-skills/91d1871e/skills/kafka-schema-registry/references/categorization.md
 related: [concepts/schema-registry-best-practices, concepts/fsi-compliance, patterns/schema-registry-shared-types, patterns/schema-registry-adoption-playbook, concepts/schema-evolution-strategies]
 confidence: high
-last_updated: 2026-05-16
-last_validated: 2026-05-16
+last_updated: 2026-08-18
+last_validated: 2026-08-18
 source: confluent-agent-skills@91d1871ef8c320be92bca955c8e42492a2778cb4
 upstream_path:
   - skills/kafka-schema-registry/references/schema-inference.md
@@ -330,7 +330,7 @@ message Customer {
 
 #### FSI-specific behaviour
 
-Tagging is not optional in regulated environments. Once a field has `["PII"]` or `["PRIVATE"]`, downstream tooling (CSFLE rules in the data contract, audit-log routing, masking proxies) can enforce encryption automatically. The client encrypts those fields against a KMS *before* the record hits the broker — even Confluent can't read them.
+Tagging is not optional in regulated environments. Once a field has `["PII"]` or `["PRIVATE"]`, downstream tooling (CSFLE rules in the data contract, audit-log routing, masking proxies) can enforce encryption automatically. The client encrypts those fields against a KMS *before* the record hits the broker. Whether Confluent itself can decrypt depends on the KEK-sharing mode: only the no-shared-KEK-access mode gives the "not even Confluent" guarantee — with shared access, Confluent's own systems can decrypt temporarily for processing (no Confluent *employee* can, but the platform can).
 
 This is the canonical FSI PII answer; see [FSI Compliance](fsi-compliance.md) for how PII tagging connects to the regulatory frameworks (OCC/FFIEC, PRA, MAS, APRA, OSFI) and to the [Schema Registry Best Practices](schema-registry-best-practices.md) section on Data Contracts (schema + rules + migration + tags).
 

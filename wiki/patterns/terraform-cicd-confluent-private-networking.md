@@ -5,7 +5,7 @@ sources:
   - https://docs.confluent.io/cloud/current/clusters/terraform-provider.html
   - https://docs.confluent.io/cloud/current/clusters/terraform-security.html
   - https://registry.terraform.io/providers/confluentinc/confluent/latest
-related: [concepts/private-networking, patterns/fsi-governance-automation, patterns/schema-registry-adoption-playbook, patterns/topic-naming, patterns/connect-deployment-models]
+related: [concepts/confluent-cloud-private-networking, patterns/fsi-governance-automation, patterns/schema-registry-adoption-playbook, patterns/topic-naming, patterns/connect-deployment-models]
 confidence: high
 last_updated: 2026-07-29
 last_validated: 2026-07-29
@@ -49,7 +49,7 @@ Do **not** expose the cluster publicly to make GitHub-hosted runners work — it
 
 #### PrivateLink specifics
 
-PrivateLink doesn't change the plane split, but it sharpens the runner requirements and dictates the plane-A resources. See [Private Networking](../concepts/private-networking.md) for the gateway mechanics.
+PrivateLink doesn't change the plane split, but it sharpens the runner requirements and dictates the plane-A resources. See [Private Networking](../concepts/confluent-cloud-private-networking.md) for the gateway mechanics.
 
 - **Plane-A resources are tier-dependent.** For **Enterprise** (FSI baseline), use the **ingress PrivateLink Gateway** model: `confluent_gateway` + `confluent_access_point` + your `aws_vpc_endpoint` (/ `azurerm_private_endpoint` / `google_compute_forwarding_rule`). The legacy `confluent_private_link_attachment` (PLATT) is superseded — no new ones after the cutover (AWS 2026-02-12; Azure/GCP 2026-05-04). For **Dedicated**, use `confluent_network` (type `PRIVATELINK`) + `confluent_private_link_access`.
 - **DNS is a two-step CNAME + wildcard.** Confluent's Global DNS Resolver strips the `glb` subdomain; your private resolver (Route 53 PHZ / Azure Private DNS / Cloud DNS) wildcard-maps the access-point zone to your VPC endpoint. Broker names are **not static** — wildcard the zone, never hardcode. The runner's resolver must see this PHZ, for **both** Kafka and Schema Registry hostnames.
@@ -98,7 +98,7 @@ terraform {
 
 ## Related
 
-- [Private Networking](../concepts/private-networking.md) — PrivateLink Gateway mechanics, PLATT→gateway transition, per-tier connectivity matrix, and the two-step DNS model the runner depends on
+- [Private Networking](../concepts/confluent-cloud-private-networking.md) — PrivateLink Gateway mechanics, PLATT→gateway transition, per-tier connectivity matrix, and the two-step DNS model the runner depends on
 - [FSI Governance Automation](fsi-governance-automation.md) — CI/CD governance and policy-as-code context this pipeline slots into
 - [Schema Registry Adoption Playbook](schema-registry-adoption-playbook.md) — the `confluent_schema` data-plane resources this pipeline registers (private SR endpoint)
 - [Topic Naming](topic-naming.md) — naming conventions for the topics managed in the data plane

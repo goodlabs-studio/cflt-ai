@@ -4,7 +4,7 @@ tags: [flink, confluent-cloud, coe, c4e, enablement, fsi, compute-pools, cfu, fl
 sources:
   - https://docs.confluent.io/cloud/current/flink/concepts/comparison-with-apache-flink.html
   - https://docs.confluent.io/cloud/current/flink/concepts/compute-pools.html
-related: [patterns/flink-runtime-models, patterns/flink-coe-optimization, patterns/flink-coe-security, patterns/flink-coe-aws-privatelink-refarch, concepts/private-networking, patterns/dead-letter-queue-design]
+related: [patterns/flink-runtime-models, patterns/flink-coe-optimization, patterns/flink-coe-security, patterns/flink-coe-aws-privatelink-refarch, concepts/confluent-cloud-private-networking, patterns/dead-letter-queue-design]
 confidence: high
 last_updated: 2026-07-30
 last_validated: 2026-07-30
@@ -84,5 +84,5 @@ Flag these to the client now — several will surface the moment engineers port 
 - [Flink COE — Optimization](flink-coe-optimization.md) — CFU/state/watermark tuning (sub-page)
 - [Flink COE — Security](flink-coe-security.md) — RBAC, service accounts, principals, mTLS (sub-page)
 - [Flink COE — AWS PrivateLink Reference Architecture](flink-coe-aws-privatelink-refarch.md) — VPC/PL wiring on AWS (sub-page)
-- [Private Networking](../concepts/private-networking.md) — PrivateLink Gateway mechanics that the AWS ref arch builds on
+- [Private Networking](../concepts/confluent-cloud-private-networking.md) — PrivateLink Gateway mechanics that the AWS ref arch builds on
 - [Dead Letter Queue Design](dead-letter-queue-design.md) — CC Flink managed DLQ (`error-handling.mode`)
