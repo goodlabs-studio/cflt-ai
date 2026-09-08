@@ -76,6 +76,16 @@ patterns/dr-multi-region-cluster → patterns/dr-cluster-linking : async DR for 
 patterns/dr-multi-region-cluster → patterns/dr-mirrormaker2 : async DR for CFK/CP
 patterns/dr-multi-region-cluster → concepts/sla-tiers : compliance tier requirement
 patterns/dr-multi-region-cluster → synthesis/adr-index : ADR-005, ADR-008
+patterns/dr-multi-region-cluster → patterns/kafka-admin-topic-rbac-tool : provisioning tool for MRC target topics/RBAC
+
+patterns/kafka-admin-topic-rbac-tool → patterns/dr-multi-region-cluster : target topology for provisioned topics
+patterns/kafka-admin-topic-rbac-tool → patterns/x86-to-linuxone-cluster-linking-migration : parallel audit/validate/evidence discipline
+patterns/kafka-admin-topic-rbac-tool → patterns/fsi-governance-automation : governance-as-code substitute for CP (Terraform is Cloud-only)
+patterns/kafka-admin-topic-rbac-tool → patterns/topic-naming : naming/config conventions for regenerated topic YAML
+patterns/kafka-admin-topic-rbac-tool → concepts/sla-tiers : tier system drives placement-policy assignment
+
+patterns/fsi-governance-automation → patterns/kafka-admin-topic-rbac-tool : CP-side tool where Terraform provider can't reach MDS
+patterns/x86-to-linuxone-cluster-linking-migration → patterns/kafka-admin-topic-rbac-tool : same audit discipline applied to topic/RBAC provisioning
 
 synthesis/adr-index → concepts/fsi-data-streaming-platform : platform these decisions govern
 synthesis/adr-index → concepts/sla-tiers : tier system (ADR-002, ADR-008)
@@ -699,7 +709,7 @@ patterns/connect-deployment-models → patterns/cp-tls-debugging-by-component : 
 patterns/shadowtraffic-confluent-cloud-datagen → concepts/schema-registry-best-practices : the governance/operational rules generated data must conform to
 patterns/shadowtraffic-confluent-cloud-datagen → concepts/schema-aware-console-producer-required : same SR wire-format concern from the opposite direction (tools that don't speak it)
 patterns/shadowtraffic-confluent-cloud-datagen → concepts/confluent-cloud-private-networking : PrivateLink reachability caveat for the generator container
-patterns/shadowtraffic-confluent-cloud-datagen → patterns/topic-naming : TopicNameStrategy default that schemaRegistrySubject overrides
+patterns/shadowtraffic-confluent-cloud-datagen → patterns/topic-naming : TopicNameStrategy default that governs produce-time subject lookup regardless of schemaRegistrySubject
 
 # Inbound — patterns/shadowtraffic-confluent-cloud-datagen
 concepts/schema-registry-best-practices → patterns/shadowtraffic-confluent-cloud-datagen : data-generation pattern that must respect SR governance

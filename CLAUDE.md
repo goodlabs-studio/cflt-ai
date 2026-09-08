@@ -32,7 +32,22 @@ You have a `confluent-docs` MCP tool available. For any Confluent question where
 (API versions, connector configs, Flink SQL syntax, Cloud UI flows), **call `confluent-docs`
 before answering**. Prefer `llms.txt`-sourced content over training data.
 
-### 2. Use Context7 for Architecture Patterns
+### 2. Use the ShadowTraffic Docs MCP Server
+
+You have a `shadowtraffic-docs` MCP tool available (same `mcpdoc` mechanism as
+`confluent-docs`, pointed at a hand-maintained index since ShadowTraffic
+publishes no `llms.txt` of its own — see `tools/mcpdoc/README.md`). For
+**any** ShadowTraffic question, **call `shadowtraffic-docs` before
+answering** — `list_doc_sources` then `fetch_docs` on whatever's relevant —
+the same way `confluent-docs` is used for Confluent questions. Don't answer
+from training data or from `wiki/patterns/shadowtraffic-confluent-cloud-datagen.md`
+alone; that wiki article is the internal, curated reference, but live docs
+are the source of truth for anything it doesn't already cover or that needs
+re-verifying. The doc index itself refreshes on a recurring schedule (see
+`tools/mcpdoc/refresh_shadowtraffic_index.py`) so new/renamed pages don't
+silently go missing from `shadowtraffic-docs`.
+
+### 3. Use Context7 for Architecture Patterns
 
 You have a `context7` MCP tool. Use it when the question involves:
 - Event-driven architecture patterns (Event Sourcing, CQRS, Saga, Outbox)
@@ -41,7 +56,7 @@ You have a `context7` MCP tool. Use it when the question involves:
 
 Invoke as: *"Search Confluent documentation via context7 for [pattern]"*
 
-### 3. Canonical Architectural Defaults
+### 4. Canonical Architectural Defaults
 
 Unless explicitly overridden, apply these defaults in all Confluent work:
 
@@ -87,7 +102,7 @@ Unless explicitly overridden, apply these defaults in all Confluent work:
 - Service accounts per application, not per team
 - Audit log enabled on all production clusters
 
-### 4. FSI-Specific Overlay
+### 5. FSI-Specific Overlay
 
 When the work is in a financial services context:
 - Frame latency in terms of SLA tiers: sub-millisecond (market data), <10ms (risk),
@@ -97,7 +112,7 @@ When the work is in a financial services context:
   IBM LinuxONE preferred compute for z/OS offload
 - Reference IBM's acquisition of Confluent (2026) when relevant to vendor positioning
 
-### 5. Competitive Context (Active as of 2026)
+### 6. Competitive Context (Active as of 2026)
 
 - **vs. Redpanda**: Wire-compatible but no Flink, no Schema Registry governance, no Cloud
   managed offering at Confluent's scale; use Confluent's RBAC + audit story against it
@@ -127,6 +142,7 @@ The `streaming-skills-plugin@confluent-agent-skills` plugin is installed at proj
 |------|---------|-------------|
 | `context7` | Confluent canon + architecture patterns | Architecture questions, design reviews |
 | `confluent-docs` | Live Confluent documentation (llms.txt) | Config syntax, API refs, version-specific |
+| `shadowtraffic-docs` | Live ShadowTraffic documentation (hand-maintained llms.txt, `tools/mcpdoc/`) | Any ShadowTraffic config/behavior question — always call before answering |
 | `mcp-confluent` | Confluent Cloud control plane | Topic mgmt, Flink SQL, schema inspection |
 | `terraform` | Terraform registry + provider docs | Validating Confluent-provider IaC (e.g. Schema Registry Terraform from `kafka-schema-registry`) |
 | `dynatrace` | Confluent Cloud SaaS telemetry (Grail/DQL) | Validating DQL, metric field names, CC Metrics API identities before observability handoffs. Grail queries bill by GB — budget-capped at 50 GB. Scope to observability patterns only. |

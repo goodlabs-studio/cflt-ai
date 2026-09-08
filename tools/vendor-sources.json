@@ -1,4 +1,13 @@
 {
+  "shadowtraffic-docs-mcpdoc": {
+    "upstream": "https://docs.shadowtraffic.io",
+    "vendored_path": "tools/mcpdoc/shadowtraffic-llms.txt",
+    "kind": "mcpdoc-source",
+    "generator": "tools/mcpdoc/refresh_shadowtraffic_index.py",
+    "generated_from": "https://docs.shadowtraffic.io/sitemap.xml",
+    "ingested_at": "2026-09-05",
+    "license": "third-party, docs only — no vendor llms.txt exists upstream, hand-generated"
+  },
   "confluent-agent-skills": {
     "upstream": "https://github.com/confluentinc/agent-skills",
     "commit": "91d1871ef8c320be92bca955c8e42492a2778cb4",
