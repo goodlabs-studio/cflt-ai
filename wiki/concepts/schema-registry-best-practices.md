@@ -2,7 +2,7 @@
 title: Schema Registry Best Practices
 tags: [schema-registry, avro, protobuf, compatibility, governance, fsi, csfle]
 sources: [outputs/reports/confluent-best-practices-quickstart.md]
-related: [concepts/schema-evolution-strategies, patterns/fsi-governance-automation, patterns/topic-naming, patterns/producer-config-fsi, concepts/fsi-compliance, patterns/schema-registry-shared-types]
+related: [concepts/schema-evolution-strategies, patterns/fsi-governance-automation, patterns/topic-naming, patterns/producer-config-fsi, concepts/fsi-compliance, patterns/schema-registry-shared-types, patterns/schema-registry-manual-install-permissions]
 confidence: high
 last_updated: 2026-08-18
 last_validated: 2026-08-18
@@ -62,4 +62,5 @@ Schema Registry is the data contract authority for Kafka. This article captures 
 - [FSI Producer Configuration](../patterns/producer-config-fsi.md) — `auto.register.schemas=false` enforcement
 - [FSI Compliance](fsi-compliance.md) — schema-change audit trail for regulatory frameworks
 - [Schema Registry Shared-Types Library](../patterns/schema-registry-shared-types.md) — pattern for cross-cutting types (Money, MemberId, UsAddress) under a reserved namespace with pinned schema references
+- [Schema Registry Manual Install — Required ACLs and RBAC Role Bindings](../patterns/schema-registry-manual-install-permissions.md) — broker-side authorization layer underneath this article's operational surface; required ACLs/role bindings for the `_schemas` topic on a hand-rolled (non-cp-ansible) install
 - [Top 20 Confluent Gotchas](../synthesis/confluent-gotchas-top-20.md) — #8 (schema IDs not portable), #9 (`auto.register` bypass), #10 (compatibility direction)

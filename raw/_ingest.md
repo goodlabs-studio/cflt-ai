@@ -17,6 +17,7 @@ Run: `python tools/wiki-compile.py --delta` to process.
   notes: optional context for the compiler
 -->
 
+
 <!-- both April-17 entries processed 2026-05-18 — see Processed section below -->
 <!-- oic-kafka-integration auto-stub processed 2026-05-18 — see Processed section below -->
 
@@ -30,6 +31,16 @@ Run: `python tools/wiki-compile.py --delta` to process.
 # All 6 articles processed 2026-05-20.
 
 ## Processed
+
+- path: raw/repos/cp-migration-demo-rehearsal.md
+  source_url: ~/GoodLabs/cp-migration-demo (local repo, not pushed to a remote)
+  notes: |
+    Hands-on rehearsal rig for the CP -> MRC live-migration plan from the
+    ongoing FSI engagement. Two tracks (Docker Compose + real cp-ansible),
+    both run and verified end-to-end in-session, not just written.
+  compiled: 2026-09-08
+  wiki_articles:
+    - wiki/patterns/cp-mrc-migration-rehearsal-rig.md
 
 - path: /Users/jhogan/Downloads/mTLS-CP-LinuxOne.md
   source_url: |

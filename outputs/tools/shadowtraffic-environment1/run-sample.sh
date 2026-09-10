@@ -4,6 +4,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 docker run --rm \
+  --network none \
+  --hostname shadowtraffic-dryrun \
+  --add-host shadowtraffic-dryrun:127.0.0.1 \
   --env-file license.env \
   --env-file .env \
   -v "$(pwd)/config/shadowtraffic-config.json:/home/config.json" \

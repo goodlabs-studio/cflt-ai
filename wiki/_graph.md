@@ -83,6 +83,15 @@ patterns/kafka-admin-topic-rbac-tool → patterns/x86-to-linuxone-cluster-linkin
 patterns/kafka-admin-topic-rbac-tool → patterns/fsi-governance-automation : governance-as-code substitute for CP (Terraform is Cloud-only)
 patterns/kafka-admin-topic-rbac-tool → patterns/topic-naming : naming/config conventions for regenerated topic YAML
 patterns/kafka-admin-topic-rbac-tool → concepts/sla-tiers : tier system drives placement-policy assignment
+patterns/kafka-admin-topic-rbac-tool → patterns/cp-mrc-migration-rehearsal-rig : rehearsal rig for the migration this tool provisions topics/RBAC for
+
+# Outbound — patterns/cp-mrc-migration-rehearsal-rig
+patterns/cp-mrc-migration-rehearsal-rig → patterns/dr-multi-region-cluster : target architecture this rehearsal migrates toward
+patterns/cp-mrc-migration-rehearsal-rig → patterns/x86-to-linuxone-cluster-linking-migration : runbook shape the Cluster Linking cutover follows
+patterns/cp-mrc-migration-rehearsal-rig → patterns/kafka-admin-topic-rbac-tool : tool that handles the ACL/RBAC portability this rig skips
+patterns/cp-mrc-migration-rehearsal-rig → concepts/sla-tiers : informs how aggressively to pursue the zero-DR-coverage mitigation
+patterns/cp-mrc-migration-rehearsal-rig → patterns/shadowtraffic-confluent-cloud-datagen : ShadowTraffic producer config/flags used to generate the rig's live background traffic
+patterns/dr-multi-region-cluster → patterns/cp-mrc-migration-rehearsal-rig : hands-on rehearsal of the live-absorption path into this architecture
 
 patterns/fsi-governance-automation → patterns/kafka-admin-topic-rbac-tool : CP-side tool where Terraform provider can't reach MDS
 patterns/x86-to-linuxone-cluster-linking-migration → patterns/kafka-admin-topic-rbac-tool : same audit discipline applied to topic/RBAC provisioning
@@ -716,3 +725,10 @@ concepts/schema-registry-best-practices → patterns/shadowtraffic-confluent-clo
 concepts/schema-aware-console-producer-required → patterns/shadowtraffic-confluent-cloud-datagen : contrast case — ShadowTraffic's KafkaAvroSerializer does speak SR wire format
 concepts/confluent-cloud-private-networking → patterns/shadowtraffic-confluent-cloud-datagen : PrivateLink-fronted clusters require the generator to run inside the network
 patterns/topic-naming → patterns/shadowtraffic-confluent-cloud-datagen : naming-strategy background for confirming the real subject name
+
+# patterns/schema-registry-manual-install-permissions (2026-09-09)
+patterns/schema-registry-manual-install-permissions → concepts/schema-registry-best-practices : operational surface this security layer sits underneath
+concepts/schema-registry-best-practices → patterns/schema-registry-manual-install-permissions : broker-side ACL/RBAC requirements for the _schemas topic
+patterns/schema-registry-manual-install-permissions → patterns/kafka-admin-topic-rbac-tool : replication.factor: -1 + confluent.placement.constraints mechanism for pre-creating _schemas on MRC
+patterns/kafka-admin-topic-rbac-tool → patterns/schema-registry-manual-install-permissions : ACL/RBAC requirements for the SR service principal once _schemas is pre-created
+patterns/schema-registry-manual-install-permissions → concepts/kafka-streams-schema-patterns : client-side SR integration, contrasted with broker-side authorization
