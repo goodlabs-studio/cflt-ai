@@ -1,7 +1,7 @@
 ---
 title: Kafka-Admin — Topic and RBAC Migration Tooling for Confluent Platform
 tags: [kafka confluent-platform rbac topic-management migration mrc replica-placement fsi]
-related: [patterns/dr-multi-region-cluster, patterns/x86-to-linuxone-cluster-linking-migration, patterns/fsi-governance-automation, patterns/topic-naming, concepts/sla-tiers]
+related: [patterns/dr-multi-region-cluster, patterns/x86-to-linuxone-cluster-linking-migration, patterns/fsi-governance-automation, patterns/topic-naming, concepts/sla-tiers, patterns/schema-registry-manual-install-permissions]
 confidence: medium
 last_updated: 2026-09-04
 last_validated: 2026-09-04
@@ -85,3 +85,4 @@ RoleBinding and Centralized-ACL deletion having no opt-out flag at all was the m
 - [FSI Governance Automation](fsi-governance-automation.md) — the Terraform/Ansible governance-as-code pattern this tool substitutes for on CP where Terraform can't reach MDS
 - [Topic Naming Convention](topic-naming.md) — naming/config conventions to apply when tiering and regenerating topic YAML
 - [SLA Tiers](../concepts/sla-tiers.md) — the tier system that should drive per-topic placement-policy assignment
+- [Schema Registry Manual Install — Required ACLs and RBAC Role Bindings](schema-registry-manual-install-permissions.md) — once this tool pre-creates `_schemas` with explicit placement constraints, the SR service principal still needs the broker-side ACLs/role bindings covered there

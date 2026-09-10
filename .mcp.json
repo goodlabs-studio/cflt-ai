@@ -21,7 +21,7 @@
         "--with", "mcp[cli]<2",
         "mcpdoc",
         "--json", "/Users/sriramkannan/GoodLabs/cflt-ai/tools/mcpdoc/shadowtraffic-config.json",
-        "--allowed-domains", "docs.shadowtraffic.io",
+        "--allowed-domains", "https://docs.shadowtraffic.io/",
         "--transport", "stdio"
       ]
     },

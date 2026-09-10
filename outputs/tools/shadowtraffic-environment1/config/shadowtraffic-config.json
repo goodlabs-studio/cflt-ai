@@ -37,9 +37,6 @@
         }
       },
       "localConfigs": {
-        "schemaRegistrySubject": {
-          "value": "datagen.users-value"
-        },
         "throughput": {
           "_gen": "env",
           "var": "EVENTS_PER_SECOND",
@@ -57,7 +54,7 @@
         "file": "/home/config/client.properties",
         "overrides": {
           "key.serializer": "org.apache.kafka.common.serialization.StringSerializer",
-          "value.serializer": "io.confluent.kafka.serializers.KafkaAvroSerializer"
+          "value.serializer": "org.apache.kafka.common.serialization.StringSerializer"
         }
       }
     }
