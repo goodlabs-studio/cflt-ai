@@ -1,0 +1,5 @@
+{
+  "llms_txt": "/Users/sriramkannan/GoodLabs/cflt-ai/tools/mcpdoc/headroom-llms.txt",
+  "fetcher": "web",
+  "timeout": 30
+}
