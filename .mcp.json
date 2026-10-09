@@ -25,6 +25,17 @@
         "--transport", "stdio"
       ]
     },
+    "headroom-docs": {
+      "command": "uvx",
+      "args": [
+        "--from", "mcpdoc",
+        "--with", "mcp[cli]<2",
+        "mcpdoc",
+        "--json", "/Users/sriramkannan/GoodLabs/cflt-ai/tools/mcpdoc/headroom-config.json",
+        "--allowed-domains", "https://github.com/headroomlabs-ai/headroom/",
+        "--transport", "stdio"
+      ]
+    },
     "mcp-confluent": {
       "command": "npx",
       "args": [

@@ -1,0 +1,92 @@
+# Headroom AI Documentation
+Official documentation for Headroom, the local context optimization proxy for Claude and other LLMs.
+
+**Repository:** https://github.com/headroomlabs-ai/headroom
+**Last Updated:** 2026-10-06T16:15:38.319464
+
+## Getting Started
+
+- [Quickstart](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/quickstart.mdx)
+
+## Installation & Setup
+
+- [Installation](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/installation.mdx)
+
+## Configuration Reference
+
+- [Configuration](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/configuration.mdx)
+
+## Proxy Operation
+
+- [Proxy](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/proxy.mdx)
+
+## Optimization & Caching
+
+- [Cache Optimization](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/cache-optimization.mdx)
+- [Ccr](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/ccr.mdx)
+
+## Security & Privacy
+
+- [Security Model](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/security-model.mdx)
+
+## API Reference
+
+- [Api Reference](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/api-reference.mdx)
+
+## Troubleshooting
+
+- [Errors](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/errors.mdx)
+- [Troubleshooting](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/troubleshooting.mdx)
+
+## SDK Integrations
+
+- [Anthropic Sdk](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/anthropic-sdk.mdx)
+- [Langchain](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/langchain.mdx)
+- [Litellm](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/litellm.mdx)
+- [Openai Sdk](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/openai-sdk.mdx)
+- [Vercel Ai Sdk](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/vercel-ai-sdk.mdx)
+
+## Additional Documentation
+
+- [Agent Hooks](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/agent-hooks.mdx)
+- [Agent Orchestration](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/agent-orchestration.mdx)
+- [Agno](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/agno.mdx)
+- [Architecture](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/architecture.mdx)
+- [Autogen](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/autogen.mdx)
+- [Benchmarks](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/benchmarks.mdx)
+- [Ci Cd Flows](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/ci-cd-flows.mdx)
+- [Claude Code Azure Foundry](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/claude-code-azure-foundry.mdx)
+- [Claude Code Vertex](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/claude-code-vertex.mdx)
+- [Code Compression](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/code-compression.mdx)
+- [Codex Recovery](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/codex-recovery.mdx)
+- [Context Management](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/context-management.mdx)
+- [Corporate Networks](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/corporate-networks.mdx)
+- [Crewai](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/crewai.mdx)
+- [Docker Install](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/docker-install.mdx)
+- [Failure Learning](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/failure-learning.mdx)
+- [Filesystem Contract](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/filesystem-contract.mdx)
+- [Grok Build](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/grok-build.mdx)
+- [Hermes](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/hermes.mdx)
+- [How Compression Works](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/how-compression-works.mdx)
+- [Image Compression](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/image-compression.mdx)
+- [Limitations](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/limitations.mdx)
+- [Local Llm Prefill](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/local-llm-prefill.mdx)
+- [Mcp](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/mcp.mdx)
+- [Memory](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/memory.mdx)
+- [Metrics](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/metrics.mdx)
+- [Oauth2 Upstream](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/oauth2-upstream.mdx)
+- [Openclaw](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/openclaw.mdx)
+- [Opencode Deepseek](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/opencode-deepseek.mdx)
+- [Opencode](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/opencode.mdx)
+- [Persistent Installs](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/persistent-installs.mdx)
+- [Pipeline Extensions](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/pipeline-extensions.mdx)
+- [Releases](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/releases.mdx)
+- [Runtime Rollouts](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/runtime-rollouts.mdx)
+- [Savings](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/savings.mdx)
+- [Shared Context](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/shared-context.mdx)
+- [Simulation](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/simulation.mdx)
+- [Smart Crusher](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/smart-crusher.mdx)
+- [Strands](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/strands.mdx)
+- [Text And Logs](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/text-and-logs.mdx)
+- [Vscode Claude Code](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/vscode-claude-code.mdx)
+- [Vscode Copilot](https://github.com/headroomlabs-ai/headroom/blob/main/docs/content/docs/vscode-copilot.mdx)
