@@ -127,6 +127,7 @@ The LLM maintains this file. Do not edit manually.
 [Confluent Cloud Access Management — API Keys vs OAuth (PingFederate) for FSI](patterns/cc-api-key-oauth-access-management.md) — OAuth-primary target via corporate IdP (PingFed as "Other OIDC") + identity pools with aud/sub-pinned filters per org; GitHub→Terraform with no stored secret; API keys as owned exception register; day-one API-key baseline (SA-only, ≤90-day overlap rotation, quotas, SIEM detection) — #confluent-cloud #security #oauth #identity-pools #api-keys #rbac #pingfederate #terraform #fsi
 
 [Schema Linking CP → CC When CP SR Uses mTLS](patterns/schema-linking-cp-to-cc-mtls.md) — CC SR has no mTLS (API key / OAuth only), but the CP-side exporter calls CC outbound so CP mTLS is untouched; OAuth-or-scoped-API-key exporter into an IMPORT-mode CC context, ranked workarounds, CC→CP failback blocker, CP 8.1+ licensing — #schema-registry #schema-linking #mtls #oauth #confluent-cloud #confluent-platform #migration #hybrid #fsi
+[Chitragupta — Confluent Cloud Chargeback by Business Unit and Usage](patterns/chitragupta-confluent-cloud-chargeback.md) — open-source chargeback engine over CC Billing/Metrics APIs: setup (SA needs MetricsViewer + OrganizationAdmin + BillingAdmin), Docker/uv run modes, per-product allocation (CKU 70/30 usage/shared), BU rollup via tags + `group_by=tag:<key>`, caveats (no API auth, DIY BU mapping) — #chitragupta #chargeback #finops #confluent-cloud #billing-api #tagging #cost-allocation
 
 ## Incidents
 
