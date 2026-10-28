@@ -17,8 +17,8 @@ sources:
   - outputs/reports/confluent-gateway-review-2026-08-06.md
 related: [concepts/confluent-cloud-private-networking, patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-application-routing, concepts/cluster-linking-topology, concepts/network-connectivity-by-tier, concepts/schema-registry-best-practices]
 confidence: high
-last_updated: 2026-08-06
-last_validated: 2026-08-06
+last_updated: 2026-10-28
+last_validated: 2026-10-28
 ---
 
 # Confluent Gateway — Protocol-Aware Kafka Proxy
@@ -29,7 +29,7 @@ last_validated: 2026-08-06
 
 It ships as **one product with two backend flavors**, differing only in which container image you deploy: `confluentinc/cpc-gateway` fronting a **self-managed / Confluent Platform** Kafka cluster, or `confluentinc/confluent-gateway-for-cloud` fronting a **Confluent Cloud** Kafka cluster. Confluent's docs call the second flavor "Confluent Cloud Gateway," but it is the same architecture, the same CR/compose schema, and the same mechanics — not a different product, and this article covers both. Deployment is **Docker or Confluent for Kubernetes (CFK)** either way — there is no fully-managed Confluent Cloud SKU; you deploy and operate it yourself regardless of backend. Current release is **1.3.0** (July 2026).
 
-**Two hard constraints to check before scoping any work:** (1) client switchover **requires a gateway restart** — it is not a hot route repoint; this holds identically for both backend flavors; (2) the docs explicitly direct you **not** to use switchover for strict-ordering applications such as **Kafka Streams**.
+**Two hard constraints to check before scoping any work:** (1) client switchover is **restart-or-hot-reload, depending on license and mode** — Trial mode, or a change to a setting the gateway can't reload in place, needs a restart; a Confluent Enterprise license with the Gateway add-on plus a mounted config file hot-reloads most route changes (either way the changed route's client connections drop and clients reconnect, and no restart-duration SLA is published); (2) the docs explicitly direct you **not** to use switchover for strict-ordering applications such as **Kafka Streams**.
 
 **Do not confuse this with the Confluent Cloud Ingress PrivateLink Gateway** — a completely unrelated CC networking resource (VPC PrivateLink termination), not a Kafka-protocol proxy at all — see [Private Networking](confluent-cloud-private-networking.md). The disambiguation note below is the fast way to check which one you're looking at.
 
@@ -274,16 +274,20 @@ routes:
       bootstrapServerId: internal-sasl-ssl
 ```
 
-> ⚠️ **Switchover requires a gateway restart.** This corrects the earlier claim in this article that route changes take effect on the running process. The documented procedure is: edit the route, then **stop and restart** the gateway. Every RTO estimate and every client-impact analysis must budget a full gateway restart, not a hot reconfiguration.
+> ⚠️ **Switchover is restart-or-hot-reload — confirm which mode you run before budgeting RTO** (re-verified against `platform/current/gateway/gateway-migrate.html`, 2026-10-28; this supersedes the earlier "always requires a restart" correction). Edit the route's `streamingDomain.name`, then apply it:
+> - **Hot reload:** with a Confluent Enterprise license that includes the Gateway add-on and a mounted config file, the gateway watches the file and applies most changes without a restart (log line `Hot-reload successful`). The changed route is replaced, so its client connections still drop and clients reconnect. If the change touches a setting that can't be reloaded in place, the gateway keeps the current config and logs that a restart is required.
+> - **Restart:** in Trial mode, or when hot reload is refused, recreate the gateway (e.g. `docker compose up -d --force-recreate gateway`).
+>
+> No restart-duration SLA is published, so load-test it. The docs show the Docker procedure only; the CFK reload path is unverified. Budget RTO as config apply + (restart or hot-reload time) + client reconnection.
 
 **Documented hard limitation:** switching between clusters **breaks message ordering and end-to-end consistency**, because source and destination are separate Kafka clusters. Confluent explicitly says **do not use Client Switchover for applications requiring strict ordering, such as Kafka Streams applications.** This is now a vendor statement, not an inference.
 
-**Restart-impact by client role, with mitigations:**
+**Restart/reconnect impact by client role, with mitigations:**
 
-| Component | Impact during restart | Mitigation |
+| Component | Impact during restart or reconnect | Mitigation |
 |---|---|---|
-| **Consumer** | Group rebalance triggers if the restart exceeds `session.timeout.ms` (default 45s). Consumers may reprocess messages if offsets weren't committed before restart. | `isolation.level=read_committed` to avoid reading aborted transactions; tune `group.coordinator.rebalance.protocols` and `group.coordinator.session.timeout.ms`. |
-| **Producer** | Duplication when the broker acks but the gateway dies before relaying the ack, causing producer retries. | `enable.idempotence=true` (canon default anyway), or make the app duplicate-tolerant. |
+| **Consumer** | Group rebalance triggers if the restart exceeds `session.timeout.ms` (default 45s). Consumers may reprocess messages if offsets weren't committed before restart. | `isolation.level=read_committed` to avoid reading aborted transactions; tune `group.protocol` (`classic`, or `consumer` for static routes only), `partition.assignment.strategy`, and `session.timeout.ms`. Under `group.protocol=consumer` Kafka ignores `session.timeout.ms` — use the broker setting `group.consumer.session.timeout.ms` instead. |
+| **Producer** | Duplication when the broker acks but the gateway dies before relaying the ack, causing producer retries. | `enable.idempotence=true` prevents duplicates (canon default anyway), or make the app duplicate-tolerant. |
 | **Transactions** | EOS holds *across the restart window*: in-flight transactions commit if the outage is shorter than `transaction.timeout.ms`, else abort. Any transaction left open on the source **aborts and cannot be committed on the target**. | The producer application must reset transaction state on failure and start a new transaction. |
 
 Note the two distinct transaction caveats — they live at different layers and both apply:
@@ -319,7 +323,7 @@ Confluent's 60-second-RTO POC is explicitly **not production software**. Read it
 - **Cluster Linking does not support transactions on mirror topics** — a real problem for EOS workloads and dangerous on failback.
 - POC scope was single-region, Dedicated clusters, public endpoints, **OAuth2 required** — because OAuth2 and Identity Pools are org-scoped in CC, the same client ID/secret works across clusters; with API keys you'd need per-cluster credentials.
 
-**FSI read:** the gateway moves *connections*, not *state*. For stateless producer/consumer apps, gateway + CL is a sound sub-minute RTO story *if* you budget the restart. For Kafka Streams (changelog/repartition topics, RocksDB) or in-flight EOS transactions, it is not — and Confluent's own docs now say so directly. Pair with an explicit state-rebuild plan or budget the reset into your RTO.
+**FSI read:** the gateway moves *connections*, not *state*. For stateless producer/consumer apps, gateway + CL is a sound sub-minute RTO story *if* you budget the restart-or-hot-reload and reconnect time (unpublished — load-test it). For Kafka Streams (changelog/repartition topics, RocksDB) or in-flight EOS transactions, it is not — and Confluent's own docs now say so directly. Pair with an explicit state-rebuild plan or budget the reset into your RTO.
 
 > ⚠️ **"Sub-minute" is not an FSI SLA tier.** Canon's FSI latency tiers are sub-millisecond (market data), <10ms (risk), <100ms (compliance), and async (reconciliation) — all but reconciliation are far tighter than "sub-minute" (tens of seconds). Do not cite this RTO as satisfying a risk- or compliance-tier requirement; it realistically scopes to reconciliation-tier (async) workloads only.
 
@@ -330,7 +334,7 @@ Brokers stay private; the gateway is the only public surface, terminating mTLS a
 ### When to use Confluent Gateway
 
 - **Migrating a large client estate** to Confluent Cloud where coordinating app redeploys is the actual blocker. This is the strongest case.
-- **Sub-minute DR RTO on stateless workloads** with Cluster Linking already in place, and a restart budgeted into the RTO.
+- **Sub-minute DR RTO on stateless workloads** with Cluster Linking already in place, and the restart/hot-reload plus reconnect time budgeted into the RTO.
 - **Auth bridging** — legacy mTLS/SCRAM client population against a modern OAUTHBEARER cluster, without a coordinated client rollout.
 - **Partner/external access** to otherwise-private brokers.
 - **Multi-tenant traffic control** where fencing a client at the proxy beats an ACL roll.

@@ -119,7 +119,9 @@
         - (lpar_dedicated | int) != expected_ifls
         - not (allow_shared_ifls | default(false) | bool)
 
-    # ---- FIPS: REQUIRED, and it must have been set at install time ----------
+    # ---- OS FIPS: REQUIRED, and it must have been set at install time -------
+    # This gate is OS-level (kernel/RHEL crypto modules) only. It does NOT imply
+    # CP FIPS mode, which is not yet supported on s390x -- see 02-fips-mode.yml.
     # RHEL 9's FIPS 140-3 modules were tested on IBM z16 as a certified operational
     # environment -- Z is on the certificate, not vendor-affirmed onto it. FIPS mode
     # must be enabled at install (`fips=1` on the kernel cmdline); retrofitting it
@@ -137,7 +139,7 @@
           FIPS mode is OFF. This stack targets a FIPS-mode host OS (RHEL 9 modules validated
           on z16). Enable with `fips=1` at INSTALL time -- never retrofit. Set
           -e require_fips=false only for a non-FSI dev box.
-        success_msg: "FIPS mode enabled (validated modules on z16)."
+        success_msg: "OS FIPS mode enabled (validated modules on z16). CP FIPS mode is separate and stays off on s390x."
       when: require_fips | default(true) | bool
 
     - name: Verify FIPS was set at install, not retrofitted
