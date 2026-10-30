@@ -23,6 +23,10 @@ fail()  { say "${RED}✗${RESET} $1"; }
 
 have() { command -v "$1" &>/dev/null; }
 
+# Prompt helper: on EOF (piped / non-interactive run) fall back to an empty
+# answer so each prompt's default applies instead of set -e killing the script.
+ask() { read -rp "$1" "$2" || printf -v "$2" ''; }
+
 say ""
 info "cflt-ai setup"
 say "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -59,6 +63,10 @@ if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
 elif [ -f "$anthropic_env" ]; then
   ok "API key file found: $anthropic_env"
   auth_ok=true
+elif claude auth status 2>/dev/null | grep -q '"loggedIn": true'; then
+  # Preferred check: works for Keychain (macOS) and file-based credentials.
+  ok "Claude login detected (claude auth status)"
+  auth_ok=true
 elif [ -f "$HOME/.claude/.credentials.json" ]; then
   ok "Claude subscription detected (logged in)"
   auth_ok=true
@@ -76,7 +84,7 @@ if [ "$auth_ok" = false ]; then
   say "      Stored in ${anthropic_env} (chmod 600), not in your shell profile"
   say ""
 
-  read -rp "   Set up auth now? [a/b/skip]: " auth_choice
+  ask "   Set up auth now? [a/b/skip]: " auth_choice
 
   case "$auth_choice" in
     a|A)
@@ -84,7 +92,8 @@ if [ "$auth_ok" = false ]; then
       say "   Running 'claude login' — follow the prompts:"
       say ""
       claude login
-      if [ -f "$HOME/.claude/.credentials.json" ]; then
+      if claude auth status 2>/dev/null | grep -q '"loggedIn": true' \
+         || [ -f "$HOME/.claude/.credentials.json" ]; then
         ok "Login successful"
         auth_ok=true
       else
@@ -201,7 +210,7 @@ else
   say "   and reference implementations used by wiki articles and /wiki:evaluate."
   say "   Requires access to github.com/goodlabs-studio/fsi-dsp."
   say ""
-  read -rp "   Initialize fsi-dsp submodule? [Y/n]: " fsi_choice
+  ask "   Initialize fsi-dsp submodule? [Y/n]: " fsi_choice
 
   if [[ ! "$fsi_choice" =~ ^[nN] ]]; then
     if git -C "$ROOT" submodule update --init raw/repos/fsi-dsp 2>/dev/null; then
@@ -229,10 +238,10 @@ else
   say "   The mcp-confluent server lets Claude query live Confluent Cloud clusters."
   say "   You need a Confluent Cloud API key/secret."
   say ""
-  read -rp "   Set up CC credentials? [y/N]: " cc_choice
+  ask "   Set up CC credentials? [y/N]: " cc_choice
 
   if [[ "$cc_choice" =~ ^[yY] ]]; then
-    read -rp "   Confluent Cloud API key: " cc_key
+    ask "   Confluent Cloud API key: " cc_key
     read -rsp "   Confluent Cloud API secret: " cc_secret
     say ""
 
@@ -271,7 +280,7 @@ else
   say "   The Electron app in app/ is a UI over the same skills."
   say "   It needs pnpm install (downloads the Electron binary, ~100 MB)."
   say ""
-  read -rp "   Install app dependencies now? [y/N]: " app_choice
+  ask "   Install app dependencies now? [y/N]: " app_choice
 
   if [[ "$app_choice" =~ ^[yY] ]]; then
     if (cd "$app_dir" && pnpm install --frozen-lockfile); then
@@ -305,7 +314,7 @@ else
   say "   Approving them for this repo skips the per-session prompt. The two"
   say "   on-demand servers stay disabled until you enable them with /mcp."
   say ""
-  read -rp "   Approve this repo's MCP servers? [Y/n]: " mcp_choice
+  ask "   Approve this repo's MCP servers? [Y/n]: " mcp_choice
 
   if [[ ! "$mcp_choice" =~ ^[nN] ]]; then
     mkdir -p "$(dirname "$local_settings")"
