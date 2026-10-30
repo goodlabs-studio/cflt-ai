@@ -6,28 +6,23 @@
     },
     "confluent-docs": {
       "command": "uvx",
-      "args": [
-        "--from", "mcpdoc",
-        "--with", "mcp[cli]<2",
-        "mcpdoc",
-        "--urls", "Confluent:https://docs.confluent.io/llms.txt",
-        "--transport", "stdio"
-      ]
+      "args": ["--from", "mcpdoc", "--with", "mcp[cli]<2", "mcpdoc", "--urls", "Confluent:https://docs.confluent.io/llms.txt", "--transport", "stdio"]
+    },
+    "shadowtraffic-docs": {
+      "command": "bin/mcp-launch",
+      "args": ["shadowtraffic-docs"]
+    },
+    "headroom-docs": {
+      "command": "bin/mcp-launch",
+      "args": ["headroom-docs"]
     },
     "mcp-confluent": {
-      "command": "/opt/homebrew/opt/node@22/bin/npx",
-      "args": [
-        "-y", "@confluentinc/mcp-confluent",
-        "--env-file", "${CONFLUENT_MCP_ENV_FILE}"
-      ],
-      "env": {
-        "CONFLUENT_MCP_ENV_FILE": "${CONFLUENT_MCP_ENV_FILE}",
-        "PATH": "/opt/homebrew/opt/node@22/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-      }
+      "command": "bin/mcp-launch",
+      "args": ["mcp-confluent"]
     },
     "terraform": {
-      "command": "/usr/local/bin/terraform-mcp-server",
-      "args": []
+      "command": "bin/mcp-launch",
+      "args": ["terraform"]
     },
     "dynatrace": {
       "command": "npx",
@@ -39,8 +34,8 @@
       }
     },
     "grafana": {
-      "command": "/Users/jhogan/go/bin/mcp-grafana",
-      "args": ["-t", "stdio", "-disable-write"],
+      "command": "bin/mcp-launch",
+      "args": ["grafana"],
       "env": {
         "GRAFANA_URL": "${GRAFANA_URL}",
         "GRAFANA_API_KEY": "${GRAFANA_API_KEY}"

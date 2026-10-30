@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Machine-agnostic launcher for the MCP servers declared in .mcp.json.
+#
+# Why this exists: .mcp.json is committed and shared, so it can't hold
+# per-machine absolute paths (home dirs, Homebrew prefixes, local binaries).
+# Everything machine-specific is resolved here at launch time instead:
+#   - repo root     -> derived from this script's own location
+#   - binaries      -> looked up on PATH (plus common install dirs), with a
+#                      `go run` fallback where an upstream binary is optional
+#   - credentials   -> $CONFLUENT_MCP_ENV_FILE, else ~/.config/confluent/mcp.env
+#                      (the file bin/setup creates)
+#
+# Usage (from .mcp.json):  bin/mcp-launch <server-name>
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# GUI-launched MCP clients often get a minimal PATH; add the usual suspects.
+# Each dir is prepended, so the LAST one listed wins. node@22 goes last so it
+# shadows a newer default Node: @confluentinc/kafka-javascript (used by
+# mcp-confluent) ships native prebuilds only for supported Node ABIs and
+# crashes on load under newer majors (seen with Node 26).
+for d in "$HOME/.local/bin" "$HOME/go/bin" /usr/local/bin /opt/homebrew/bin \
+         /usr/local/opt/node@22/bin /opt/homebrew/opt/node@22/bin; do
+  [ -d "$d" ] && PATH="$d:$PATH"
+done
+export PATH
+
+die() { echo "mcp-launch: $*" >&2; exit 1; }
+need() { command -v "$1" >/dev/null 2>&1 || die "'$1' not found on PATH — $2"; }
+
+server="${1:-}"
+[ -n "$server" ] || die "usage: bin/mcp-launch <mcp-confluent|terraform|grafana|shadowtraffic-docs|headroom-docs>"
+
+# mcpdoc resolves relative llms_txt paths in tools/mcpdoc/*-config.json against cwd.
+cd "$ROOT"
+
+mcpdoc() {
+  need uvx "install uv: https://docs.astral.sh/uv/"
+  exec uvx --from mcpdoc --with 'mcp[cli]<2' mcpdoc "$@" --transport stdio
+}
+
+case "$server" in
+  mcp-confluent)
+    need npx "install Node.js (>=22 recommended)"
+    env_file="${CONFLUENT_MCP_ENV_FILE:-$HOME/.config/confluent/mcp.env}"
+    [ -f "$env_file" ] || die "no credentials file at $env_file — run bin/setup or set CONFLUENT_MCP_ENV_FILE"
+    exec npx -y @confluentinc/mcp-confluent --env-file "$env_file"
+    ;;
+  terraform)
+    if command -v terraform-mcp-server >/dev/null 2>&1; then
+      exec terraform-mcp-server
+    fi
+    need go "install terraform-mcp-server (https://github.com/hashicorp/terraform-mcp-server) or Go"
+    exec go run github.com/hashicorp/terraform-mcp-server/cmd/terraform-mcp-server@latest stdio
+    ;;
+  grafana)
+    # Read-only by design; see CLAUDE.md (grafana row).
+    if command -v mcp-grafana >/dev/null 2>&1; then
+      exec mcp-grafana -t stdio -disable-write
+    fi
+    need go "install mcp-grafana (https://github.com/grafana/mcp-grafana) or Go"
+    exec go run github.com/grafana/mcp-grafana/cmd/mcp-grafana@latest -t stdio -disable-write
+    ;;
+  shadowtraffic-docs)
+    mcpdoc --json tools/mcpdoc/shadowtraffic-config.json \
+           --allowed-domains https://docs.shadowtraffic.io/
+    ;;
+  headroom-docs)
+    mcpdoc --json tools/mcpdoc/headroom-config.json \
+           --allowed-domains https://github.com/headroomlabs-ai/headroom/ \
+           --timeout 30
+    ;;
+  *)
+    die "unknown server '$server'"
+    ;;
+esac

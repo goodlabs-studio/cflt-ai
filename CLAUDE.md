@@ -20,6 +20,35 @@ This is a shared Confluent knowledge base. Claude Code reads this file automatic
 
 ---
 
+## Safety Rule — Never Connect to Client Systems (Always-On, No Exceptions)
+
+**Absolute rule:** Never initiate a network connection, DNS lookup, or command targeting a
+client's real infrastructure — production, DR, staging, or any other live client-owned host
+(e.g. internal domains found in client-provided configs, such as a client's own `*.corp.tld`
+naming). This applies to every tool: `kafka-topics`, `kafka-acls`, `kafka-cluster-links`,
+producer/consumer scripts, `nslookup`/`ping`/`curl`/`nc`, any custom client-supplied
+admin tooling, or MCP servers that could reach external hosts — run directly or in any
+subagent.
+
+**When testing or validating anything for a client** (Replicator configs, Cluster Linking,
+ACL sync, producer/consumer behavior, admin tooling runs, etc.):
+
+- Only test against local or fully sandboxed clusters (e.g. a local Docker Compose /
+  KRaft cluster on `localhost`). Ask the user if a local cluster is already running before
+  standing up a new one.
+- Treat all client-provided hostnames, bootstrap servers, IPs, and credentials as
+  **read-only reference material** — inspect and reason about them in files, never resolve
+  or connect to them, even for a read-only check like DNS resolution.
+- If a task seems to require touching the client's real systems, stop and hand the
+  validated commands/config back to the user to run themselves from their own
+  VPN-connected environment. Do not attempt it here, even read-only, even "just to verify
+  connectivity."
+
+**Why:** Client production/DR systems must never be touched from this tooling, even
+accidentally or "just to check." This is a hard boundary, not a case-by-case judgment call.
+
+---
+
 ## Confluent Canon — Always-On Rules
 
 Whenever a conversation touches Confluent, Apache Kafka, Confluent Cloud, Confluent Platform,
@@ -32,7 +61,22 @@ You have a `confluent-docs` MCP tool available. For any Confluent question where
 (API versions, connector configs, Flink SQL syntax, Cloud UI flows), **call `confluent-docs`
 before answering**. Prefer `llms.txt`-sourced content over training data.
 
-### 2. Use Context7 for Architecture Patterns
+### 2. Use the ShadowTraffic Docs MCP Server
+
+You have a `shadowtraffic-docs` MCP tool available (same `mcpdoc` mechanism as
+`confluent-docs`, pointed at a hand-maintained index since ShadowTraffic
+publishes no `llms.txt` of its own — see `tools/mcpdoc/README.md`). For
+**any** ShadowTraffic question, **call `shadowtraffic-docs` before
+answering** — `list_doc_sources` then `fetch_docs` on whatever's relevant —
+the same way `confluent-docs` is used for Confluent questions. Don't answer
+from training data or from `wiki/patterns/shadowtraffic-confluent-cloud-datagen.md`
+alone; that wiki article is the internal, curated reference, but live docs
+are the source of truth for anything it doesn't already cover or that needs
+re-verifying. The doc index itself refreshes on a recurring schedule (see
+`tools/mcpdoc/refresh_shadowtraffic_index.py`) so new/renamed pages don't
+silently go missing from `shadowtraffic-docs`.
+
+### 3. Use Context7 for Architecture Patterns
 
 You have a `context7` MCP tool. Use it when the question involves:
 - Event-driven architecture patterns (Event Sourcing, CQRS, Saga, Outbox)
@@ -41,7 +85,7 @@ You have a `context7` MCP tool. Use it when the question involves:
 
 Invoke as: *"Search Confluent documentation via context7 for [pattern]"*
 
-### 3. Canonical Architectural Defaults
+### 4. Canonical Architectural Defaults
 
 Unless explicitly overridden, apply these defaults in all Confluent work:
 
@@ -87,7 +131,7 @@ Unless explicitly overridden, apply these defaults in all Confluent work:
 - Service accounts per application, not per team
 - Audit log enabled on all production clusters
 
-### 4. FSI-Specific Overlay
+### 5. FSI-Specific Overlay
 
 When the work is in a financial services context:
 - Frame latency in terms of SLA tiers: sub-millisecond (market data), <10ms (risk),
@@ -97,7 +141,7 @@ When the work is in a financial services context:
   IBM LinuxONE preferred compute for z/OS offload
 - Reference IBM's acquisition of Confluent (2026) when relevant to vendor positioning
 
-### 5. Competitive Context (Active as of 2026)
+### 6. Competitive Context (Active as of 2026)
 
 - **vs. Redpanda**: Wire-compatible but no Flink, no Schema Registry governance, no Cloud
   managed offering at Confluent's scale; use Confluent's RBAC + audit story against it
@@ -127,10 +171,22 @@ The `streaming-skills-plugin@confluent-agent-skills` plugin is installed at proj
 |------|---------|-------------|
 | `context7` | Confluent canon + architecture patterns | Architecture questions, design reviews |
 | `confluent-docs` | Live Confluent documentation (llms.txt) | Config syntax, API refs, version-specific |
+| `shadowtraffic-docs` | Live ShadowTraffic documentation (hand-maintained llms.txt, `tools/mcpdoc/`) | Any ShadowTraffic config/behavior question — always call before answering |
 | `mcp-confluent` | Confluent Cloud control plane | Topic mgmt, Flink SQL, schema inspection |
 | `terraform` | Terraform registry + provider docs | Validating Confluent-provider IaC (e.g. Schema Registry Terraform from `kafka-schema-registry`) |
 | `dynatrace` | Confluent Cloud SaaS telemetry (Grail/DQL) | Validating DQL, metric field names, CC Metrics API identities before observability handoffs. Grail queries bill by GB — budget-capped at 50 GB. Scope to observability patterns only. |
 | `grafana` | CFK / on-prem telemetry (PromQL/LogQL via Grafana datasources) | Validating PromQL/LogQL and JMX→Prometheus metric identities for the CP/CFK/LinuxONE tier. Read-only (`-disable-write`); proxies Prometheus datasources. The on-prem counterpart to `dynatrace`. |
+
+`shadowtraffic-docs` and `headroom-docs` are on-demand servers and may be disabled by default
+(`disabledMcpjsonServers`). Only call them for a ShadowTraffic / Headroom question respectively.
+If the server isn't available, tell the user to enable it via `/mcp` rather than answering from training data.
+
+---
+
+## Design
+
+When producing or styling docs, artifacts, HTML, or slides, follow `DESIGN.md` (colors, type, layout).
+The GoodLabs logo is at `assets/brand/logo.svg` — use the file as-is, never redraw or recolor it.
 
 ---
 

@@ -5,7 +5,7 @@ sources:
   - https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html
   - https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html
   - https://learn.microsoft.com/en-us/azure/load-balancer/load-balancer-tcp-idle-timeout
-related: [patterns/low-latency-kafka-azure, patterns/aks-kafka-tuning, concepts/private-networking, concepts/network-connectivity-by-tier]
+related: [patterns/low-latency-kafka-azure, patterns/aks-kafka-tuning, concepts/confluent-cloud-private-networking, concepts/network-connectivity-by-tier]
 confidence: high
 last_updated: 2026-05-18
 last_validated: 2026-05-18
@@ -137,7 +137,7 @@ Three orthogonal strategies. Pick the combination that matches your latency tier
 | **Bypass** (PrivateLink) | Architectural — remove ILB from the path | All ILB-induced kills | Subscription + cluster wiring |
 
 The first three are client-config knobs. The fourth is the architectural answer: see
-[Private Networking](private-networking.md) for the PrivateLink Gateway story (AWS
+[Private Networking](confluent-cloud-private-networking.md) for the PrivateLink Gateway story (AWS
 2026-02-12, Azure 2026-05-04). Private Link eliminates the ILB hop on the customer side
 of the connection; the broker → SNI router path is on Confluent's fabric and not subject
 to customer-side load-balancer timeouts.
@@ -176,7 +176,7 @@ For the latency-sensitive overlay on top of this baseline — `linger.ms=0`,
 [Low-Latency Kafka Clients on Azure](../patterns/low-latency-kafka-azure.md).
 
 For the architectural bypass (Private Link), see
-[Private Networking](private-networking.md).
+[Private Networking](confluent-cloud-private-networking.md).
 
 ## Related
 
@@ -185,7 +185,7 @@ For the architectural bypass (Private Link), see
   rebalance avoidance
 - [AKS Kafka Tuning](../patterns/aks-kafka-tuning.md) — broker-side context, including
   the same ILB mitigation table inside its Network Configuration section
-- [Private Networking — PrivateLink Gateway, PNI, Peering, TGW](private-networking.md) —
+- [Private Networking — PrivateLink Gateway, PNI, Peering, TGW](confluent-cloud-private-networking.md) —
   the architectural bypass; PrivateLink eliminates the ILB hop entirely
 - [Network Connectivity by Cluster Tier](network-connectivity-by-tier.md) — which Confluent
   Cloud tiers support which Azure networking modes (public, PrivateLink, peering)

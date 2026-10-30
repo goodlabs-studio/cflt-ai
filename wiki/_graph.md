@@ -15,6 +15,13 @@ Tracks which articles reference which. The LLM maintains this file.
 
 ## Backlinks
 
+concepts/confluent-cloud-certified-operator-exam → concepts/cc-cluster-tiers : Core Concepts domain refresher
+concepts/confluent-cloud-certified-operator-exam → concepts/confluent-cloud-cluster-sku-selection : Static Operations domain refresher
+concepts/confluent-cloud-certified-operator-exam → concepts/cluster-linking-topology : Resilience domain refresher
+concepts/confluent-cloud-certified-operator-exam → concepts/schema-registry-best-practices : Data Governance domain refresher
+concepts/confluent-cloud-certified-operator-exam → concepts/observability-metrics-mapping : Dynamic Operations domain refresher
+concepts/confluent-cloud-certified-operator-exam → concepts/flink-confluent-cloud-setup : Streaming Pipelines domain refresher
+
 concepts/fsi-data-streaming-platform → concepts/sla-tiers : tier system drives all governance defaults
 concepts/fsi-data-streaming-platform → concepts/schema-evolution-strategies : schema governance for the platform
 concepts/fsi-data-streaming-platform → concepts/fsi-compliance : compliance audit trail for CI/CD
@@ -69,6 +76,25 @@ patterns/dr-multi-region-cluster → patterns/dr-cluster-linking : async DR for 
 patterns/dr-multi-region-cluster → patterns/dr-mirrormaker2 : async DR for CFK/CP
 patterns/dr-multi-region-cluster → concepts/sla-tiers : compliance tier requirement
 patterns/dr-multi-region-cluster → synthesis/adr-index : ADR-005, ADR-008
+patterns/dr-multi-region-cluster → patterns/yaml-topic-rbac-admin-tool : provisioning tool for MRC target topics/RBAC
+
+patterns/yaml-topic-rbac-admin-tool → patterns/dr-multi-region-cluster : target topology for provisioned topics
+patterns/yaml-topic-rbac-admin-tool → patterns/x86-to-linuxone-cluster-linking-migration : parallel audit/validate/evidence discipline
+patterns/yaml-topic-rbac-admin-tool → patterns/fsi-governance-automation : governance-as-code substitute for CP (Terraform is Cloud-only)
+patterns/yaml-topic-rbac-admin-tool → patterns/topic-naming : naming/config conventions for regenerated topic YAML
+patterns/yaml-topic-rbac-admin-tool → concepts/sla-tiers : tier system drives placement-policy assignment
+patterns/yaml-topic-rbac-admin-tool → patterns/cp-mrc-migration-rehearsal-rig : rehearsal rig for the migration this tool provisions topics/RBAC for
+
+# Outbound — patterns/cp-mrc-migration-rehearsal-rig
+patterns/cp-mrc-migration-rehearsal-rig → patterns/dr-multi-region-cluster : target architecture this rehearsal migrates toward
+patterns/cp-mrc-migration-rehearsal-rig → patterns/x86-to-linuxone-cluster-linking-migration : runbook shape the Cluster Linking cutover follows
+patterns/cp-mrc-migration-rehearsal-rig → patterns/yaml-topic-rbac-admin-tool : tool that handles the ACL/RBAC portability this rig skips
+patterns/cp-mrc-migration-rehearsal-rig → concepts/sla-tiers : informs how aggressively to pursue the zero-DR-coverage mitigation
+patterns/cp-mrc-migration-rehearsal-rig → patterns/shadowtraffic-confluent-cloud-datagen : ShadowTraffic producer config/flags used to generate the rig's live background traffic
+patterns/dr-multi-region-cluster → patterns/cp-mrc-migration-rehearsal-rig : hands-on rehearsal of the live-absorption path into this architecture
+
+patterns/fsi-governance-automation → patterns/yaml-topic-rbac-admin-tool : CP-side tool where Terraform provider can't reach MDS
+patterns/x86-to-linuxone-cluster-linking-migration → patterns/yaml-topic-rbac-admin-tool : same audit discipline applied to topic/RBAC provisioning
 
 synthesis/adr-index → concepts/fsi-data-streaming-platform : platform these decisions govern
 synthesis/adr-index → concepts/sla-tiers : tier system (ADR-002, ADR-008)
@@ -156,13 +182,13 @@ patterns/low-latency-kafka-azure → concepts/azure-connection-management : Laye
 
 concepts/azure-connection-management → patterns/low-latency-kafka-azure : the named profile that bundles this with latency tuning
 concepts/azure-connection-management → patterns/aks-kafka-tuning : broker-side context for AKS-hosted clusters
-concepts/azure-connection-management → concepts/private-networking : PrivateLink as architectural bypass for ILB silent kill
+concepts/azure-connection-management → concepts/confluent-cloud-private-networking : PrivateLink as architectural bypass for ILB silent kill
 concepts/azure-connection-management → concepts/network-connectivity-by-tier : tier-to-mode mapping for Confluent Cloud
 concepts/azure-connection-management → concepts/producer-batching-config : adjacent client config (throughput vs lifecycle separation)
 
 patterns/aks-kafka-tuning → concepts/azure-connection-management : canonical reference for the ILB client mitigation table
 
-concepts/private-networking → concepts/azure-connection-management : ILB silent-kill is what PrivateLink bypasses
+concepts/confluent-cloud-private-networking → concepts/azure-connection-management : ILB silent-kill is what PrivateLink bypasses
 
 patterns/producer-config-fsi → concepts/producer-batching-config : batching internals
 patterns/producer-config-fsi → concepts/exactly-once-semantics : idempotent + transactional producer mechanics
@@ -211,13 +237,13 @@ concepts/network-connectivity-by-tier → patterns/dr-cluster-linking : Consul e
 concepts/network-connectivity-by-tier → patterns/low-latency-kafka-azure : ILB-aware, fetch-from-follower
 concepts/network-connectivity-by-tier → patterns/aks-kafka-tuning : advertised listeners on CFK
 concepts/network-connectivity-by-tier → synthesis/confluent-gotchas-top-20 : gotchas #18, #20
-concepts/network-connectivity-by-tier → concepts/private-networking : deep dive on PrivateLink Gateway mechanics
+concepts/network-connectivity-by-tier → concepts/confluent-cloud-private-networking : deep dive on PrivateLink Gateway mechanics
 
-concepts/private-networking → concepts/network-connectivity-by-tier : tier-to-mode mapping (parent article)
-concepts/private-networking → concepts/cc-cluster-tiers : Enterprise vs Dedicated tier requirements
-concepts/private-networking → patterns/dr-cluster-linking : CL over private, CC↔CP reachability planning
-concepts/private-networking → patterns/low-latency-kafka-azure : Azure ILB connection-management for self-managed paths
-concepts/private-networking → concepts/fsi-data-streaming-platform : six deployment models context
+concepts/confluent-cloud-private-networking → concepts/network-connectivity-by-tier : tier-to-mode mapping (parent article)
+concepts/confluent-cloud-private-networking → concepts/cc-cluster-tiers : Enterprise vs Dedicated tier requirements
+concepts/confluent-cloud-private-networking → patterns/dr-cluster-linking : CL over private, CC↔CP reachability planning
+concepts/confluent-cloud-private-networking → patterns/low-latency-kafka-azure : Azure ILB connection-management for self-managed paths
+concepts/confluent-cloud-private-networking → concepts/fsi-data-streaming-platform : six deployment models context
 
 synthesis/confluent-gotchas-top-20 → patterns/producer-config-fsi : producer gotchas resolution
 synthesis/confluent-gotchas-top-20 → patterns/consumer-config-fsi : consumer gotchas resolution
@@ -412,25 +438,25 @@ patterns/cdc-to-tableflow-flink-decode → concepts/tableflow-iceberg-delta : fr
 concepts/tableflow-changelog-mode-immutability → concepts/tableflow-iceberg-delta : framework-level concept underpinning the trip-wire
 patterns/fsi-l1-reference-architecture → concepts/tableflow-iceberg-delta : Tableflow is the operational→analytical bridge in the L1 architecture
 
-## confluent-cloud-gateway concept (2026-05-18)
+## confluent-gateway concept (2026-05-18)
 
 # Outbound (concept article → wiki articles it depends on)
-concepts/confluent-cloud-gateway → concepts/private-networking : disambiguation — CC PrivateLink Gateway is a networking resource, not a protocol proxy
-concepts/confluent-cloud-gateway → patterns/dr-cluster-linking : data-plane replication paired with gateway for client-side switchover
-concepts/confluent-cloud-gateway → patterns/dr-mirrormaker2 : alternative replication backend for CFK/CP topologies fronted by the gateway
-concepts/confluent-cloud-gateway → concepts/cluster-linking-topology : CL topology determines which switchover model applies
-concepts/confluent-cloud-gateway → concepts/network-connectivity-by-tier : where the gateway sits relative to CC tier networking
-concepts/confluent-cloud-gateway → patterns/audit-log-siem-integration : forward gateway audit events alongside broker audit logs
+concepts/confluent-gateway → concepts/confluent-cloud-private-networking : disambiguation — CC PrivateLink Gateway is a networking resource, not a protocol proxy
+concepts/confluent-gateway → patterns/dr-cluster-linking : data-plane replication paired with gateway for client-side switchover
+concepts/confluent-gateway → patterns/dr-mirrormaker2 : alternative replication backend for CFK/CP topologies fronted by the gateway
+concepts/confluent-gateway → concepts/cluster-linking-topology : CL topology determines which switchover model applies
+concepts/confluent-gateway → concepts/network-connectivity-by-tier : where the gateway sits relative to CC tier networking
+concepts/confluent-gateway → patterns/audit-log-siem-integration : forward gateway audit events alongside broker audit logs
 
 # Inbound (existing wiki → new concept) — backfill to satisfy ≥1 inbound graph rule
-concepts/private-networking → concepts/confluent-cloud-gateway : sibling — protocol-proxy gateway distinct from PrivateLink Gateway
-patterns/dr-cluster-linking → concepts/confluent-cloud-gateway : client-side switchover companion for sub-minute RTO
-patterns/dr-mirrormaker2 → concepts/confluent-cloud-gateway : client-side switchover companion for CFK/CP DR
+concepts/confluent-cloud-private-networking → concepts/confluent-gateway : sibling — protocol-proxy gateway distinct from PrivateLink Gateway
+patterns/dr-cluster-linking → concepts/confluent-gateway : client-side switchover companion for sub-minute RTO
+patterns/dr-mirrormaker2 → concepts/confluent-gateway : client-side switchover companion for CFK/CP DR
 
 ## dr-application-routing pattern (2026-05-18)
 
 # Outbound (pattern article → wiki articles it depends on)
-patterns/dr-application-routing → concepts/confluent-cloud-gateway : Solution 2 product (protocol-aware proxy)
+patterns/dr-application-routing → concepts/confluent-gateway : Solution 2 product (protocol-aware proxy)
 patterns/dr-application-routing → patterns/dr-cluster-linking : data-plane replication this pattern routes clients across
 patterns/dr-application-routing → patterns/dr-mirrormaker2 : alternative data-plane backend for CFK/CP
 patterns/dr-application-routing → patterns/dr-multi-region-cluster : RPO=0 alternative when stateful correctness is non-negotiable
@@ -438,7 +464,7 @@ patterns/dr-application-routing → concepts/cluster-linking-topology : CL topol
 patterns/dr-application-routing → concepts/sla-tiers : tier-based RTO targets drive routing-solution choice
 
 # Inbound (existing wiki → new pattern) — backfill to satisfy ≥1 inbound graph rule
-concepts/confluent-cloud-gateway → patterns/dr-application-routing : routing-pattern view of the gateway's DR use case
+concepts/confluent-gateway → patterns/dr-application-routing : routing-pattern view of the gateway's DR use case
 patterns/dr-cluster-linking → patterns/dr-application-routing : client-plane companion to CL data-plane DR
 patterns/dr-mirrormaker2 → patterns/dr-application-routing : client-plane companion to MM2 data-plane DR
 
@@ -467,7 +493,7 @@ concepts/oic-kafka-integration → patterns/producer-config-fsi : canon producer
 concepts/oic-kafka-integration → patterns/fsi-exactly-once : EOS implications when OIC adapter transactional support is uncertain
 concepts/oic-kafka-integration → concepts/cc-cluster-tiers : per-tier capacity bounds OIC throughput
 concepts/oic-kafka-integration → concepts/exactly-once-semantics : idempotent producer mechanics + ProducerFenced surface
-concepts/oic-kafka-integration → concepts/private-networking : PrivateLink as architectural bypass for ILB hop
+concepts/oic-kafka-integration → concepts/confluent-cloud-private-networking : PrivateLink as architectural bypass for ILB hop
 
 # Inbound (existing wiki → new concept) — backfill to satisfy ≥1 inbound graph rule
 concepts/azure-connection-management → concepts/oic-kafka-integration : cross-cloud iPaaS instance of the ILB silent-kill problem
@@ -479,7 +505,7 @@ concepts/producer-batching-config → concepts/oic-kafka-integration : cross-clo
 # Outbound (concept article → wiki articles it depends on)
 concepts/confluent-cloud-cluster-sku-selection → concepts/cc-cluster-tiers : tier matrix this selection workflow routes into
 concepts/confluent-cloud-cluster-sku-selection → concepts/network-connectivity-by-tier : networking axis orthogonal to SKU
-concepts/confluent-cloud-cluster-sku-selection → concepts/private-networking : PrivateLink Gateway / PSC / PNI provisioning workflow
+concepts/confluent-cloud-cluster-sku-selection → concepts/confluent-cloud-private-networking : PrivateLink Gateway / PSC / PNI provisioning workflow
 concepts/confluent-cloud-cluster-sku-selection → concepts/fsi-data-streaming-platform : six deployment models context
 concepts/confluent-cloud-cluster-sku-selection → concepts/sla-tiers : multi-zone and RPO/RTO posture driven by FSI SLA tier
 concepts/confluent-cloud-cluster-sku-selection → patterns/dr-cluster-linking : SKU constraints on CL source vs destination
@@ -687,3 +713,32 @@ concepts/fips-at-install-ocp-requirement → patterns/cp-mtls-self-signed-setup 
 concepts/linuxone-platform-foundations → concepts/linuxone-jdk-tls-gotchas : foundations referenced by the L1 gotcha catalog
 patterns/auditor-readonly-rbac-payload-isolation → patterns/cp-mtls-self-signed-setup : mTLS is the auth substrate for the ACL pattern
 patterns/connect-deployment-models → patterns/cp-tls-debugging-by-component : Connect deployment surfaces the SSL config landscape
+
+# Outbound — patterns/shadowtraffic-confluent-cloud-datagen
+patterns/shadowtraffic-confluent-cloud-datagen → concepts/schema-registry-best-practices : the governance/operational rules generated data must conform to
+patterns/shadowtraffic-confluent-cloud-datagen → concepts/schema-aware-console-producer-required : same SR wire-format concern from the opposite direction (tools that don't speak it)
+patterns/shadowtraffic-confluent-cloud-datagen → concepts/confluent-cloud-private-networking : PrivateLink reachability caveat for the generator container
+patterns/shadowtraffic-confluent-cloud-datagen → patterns/topic-naming : TopicNameStrategy default that governs produce-time subject lookup regardless of schemaRegistrySubject
+
+# Inbound — patterns/shadowtraffic-confluent-cloud-datagen
+concepts/schema-registry-best-practices → patterns/shadowtraffic-confluent-cloud-datagen : data-generation pattern that must respect SR governance
+concepts/schema-aware-console-producer-required → patterns/shadowtraffic-confluent-cloud-datagen : contrast case — ShadowTraffic's KafkaAvroSerializer does speak SR wire format
+concepts/confluent-cloud-private-networking → patterns/shadowtraffic-confluent-cloud-datagen : PrivateLink-fronted clusters require the generator to run inside the network
+patterns/topic-naming → patterns/shadowtraffic-confluent-cloud-datagen : naming-strategy background for confirming the real subject name
+
+# patterns/schema-registry-manual-install-permissions (2026-09-09)
+patterns/schema-registry-manual-install-permissions → concepts/schema-registry-best-practices : operational surface this security layer sits underneath
+concepts/schema-registry-best-practices → patterns/schema-registry-manual-install-permissions : broker-side ACL/RBAC requirements for the _schemas topic
+patterns/schema-registry-manual-install-permissions → patterns/yaml-topic-rbac-admin-tool : replication.factor: -1 + confluent.placement.constraints mechanism for pre-creating _schemas on MRC
+patterns/yaml-topic-rbac-admin-tool → patterns/schema-registry-manual-install-permissions : ACL/RBAC requirements for the SR service principal once _schemas is pre-created
+patterns/schema-registry-manual-install-permissions → concepts/kafka-streams-schema-patterns : client-side SR integration, contrasted with broker-side authorization
+
+# patterns/kcp-msk-migration-bastion-host (2026-09-16)
+patterns/kcp-msk-migration-bastion-host → patterns/dr-cluster-linking : shared mirror-topic mechanism (KCP migration-infra/migrate-topics vs. standard CC DR)
+patterns/kcp-msk-migration-bastion-host → concepts/cluster-linking-topology : mirror-topic/promotion background used by the pipeline stages
+patterns/kcp-msk-migration-bastion-host → concepts/confluent-cloud-private-networking : PNI gateway/ENI/wildcard-DNS mechanics behind KCP's connectivity stage
+patterns/kcp-msk-migration-bastion-host → concepts/confluent-gateway : gateway-based client cutover KCP's migration flow points to
+patterns/kcp-msk-migration-bastion-host → patterns/yaml-topic-rbac-admin-tool : comparable principal-to-role-binding migration tooling for CP rather than MSK→CC
+patterns/dr-cluster-linking → patterns/kcp-msk-migration-bastion-host : KCP as the MSK-source path onto the same mirror-topic DR primitive
+concepts/confluent-cloud-private-networking → patterns/kcp-msk-migration-bastion-host : PNI as the connectivity step in an MSK migration
+concepts/confluent-gateway → patterns/kcp-msk-migration-bastion-host : gateway-based zero-config-change client switchover consumed by KCP migrations

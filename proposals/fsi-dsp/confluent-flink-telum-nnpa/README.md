@@ -3,7 +3,7 @@
 Fraud-scoring pipeline: Confluent Platform (Kafka + Flink via CMF) on OpenShift/s390x,
 with model inference offloaded to the Telum on-chip AI accelerator (NNPA).
 
-**Target hardware (this proposal):** IBM z16, **32 dedicated IFLs across 4 Telum (gen-1) chips**.
+**Reference sizing — example target:** IBM z16, **32 dedicated IFLs across 4 Telum (gen-1) chips**.
 RHEL + OCP assumed pre-installed.
 
 ---
@@ -29,7 +29,7 @@ on 2026-07-06.
 | Semeru = OpenJDK libs on OpenJ9 | ✅ |
 | Terraform is peripheral (Grafana config-as-code + cloud adjuncts) | ✅ |
 
-### Support-matrix posture (resolved 2026-07-06)
+### Support-matrix posture
 
 `confluent-docs` ("Linux on IBM Z (s390x) support") lists, under *"not yet supported on
 s390x"*: **FIPS mode, IPv6, Unified Stream Manager Agent, connectors that rely on native OS
@@ -105,13 +105,13 @@ as ordinary Kubernetes scheduling:
 - `cpuManagerPolicy: static` + `cpuManagerPolicyOptions: full-pcpus-only` → the TM gets **whole cores** (both SMT siblings), so inference threads don't contend with a co-tenant on the same core.
 - TM `cpu` requests must be **even** (whole cores) for `full-pcpus-only` to admit the pod.
 
-### Broker/TM co-residency — DECIDED: Option A (2026-07-06)
+### Broker/TM co-residency — Recommended: Option A
 
 The runbook says *"do not co-schedule brokers and inference-heavy TaskManagers on the same chip
 domain if you can avoid it."* With exactly 4 chips and a goal of using all 4 accelerators, **you
 cannot avoid it.**
 
-**Decision: Option A.** 4 inference TMs, one per chip; brokers co-resident but on **disjoint
+**Recommendation: Option A.** 4 inference TMs, one per chip; brokers co-resident but on **disjoint
 exclusive cores**. Rationale: NNPA is a *separate on-chip functional unit* — brokers never issue
 NNPA instructions. The contention is for cores and L2/LLC, which whole-core pinning
 (`full-pcpus-only`) addresses. Uses all 4 accelerators.
@@ -144,7 +144,7 @@ fail to schedule, and the failure reads as a capacity problem rather than an ali
 
 ### Smaller notes
 
-- *"4 Telum cores"* in the ask is read as **4 Telum chips** (8 cores/chip × 4 = 32 IFLs). This means
+- *"4 Telum cores"* is read as **4 Telum chips** (8 cores/chip × 4 = 32 IFLs). This means
   all cores on all 4 chips are IFLs, giving exactly **4 NNPA accelerators**.
 - On **z16 (Telum gen-1)** chip pinning is a **correctness/latency requirement**, not an optimization —
   a core cannot reach another chip's accelerator.
@@ -211,6 +211,6 @@ turning CP FIPS mode on once Confluent lists it is a values change rather than a
 4. Confirm each Telum chip maps 1:1 to an OCP worker node (Phase 0 `chip_count` assertion).
 5. **DLFLOAT16 accuracy tolerance** on the labelled eval set — this, not latency, is the kill criterion.
 
-Note for the client security doc: the **AI inference path is outside the FIPS boundary by
+Note for the security review: the **AI inference path is outside the FIPS boundary by
 construction** — zDLC/zDNN/NNPA perform no cryptographic functions. State it explicitly to preempt
 the question.

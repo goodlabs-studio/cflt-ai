@@ -2,13 +2,15 @@
 title: Private Networking — PrivateLink Gateway, PNI, Peering, TGW
 tags: [networking, confluent-cloud, privatelink, private-service-connect, pni, peering, transit-gateway, flink, fsi]
 sources: []
-related: [concepts/network-connectivity-by-tier, concepts/cc-cluster-tiers, patterns/dr-cluster-linking, patterns/low-latency-kafka-azure, concepts/fsi-data-streaming-platform]
+related: [concepts/confluent-gateway, concepts/network-connectivity-by-tier, concepts/cc-cluster-tiers, patterns/dr-cluster-linking, patterns/low-latency-kafka-azure, concepts/fsi-data-streaming-platform]
 confidence: high
-last_updated: 2026-05-15
+last_updated: 2026-08-06
 last_validated: 2026-05-15
 ---
 
 # Private Networking — PrivateLink Gateway, PNI, Peering, TGW
+
+> ⚠️ **Not the same product as "Confluent Gateway."** Every "gateway" on this page — the Ingress PrivateLink Gateway, the `confluent_gateway` Terraform resource, "one gateway per environment per region" — is this CC **networking** resource: it terminates VPC private endpoints and operates at the network/DNS layer. It has **no relationship** to [Confluent Gateway](confluent-gateway.md), the self-managed, Kafka-**protocol**-aware proxy (Streaming Domains, Routes, Client Switchover) that you deploy yourself via Docker or CFK — covering both the self-managed-backend and Confluent-Cloud-backend flavors, since they're the same product. If you came here looking for Terraform support for that proxy product, it doesn't exist — `confluent_gateway` (below) is this networking resource, not it.
 
 ## Summary
 
@@ -130,6 +132,7 @@ Azure Internal Load Balancers (used in front of self-managed Kafka on AKS and in
 
 ## Related
 
+- [Confluent Gateway](confluent-gateway.md) — disambiguation: the unrelated Kafka-protocol-aware proxy product (covers both self-managed and Confluent Cloud backend flavors), self-managed by you, not a CC networking resource
 - [Network Connectivity by Cluster Tier](network-connectivity-by-tier.md) — tier/connectivity matrix; this article is the deep dive on the gateway mechanics
 - [Confluent Cloud Cluster Tiers](cc-cluster-tiers.md) — Basic/Standard/Enterprise/Dedicated/Freight tier definitions
 - [DR — Cluster Linking](../patterns/dr-cluster-linking.md) — CL over private (CC↔CC) and CC↔CP reachability planning
