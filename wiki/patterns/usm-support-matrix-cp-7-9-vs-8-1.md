@@ -1,5 +1,5 @@
 ---
-title: USM Support Matrix and Implementation: CP 7.9.x vs CP 8.1.x
+title: "USM Support Matrix and Implementation: CP 7.9.x vs CP 8.1.x"
 tags: [usm, unified-stream-manager, confluent-platform, rhel8, ansible, upgrade, support-matrix, fsi]
 related: [patterns/usm-enablement-cp-on-rhel8, patterns/schema-linking-cp-to-cc-mtls, patterns/cp-mtls-self-signed-setup]
 confidence: medium

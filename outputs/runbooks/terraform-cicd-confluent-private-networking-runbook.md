@@ -5,7 +5,7 @@ audience: Platform / C4E (owners), app teams (data-plane PRs), cloud networking 
 validated: 2026-07-29 against confluent-docs (Terraform provider resource inventory, two-tier auth, terraform-security identity-pool/OIDC + state guidance) + Terraform registry (confluentinc/confluent 2.80.0) + local canon (topic-naming, schema-registry-adoption-playbook, fsi-governance-automation). The management-vs-data-plane reachability split is provider mechanics (kafka/schema resources require the private rest_endpoint), reasoned not doc-cited.
 confidence: high
 companion: ../../wiki/patterns/terraform-cicd-confluent-private-networking.md
-related-canon: patterns/terraform-cicd-confluent-private-networking.md, concepts/private-networking.md, patterns/schema-registry-adoption-playbook.md, patterns/topic-naming.md, patterns/fsi-governance-automation.md
+related-canon: patterns/terraform-cicd-confluent-private-networking.md, concepts/confluent-cloud-private-networking.md, patterns/schema-registry-adoption-playbook.md, patterns/topic-naming.md, patterns/fsi-governance-automation.md
 ---
 
 # Terraform CI/CD for Confluent Cloud over Private Networking
@@ -31,7 +31,7 @@ landing zone** through it.
     `confluent_private_link_access`. PL endpoints are **per-AZ (≤10/gateway)** — the ARC node
     pool must span the AZs that have an endpoint. The endpoint's **security group must allow
     `tcp/443` inbound from the runner CIDR** — the most common cause of a private-IP-resolves-
-    but-times-out failure (§7). See [Private Networking](../../wiki/concepts/private-networking.md).
+    but-times-out failure (§7). See [Private Networking](../../wiki/concepts/confluent-cloud-private-networking.md).
 - A **VPC (or peered CI subnet)** with the private path to Confluent Cloud — the same one
   the CDC agents use.
 - **EKS cluster** (or ASG host pool) in that VPC to run **Actions Runner Controller (ARC)**.

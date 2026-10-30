@@ -13,7 +13,7 @@ last_validated: 2026-07-30
 
 # Flink COE — AWS VPC / PrivateLink Reference Architecture
 
-> ⚠️ Stub — seeded with validated facts; expand into a full AWS ref arch (diagrams + Terraform) per your organization's account/region topology. Gateway mechanics live in [Private Networking](../concepts/confluent-cloud-private-networking.md); the CI/CD-over-PL runner model lives in [Terraform CI/CD over Private Networking](terraform-cicd-confluent-confluent-cloud-private-networking.md).
+> ⚠️ Stub — seeded with validated facts; expand into a full AWS ref arch (diagrams + Terraform) per your organization's account/region topology. Gateway mechanics live in [Private Networking](../concepts/confluent-cloud-private-networking.md); the CI/CD-over-PL runner model lives in [Terraform CI/CD over Private Networking](terraform-cicd-confluent-private-networking.md).
 
 ## Summary
 
@@ -46,7 +46,7 @@ AWS VPC/PrivateLink reference-architecture sub-page for the [Flink COE](flink-co
 ### DevOps flow (the FSI pattern)
 
 - **Developers get no direct CLI/Console access.** All Flink SQL is version-controlled and deployed via a **self-hosted CI/CD runner inside your VPC** (required for PrivateLink reachability), calling `confluent_flink_statement` (preferred, IaC) or the REST API over the Private Endpoint.
-- This is the same in-VPC runner model as [Terraform CI/CD over Private Networking](terraform-cicd-confluent-confluent-cloud-private-networking.md) — the Flink control-plane endpoint (`flink.<region>.aws.private.confluent.cloud`) is another private data-plane target the ARC runner must resolve and reach (SG allows 443, node pool spans the endpoint AZs).
+- This is the same in-VPC runner model as [Terraform CI/CD over Private Networking](terraform-cicd-confluent-private-networking.md) — the Flink control-plane endpoint (`flink.<region>.aws.private.confluent.cloud`) is another private data-plane target the ARC runner must resolve and reach (SG allows 443, node pool spans the endpoint AZs).
 
 ## Caveats
 
@@ -57,5 +57,5 @@ AWS VPC/PrivateLink reference-architecture sub-page for the [Flink COE](flink-co
 
 - [Flink COE — Overview](flink-coe-managed-cc-overview.md)
 - [Private Networking](../concepts/confluent-cloud-private-networking.md) — PrivateLink Gateway mechanics, per-tier matrix, Flink-to-Kafka-stays-internal
-- [Terraform CI/CD over Private Networking](terraform-cicd-confluent-confluent-cloud-private-networking.md) — the in-VPC runner that deploys Flink statements over PL
+- [Terraform CI/CD over Private Networking](terraform-cicd-confluent-private-networking.md) — the in-VPC runner that deploys Flink statements over PL
 - [Flink COE — Security](flink-coe-security.md) — the auth side of the same boundary

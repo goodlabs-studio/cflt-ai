@@ -177,6 +177,10 @@ The `streaming-skills-plugin@confluent-agent-skills` plugin is installed at proj
 | `dynatrace` | Confluent Cloud SaaS telemetry (Grail/DQL) | Validating DQL, metric field names, CC Metrics API identities before observability handoffs. Grail queries bill by GB — budget-capped at 50 GB. Scope to observability patterns only. |
 | `grafana` | CFK / on-prem telemetry (PromQL/LogQL via Grafana datasources) | Validating PromQL/LogQL and JMX→Prometheus metric identities for the CP/CFK/LinuxONE tier. Read-only (`-disable-write`); proxies Prometheus datasources. The on-prem counterpart to `dynatrace`. |
 
+`shadowtraffic-docs` and `headroom-docs` are on-demand servers and may be disabled by default
+(`disabledMcpjsonServers`). Only call them for a ShadowTraffic / Headroom question respectively.
+If the server isn't available, tell the user to enable it via `/mcp` rather than answering from training data.
+
 ---
 
 ## Design

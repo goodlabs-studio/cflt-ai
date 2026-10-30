@@ -2,7 +2,7 @@
 title: KCP (Copy Paste) — Quick Bastion Host Provisioning and MSK-to-CC Migration
 tags: [kcp kafka msk migration bastion-host terraform iam confluent-cloud cluster-linking aws fsi]
 sources: [raw/repos/kcp-bastion-migration-usage.md]
-related: [patterns/dr-cluster-linking, concepts/cluster-linking-topology, concepts/confluent-cloud-private-networking, patterns/yaml-topic-rbac-admin-tool, concepts/confluent-gateway, patterns/terraform-cicd-confluent-confluent-cloud-private-networking]
+related: [patterns/dr-cluster-linking, concepts/cluster-linking-topology, concepts/confluent-cloud-private-networking, patterns/yaml-topic-rbac-admin-tool, concepts/confluent-gateway, patterns/terraform-cicd-confluent-private-networking]
 confidence: medium
 last_updated: 2026-09-16
 last_validated: 2026-09-16

@@ -8,11 +8,15 @@ see the `shadowtraffic-docs` entry in `.mcp.json`.
 - `shadowtraffic-llms.txt` — the index `mcpdoc` reads. Generated from
   docs.shadowtraffic.io's `sitemap.xml`, not hand-written — don't edit
   directly, re-run the refresh script instead.
-- `shadowtraffic-config.json` — mcpdoc's `--json` config, points at
-  `shadowtraffic-llms.txt` by **absolute path** (mcpdoc's documented config
-  format doesn't support a path relative to the repo). If you're setting
-  this up on a different machine, update both this file's `llms_txt` path
-  and `.mcp.json`'s `--json` arg to match your local clone's absolute path.
+- `shadowtraffic-config.json` — mcpdoc's `--json` config. `llms_txt` is
+  repo-relative; mcpdoc resolves it against its working directory, and
+  `bin/mcp-launch` sets that to the repo root. So no per-machine edits are
+  needed — `.mcp.json` calls `bin/mcp-launch shadowtraffic-docs`, which
+  derives the repo root from its own location.
+- **On demand:** `shadowtraffic-docs` (and `headroom-docs`) can be kept out
+  of the default session via `disabledMcpjsonServers` in
+  `.claude/settings.local.json`. Enable one for a session with `/mcp`
+  (toggle the server), or remove it from that list to make it permanent.
 - `refresh_shadowtraffic_index.py` — re-fetches the live sitemap and
   regenerates `shadowtraffic-llms.txt`, printing an added/removed-page diff
   so you know if `wiki/patterns/shadowtraffic-confluent-cloud-datagen.md`

@@ -6,49 +6,23 @@
     },
     "confluent-docs": {
       "command": "uvx",
-      "args": [
-        "--from", "mcpdoc",
-        "--with", "mcp[cli]<2",
-        "mcpdoc",
-        "--urls", "Confluent:https://docs.confluent.io/llms.txt",
-        "--transport", "stdio"
-      ]
+      "args": ["--from", "mcpdoc", "--with", "mcp[cli]<2", "mcpdoc", "--urls", "Confluent:https://docs.confluent.io/llms.txt", "--transport", "stdio"]
     },
     "shadowtraffic-docs": {
-      "command": "uvx",
-      "args": [
-        "--from", "mcpdoc",
-        "--with", "mcp[cli]<2",
-        "mcpdoc",
-        "--json", "/Users/sriramkannan/GoodLabs/cflt-ai/tools/mcpdoc/shadowtraffic-config.json",
-        "--allowed-domains", "https://docs.shadowtraffic.io/",
-        "--transport", "stdio"
-      ]
+      "command": "bin/mcp-launch",
+      "args": ["shadowtraffic-docs"]
     },
     "headroom-docs": {
-      "command": "uvx",
-      "args": [
-        "--from", "mcpdoc",
-        "--with", "mcp[cli]<2",
-        "mcpdoc",
-        "--json", "/Users/sriramkannan/GoodLabs/cflt-ai/tools/mcpdoc/headroom-config.json",
-        "--allowed-domains", "https://github.com/headroomlabs-ai/headroom/",
-        "--transport", "stdio"
-      ]
+      "command": "bin/mcp-launch",
+      "args": ["headroom-docs"]
     },
     "mcp-confluent": {
-      "command": "npx",
-      "args": [
-        "-y", "@confluentinc/mcp-confluent",
-        "--env-file", "/Users/sriramkannan/.config/confluent/mcp.env"
-      ],
-      "env": {
-        "PATH": "/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-      }
+      "command": "bin/mcp-launch",
+      "args": ["mcp-confluent"]
     },
     "terraform": {
-      "command": "go",
-      "args": ["run", "github.com/hashicorp/terraform-mcp-server/cmd/terraform-mcp-server@latest", "stdio"]
+      "command": "bin/mcp-launch",
+      "args": ["terraform"]
     },
     "dynatrace": {
       "command": "npx",
@@ -60,8 +34,8 @@
       }
     },
     "grafana": {
-      "command": "go",
-      "args": ["run", "github.com/grafana/mcp-grafana/cmd/mcp-grafana@latest", "-t", "stdio", "-disable-write"],
+      "command": "bin/mcp-launch",
+      "args": ["grafana"],
       "env": {
         "GRAFANA_URL": "${GRAFANA_URL}",
         "GRAFANA_API_KEY": "${GRAFANA_API_KEY}"
