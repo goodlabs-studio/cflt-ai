@@ -13,7 +13,7 @@ git clone --recurse-submodules git@github.com:goodlabs-studio/cflt-ai.git && cd 
 # 2. (Optional) Activate the Flox environment (installs Python, Node.js, etc.)
 flox activate
 
-# 3. Run first-time setup (auth, credentials, MCP config)
+# 3. Run first-time setup (auth, MCP prerequisite check, credentials, MCP approval, optional app deps)
 bin/setup
 
 # 4. Start Claude Code
