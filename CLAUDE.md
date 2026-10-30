@@ -179,6 +179,13 @@ The `streaming-skills-plugin@confluent-agent-skills` plugin is installed at proj
 
 ---
 
+## Design
+
+When producing or styling docs, artifacts, HTML, or slides, follow `DESIGN.md` (colors, type, layout).
+The GoodLabs logo is at `assets/brand/logo.svg` — use the file as-is, never redraw or recolor it.
+
+---
+
 ## Working Style
 
 - Communicate with directness and technical precision; skip hedging preamble
