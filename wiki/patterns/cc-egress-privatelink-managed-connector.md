@@ -5,7 +5,7 @@ sources:
   - https://docs.confluent.io/cloud/current/connectors/networking/index.html
   - https://docs.confluent.io/cloud/current/connectors/networking/aws-eap-self-managed.html
   - https://docs.confluent.io/cloud/current/connectors/networking/aws-eap-1st-party.html
-related: [concepts/private-networking, concepts/network-connectivity-by-tier, patterns/connect-deployment-models, patterns/terraform-cicd-confluent-private-networking, patterns/flink-coe-aws-privatelink-refarch]
+related: [concepts/confluent-cloud-private-networking, concepts/network-connectivity-by-tier, patterns/connect-deployment-models, patterns/terraform-cicd-confluent-private-networking, patterns/flink-coe-aws-privatelink-refarch]
 confidence: high
 last_updated: 2026-08-07
 last_validated: 2026-08-07
@@ -85,7 +85,7 @@ Because success looks identical over public and private paths:
 
 ## Related
 
-- [Private Networking](../concepts/private-networking.md) — the PrivateLink Gateway / access-point mechanics and per-tier matrix this builds on
+- [Private Networking](../concepts/confluent-cloud-private-networking.md) — the PrivateLink Gateway / access-point mechanics and per-tier matrix this builds on
 - [Network Connectivity by Cluster Tier](../concepts/network-connectivity-by-tier.md) — which egress options each cluster tier supports
 - [Connect Deployment Models](connect-deployment-models.md) — where fully-managed connectors sit vs self-managed Connect
 - [Terraform CI/CD over Private Networking](terraform-cicd-confluent-private-networking.md) — `confluent_access_point` / `confluent_dns_record` as IaC, and runner placement

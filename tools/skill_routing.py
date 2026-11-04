@@ -4,7 +4,7 @@ Maps claim text to one of the four streaming-skills-plugin skills, activates
 the corresponding skill (loads SKILL.md + extracts the matching FSI overlay
 block), and produces a structured advisory verdict.
 
-The four skills (per `tools/vendor-sources.json` pin `91d1871e`):
+The four skills (per `tools/vendor-sources.json` pin `204b36f1`):
 - kafka-streams-programming
 - developing-kafka-python-client
 - kafka-schema-registry

@@ -48,7 +48,7 @@
         implemented_by: ["helm/cfk-operator-values.yaml (fipsmode: false)", "manifests/00-platform-crs.yaml (no FIPS settings)", "ansible/02-fips-mode.yml (OS verification + staged BCFKS)"]
       ipv6:
         status: "recorded, not gated"
-        note: "Confirm CP-on-Z IPv6 listener support at kickoff; absence surfaces as broker bind failures, not a clean error."
+        note: "Confirm CP-on-Z IPv6 listener support with IBM/Confluent before deployment; absence surfaces as broker bind failures, not a clean error."
       connectors_with_native_os_libraries:
         status: "runtime fact, not a support-matrix fact"
         note: "Connectors in scope (Mongo sink, CDC) are pure-Java. Audit native deps per plugin and record in the BOM."

@@ -4,8 +4,8 @@ tags: [kafka fsi governance sla]
 sources: [fsi-dsp://role/cp_topic]
 related: [concepts/fsi-data-streaming-platform, concepts/schema-evolution-strategies, concepts/fsi-compliance, patterns/fsi-governance-automation, patterns/dr-cluster-linking, patterns/dr-mirrormaker2, patterns/dr-multi-region-cluster]
 confidence: high
-last_updated: 2026-04-11
-last_validated: 2026-04-28
+last_updated: 2026-08-18
+last_validated: 2026-08-18
 ---
 
 # SLA Tiers
@@ -36,9 +36,11 @@ Default tier: **standard** (if not specified).
 | Tier | RPO Target | RTO Target | Priority |
 |------|-----------|-----------|----------|
 | critical | < 5 minutes | < 15 minutes | P1 — immediate |
-| compliance | RPO = 0 | < 15 minutes | P1 — immediate |
+| compliance | RPO = 0† | < 15 minutes | P1 — immediate |
 | standard | < 2 hours | < 1 hour | P2 — business hours |
 | best-effort | < 24 hours | < 4 hours | P3 — next business day |
+
+† This is the governance *target*, not a claim about any specific DR mechanism's capability. It is only actually achieved via Multi-Region Clusters (synchronous replication) on Confluent Platform — see the Tier Selection Guide below. Cluster Linking on Confluent Cloud is asynchronous and can only bound RPO to near-zero, never literally zero; do not read this row as "Cluster Linking achieves RPO=0."
 
 During multi-topic outages, failover verification follows priority order: P1 (critical + compliance) first, then P2, then P3.
 

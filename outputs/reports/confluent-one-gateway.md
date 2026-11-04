@@ -168,7 +168,7 @@ This gateway operates at the **network layer** (VPC endpoints, DNS). Confluent G
 ## Wiki Sources Consulted
 
 - `wiki/concepts/confluent-cloud-gateway.md` — primary source for the protocol-proxy product; capability table, DR switchover mechanics, FSI considerations. `last_validated: 2026-05-18` (79 days — inside the 90-day window). Three of its four `⚠️ unverified` flags are resolved by this report.
-- `wiki/concepts/private-networking.md` — "one gateway, multiple services" for Enterprise; one gateway per environment per region, ≤10 endpoints.
+- `wiki/concepts/confluent-cloud-private-networking.md` — "one gateway, multiple services" for Enterprise; one gateway per environment per region, ≤10 endpoints.
 - `wiki/patterns/flink-coe-aws-privatelink-refarch.md` — Enterprise shares a gateway across Kafka+Flink+SR+Connect; Dedicated needs its own for Flink; egress PrivateLink scoping.
 - `wiki/patterns/terraform-cicd-confluent-private-networking.md` — Terraform resolution through the shared gateway; confirm SR DNS separately.
 

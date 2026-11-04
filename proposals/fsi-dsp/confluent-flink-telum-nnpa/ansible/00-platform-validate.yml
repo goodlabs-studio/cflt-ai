@@ -119,7 +119,9 @@
         - (lpar_dedicated | int) != expected_ifls
         - not (allow_shared_ifls | default(false) | bool)
 
-    # ---- FIPS: REQUIRED, and it must have been set at install time ----------
+    # ---- OS FIPS: REQUIRED, and it must have been set at install time -------
+    # This gate is OS-level (kernel/RHEL crypto modules) only. It does NOT imply
+    # CP FIPS mode, which is not yet supported on s390x -- see 02-fips-mode.yml.
     # RHEL 9's FIPS 140-3 modules were tested on IBM z16 as a certified operational
     # environment -- Z is on the certificate, not vendor-affirmed onto it. FIPS mode
     # must be enabled at install (`fips=1` on the kernel cmdline); retrofitting it
@@ -137,7 +139,7 @@
           FIPS mode is OFF. This stack targets a FIPS-mode host OS (RHEL 9 modules validated
           on z16). Enable with `fips=1` at INSTALL time -- never retrofit. Set
           -e require_fips=false only for a non-FSI dev box.
-        success_msg: "FIPS mode enabled (validated modules on z16)."
+        success_msg: "OS FIPS mode enabled (validated modules on z16). CP FIPS mode is separate and stays off on s390x."
       when: require_fips | default(true) | bool
 
     - name: Verify FIPS was set at install, not retrofitted
@@ -173,7 +175,7 @@
 
     # ---- IPv6: recorded posture item, NOT a gate ----------------------------
     # confluent-docs lists IPv6 under "not yet supported on s390x" -- a CP-layer
-    # statement at the same scope as the FIPS line, which the partner team has
+    # statement at the same scope as the FIPS line, which IBM/Confluent have
     # since moved. s390x/RHEL/OCP themselves support IPv6 fine. We therefore
     # RECORD the cluster network mode rather than block on it. If CP's s390x build
     # genuinely lacks IPv6 listener support, it surfaces as broker bind failures,
@@ -189,7 +191,7 @@
         msg: >-
           IPv6 {{ 'ENABLED' if (ipv6_raw.content | default('MQ==') | b64decode | trim) == '0' else 'disabled' }}
           on this node. Confluent lists IPv6 under "not yet supported on s390x" (CP-layer).
-          Confirm CP-on-Z IPv6 listener support with the IBM/Confluent partner team at kickoff
+          Confirm CP-on-Z IPv6 listener support with IBM/Confluent before deployment
           and record the answer in the BOM. Do not hardcode the public matrix into design.
 
     # ---- Chip topology (drives inference TM placement) ----------------------
@@ -214,8 +216,8 @@
         msg: "CPACF {{ 'available — enable accelerated OpenSSL/JSSE for Kafka TLS' if cpacf_check.rc == 0 else 'NOT detected' }}"
 
     # Crypto Express HSM — FIPS 140 Level 4, the strongest hardware crypto
-    # certification available. Bonus, not blocker: if the client wants keystore
-    # material in an HSM, Z is best-in-industry, not a compromise.
+    # certification available. Bonus, not blocker: if keystore material in an HSM
+    # is required, Z is best-in-industry, not a compromise.
     - name: Detect Crypto Express adapters
       ansible.builtin.command: ls /sys/bus/ap/devices
       register: cryptoexpress

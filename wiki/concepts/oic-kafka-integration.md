@@ -67,11 +67,10 @@ causes the adapter to fail to publish — observed as connection-establishment f
 rather than per-record errors, which makes the misconfiguration look like a network or
 auth issue.
 
-> ⚠️ unverified — the GZIP-only constraint is documented in customer-facing FSI runbooks
-> and the 2026-04-29 /review report (claim oic-14) but is not surfaced in the public
-> Oracle docs nor in `confluent-docs` (Oracle product). The behavioral assertion
+> ⚠️ unverified — the GZIP-only constraint is operationally reported but is not surfaced
+> in the public Oracle docs nor in `confluent-docs` (Oracle product). The behavioral assertion
 > (zstd "breaks the connection" rather than failing per record) is operationally
-> reported and should be re-confirmed before authoring customer-facing guidance.
+> reported and should be re-confirmed before authoring external guidance.
 
 Operational guidance: **do not set `compression.type` in the OIC Additional Properties
 table**. Let the adapter pick GZIP. On the topic side, set `compression.type=producer`
@@ -148,7 +147,7 @@ Mitigations, in order of preference:
 
 1. **PrivateLink architectural bypass** — if the CC cluster is reachable via Confluent
    Cloud PrivateLink Gateway from the OCI VCN, the ILB hop is removed entirely. See
-   [Private Networking](private-networking.md).
+   [Private Networking](confluent-cloud-private-networking.md).
 2. **`connections.max.idle.ms=180000`** in the OIC Additional Properties table — closes
    the client-side socket before the ILB does, forcing a clean reconnect on next use.
 3. **librdkafka users only:** `socket.keepalive.enable=true` to send TCP keepalives
@@ -223,5 +222,5 @@ validate end-to-end before relying on transactional semantics from OIC:
   that bound OIC throughput
 - [Exactly-Once Semantics](exactly-once-semantics.md) — idempotence and
   transactional producer mechanics
-- [Private Networking](private-networking.md) — PrivateLink as the architectural
+- [Private Networking](confluent-cloud-private-networking.md) — PrivateLink as the architectural
   bypass for the ILB hop

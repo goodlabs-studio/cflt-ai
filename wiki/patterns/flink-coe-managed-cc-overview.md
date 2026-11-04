@@ -4,7 +4,7 @@ tags: [flink, confluent-cloud, coe, c4e, enablement, fsi, compute-pools, cfu, fl
 sources:
   - https://docs.confluent.io/cloud/current/flink/concepts/comparison-with-apache-flink.html
   - https://docs.confluent.io/cloud/current/flink/concepts/compute-pools.html
-related: [patterns/flink-runtime-models, patterns/flink-coe-optimization, patterns/flink-coe-security, patterns/flink-coe-aws-privatelink-refarch, concepts/private-networking, patterns/dead-letter-queue-design]
+related: [patterns/flink-runtime-models, patterns/flink-coe-optimization, patterns/flink-coe-security, patterns/flink-coe-aws-privatelink-refarch, concepts/confluent-cloud-private-networking, patterns/dead-letter-queue-design]
 confidence: high
 last_updated: 2026-07-30
 last_validated: 2026-07-30
@@ -52,7 +52,7 @@ CC maps Confluent Cloud objects onto Flink concepts automatically — this is th
 
 ### Anticipated blockers & FSI gotchas
 
-Flag these to the client now — several will surface the moment engineers port OSS/CMF habits:
+Flag these to the adopting team now — several will surface the moment engineers port OSS/CMF habits:
 
 | Blocker | Why it bites | Mitigation |
 |---|---|---|
@@ -68,14 +68,14 @@ Flag these to the client now — several will surface the moment engineers port 
 
 ## When to Use
 
-- Standing up a Flink practice on Confluent Cloud where **use cases aren't chosen yet** and the client wants environment + guardrails first.
+- Standing up a Flink practice on Confluent Cloud where **use cases aren't chosen yet** and your organization wants environment + guardrails first.
 - Establishing the CC-vs-CMF decision boundary so teams don't start a DataStream/custom-JAR workload on CC and hit a wall.
 - FSI enablement where the governance, security, and PrivateLink posture must be defined before any regulated data flows through Flink.
 
 ## Caveats
 
-- CC Flink capability moves fast — the unsupported-statement list and default watermark tolerance were validated against `confluent-docs` on 2026-07-30; re-check before committing a customer to a specific capability.
-- This overview is product/environment shaped. Use-case-specific tuning (fraud scoring, reconciliation, CDC) will need its own pages once the client selects workloads.
+- CC Flink capability moves fast — the unsupported-statement list and default watermark tolerance were validated against `confluent-docs` on 2026-07-30; re-check before committing to a specific capability.
+- This overview is product/environment shaped. Use-case-specific tuning (fraud scoring, reconciliation, CDC) will need its own pages once the adopting team selects workloads.
 - The comparison here is CC vs OSS/CMF. CMF ≈ full Apache Flink; the "subset" caveats are about **CC**, not CMF.
 
 ## Related
@@ -84,5 +84,5 @@ Flag these to the client now — several will surface the moment engineers port 
 - [Flink COE — Optimization](flink-coe-optimization.md) — CFU/state/watermark tuning (sub-page)
 - [Flink COE — Security](flink-coe-security.md) — RBAC, service accounts, principals, mTLS (sub-page)
 - [Flink COE — AWS PrivateLink Reference Architecture](flink-coe-aws-privatelink-refarch.md) — VPC/PL wiring on AWS (sub-page)
-- [Private Networking](../concepts/private-networking.md) — PrivateLink Gateway mechanics that the AWS ref arch builds on
+- [Private Networking](../concepts/confluent-cloud-private-networking.md) — PrivateLink Gateway mechanics that the AWS ref arch builds on
 - [Dead Letter Queue Design](dead-letter-queue-design.md) — CC Flink managed DLQ (`error-handling.mode`)

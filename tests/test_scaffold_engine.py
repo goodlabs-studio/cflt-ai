@@ -54,7 +54,7 @@ def test_scaffold_producer_happy_path_developer_sandbox():
     assert prov["canon_family"] == "developer-sandbox"
     assert prov["profile_family"] == "developer"
     assert prov["upstream_skill"] == "developing-kafka-python-client"
-    assert prov["upstream_commit_sha"] == "91d1871ef8c320be92bca955c8e42492a2778cb4"
+    assert prov["upstream_commit_sha"] == "204b36f10e9be41819557988e8f5291711fda986"
 
 
 def test_scaffold_producer_happy_path_engineer_prod():

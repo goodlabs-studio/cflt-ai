@@ -13,7 +13,7 @@ git clone --recurse-submodules git@github.com:goodlabs-studio/cflt-ai.git && cd 
 # 2. (Optional) Activate the Flox environment (installs Python, Node.js, etc.)
 flox activate
 
-# 3. Run first-time setup (auth, credentials, MCP config)
+# 3. Run first-time setup (auth, MCP prerequisite check, credentials, MCP approval, optional app deps)
 bin/setup
 
 # 4. Start Claude Code
@@ -54,7 +54,7 @@ Modes: `--mode ephemeral` (quick answer), `--mode report` (structured output), `
 Point at a file and get a structured review with deterministic claim extraction, premise-challenge validation, and provenance-stamped output.
 
 ```
-/review kafka-dr-framework-v3.md
+/review my-dr-proposal.md
 ```
 
 Supports multi-document input (deck + tfvars + runbook as a single scope), customer overlays for differential canon, and `.docx` export with full provenance footer.

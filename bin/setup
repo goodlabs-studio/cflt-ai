@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # cflt-ai first-run setup
-# Checks Claude auth, optional CC credentials, MCP auto-approve
+# Checks Claude auth, MCP prerequisites, optional fsi-dsp / CC credentials /
+# desktop app deps, and project-scoped MCP approval. Safe to re-run.
 
 set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 BOLD='\033[1m'
 DIM='\033[2m'
@@ -11,28 +14,36 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
-info()  { echo -e "${BOLD}$1${RESET}"; }
-ok()    { echo -e "${GREEN}✓${RESET} $1"; }
-warn()  { echo -e "${YELLOW}⚠${RESET} $1"; }
-fail()  { echo -e "${RED}✗${RESET} $1"; }
+# All output goes through echo -e so the colour codes in messages render.
+say()   { echo -e "$*"; }
+info()  { say "${BOLD}$1${RESET}"; }
+ok()    { say "${GREEN}✓${RESET} $1"; }
+warn()  { say "${YELLOW}⚠${RESET} $1"; }
+fail()  { say "${RED}✗${RESET} $1"; }
 
-echo ""
+have() { command -v "$1" &>/dev/null; }
+
+# Prompt helper: on EOF (piped / non-interactive run) fall back to an empty
+# answer so each prompt's default applies instead of set -e killing the script.
+ask() { read -rp "$1" "$2" || printf -v "$2" ''; }
+
+say ""
 info "cflt-ai setup"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
+say "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+say ""
 
 # ── Step 1: Claude Code ─────────────────────────────────────────────
 
 info "1. Claude Code"
 
-if ! command -v claude &>/dev/null; then
+if ! have claude; then
   fail "Claude Code not found."
-  echo ""
-  echo "   Install it first:"
-  echo "     npm install -g @anthropic-ai/claude-code"
-  echo "     # or: brew install claude-code"
-  echo ""
-  echo "   Then re-run: bin/setup"
+  say ""
+  say "   Install it first:"
+  say "     npm install -g @anthropic-ai/claude-code"
+  say "     # or: brew install claude-code"
+  say ""
+  say "   Then re-run: bin/setup"
   exit 1
 fi
 
@@ -40,13 +51,21 @@ ok "Claude Code found: $(command -v claude)"
 
 # ── Step 2: Authentication ──────────────────────────────────────────
 
-echo ""
+say ""
 info "2. Authentication"
 
 auth_ok=false
+anthropic_env="$HOME/.config/cflt-ai/anthropic.env"
 
 if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
   ok "ANTHROPIC_API_KEY is set"
+  auth_ok=true
+elif [ -f "$anthropic_env" ]; then
+  ok "API key file found: $anthropic_env"
+  auth_ok=true
+elif claude auth status 2>/dev/null | grep -q '"loggedIn": true'; then
+  # Preferred check: works for Keychain (macOS) and file-based credentials.
+  ok "Claude login detected (claude auth status)"
   auth_ok=true
 elif [ -f "$HOME/.claude/.credentials.json" ]; then
   ok "Claude subscription detected (logged in)"
@@ -55,25 +74,26 @@ fi
 
 if [ "$auth_ok" = false ]; then
   warn "No authentication detected."
-  echo ""
-  echo "   Choose one:"
-  echo ""
-  echo "   ${BOLD}a)${RESET} Claude Max/Pro subscription"
-  echo "      Run: claude login"
-  echo ""
-  echo "   ${BOLD}b)${RESET} Anthropic API key"
-  echo "      Export ANTHROPIC_API_KEY in your shell profile"
-  echo ""
+  say ""
+  say "   Choose one:"
+  say ""
+  say "   ${BOLD}a)${RESET} Claude Max/Pro subscription (recommended)"
+  say "      Runs: claude login"
+  say ""
+  say "   ${BOLD}b)${RESET} Anthropic API key"
+  say "      Stored in ${anthropic_env} (chmod 600), not in your shell profile"
+  say ""
 
-  read -rp "   Set up auth now? [a/b/skip]: " auth_choice
+  ask "   Set up auth now? [a/b/skip]: " auth_choice
 
   case "$auth_choice" in
     a|A)
-      echo ""
-      echo "   Running 'claude login' — follow the prompts:"
-      echo ""
+      say ""
+      say "   Running 'claude login' — follow the prompts:"
+      say ""
       claude login
-      if [ -f "$HOME/.claude/.credentials.json" ]; then
+      if claude auth status 2>/dev/null | grep -q '"loggedIn": true' \
+         || [ -f "$HOME/.claude/.credentials.json" ]; then
         ok "Login successful"
         auth_ok=true
       else
@@ -81,23 +101,32 @@ if [ "$auth_ok" = false ]; then
       fi
       ;;
     b|B)
-      echo ""
+      say ""
       read -rsp "   Paste your API key: " api_key
-      echo ""
+      say ""
       if [ -n "$api_key" ]; then
-        # Detect shell profile
+        # Keep the secret out of the (often synced / dotfile-committed) shell
+        # profile: write it to a 0600 file and have the profile source that.
+        mkdir -p "$(dirname "$anthropic_env")"
+        ( umask 077; printf "export ANTHROPIC_API_KEY='%s'\n" "$api_key" > "$anthropic_env" )
+        chmod 600 "$anthropic_env"
+
         shell_profile="$HOME/.zshrc"
-        if [ -n "${BASH_VERSION:-}" ] && [ -f "$HOME/.bashrc" ]; then
+        if [ -n "${BASH_VERSION:-}" ] && [ -f "$HOME/.bashrc" ] && [ "${SHELL##*/}" = "bash" ]; then
           shell_profile="$HOME/.bashrc"
         fi
 
-        echo "" >> "$shell_profile"
-        echo "# Anthropic API key (added by cflt-ai setup)" >> "$shell_profile"
-        echo "export ANTHROPIC_API_KEY='${api_key}'" >> "$shell_profile"
+        if ! grep -qsF "$anthropic_env" "$shell_profile"; then
+          {
+            echo ""
+            echo "# Anthropic API key (added by cflt-ai setup)"
+            echo "[ -f \"$anthropic_env\" ] && . \"$anthropic_env\""
+          } >> "$shell_profile"
+        fi
 
         export ANTHROPIC_API_KEY="$api_key"
-        ok "API key written to $shell_profile"
-        ok "Exported for this session"
+        ok "API key written to $anthropic_env (chmod 600)"
+        ok "$shell_profile sources it in new shells; exported for this session"
         auth_ok=true
       fi
       ;;
@@ -107,131 +136,235 @@ if [ "$auth_ok" = false ]; then
   esac
 fi
 
-# ── Step 3: fsi-dsp reference repo (optional) ───────────────────────
+# ── Step 3: MCP server prerequisites ────────────────────────────────
+# Mirrors what bin/mcp-launch needs per server. Informational: a missing
+# prerequisite only disables that one server, so we never abort here.
 
-echo ""
-info "3. fsi-dsp reference repo ${DIM}(optional)${RESET}"
+say ""
+info "3. MCP server prerequisites"
 
-fsi_dsp_path="$(git rev-parse --show-toplevel)/raw/repos/fsi-dsp"
+missing_hint() { say "   ${DIM}→ $1${RESET}"; }
+
+# Node: mcp-confluent's native module needs a supported ABI; bin/mcp-launch
+# prefers node@22 when present, so a newer default Node is fine if node@22 exists.
+node22_dir=""
+for d in /opt/homebrew/opt/node@22/bin /usr/local/opt/node@22/bin; do
+  [ -x "$d/node" ] && node22_dir="$d" && break
+done
+
+if have npx; then
+  node_major="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
+  if [ "$node_major" -ge 20 ] && [ "$node_major" -le 24 ]; then
+    ok "Node $(node -v) + npx   ${DIM}(mcp-confluent, context7, dynatrace)${RESET}"
+  elif [ -n "$node22_dir" ]; then
+    ok "Node $(node -v) default; node@22 found — bin/mcp-launch will use it for mcp-confluent"
+  else
+    warn "Node $(node -v) is newer than mcp-confluent's native module supports"
+    missing_hint "brew install node@22   (bin/mcp-launch picks it up automatically)"
+  fi
+else
+  warn "Node.js / npx not found   ${DIM}(mcp-confluent, context7, dynatrace)${RESET}"
+  missing_hint "brew install node@22"
+fi
+
+if have uvx; then
+  ok "uvx   ${DIM}(confluent-docs, shadowtraffic-docs, headroom-docs)${RESET}"
+else
+  warn "uvx not found   ${DIM}(confluent-docs, shadowtraffic-docs, headroom-docs)${RESET}"
+  missing_hint "brew install uv   (or https://docs.astral.sh/uv/)"
+fi
+
+# terraform / grafana: a prebuilt binary, or Go as the `go run` fallback.
+if have terraform-mcp-server; then
+  ok "terraform-mcp-server   ${DIM}(terraform)${RESET}"
+elif have go; then
+  ok "go found — terraform MCP will use 'go run'   ${DIM}(slower first start)${RESET}"
+else
+  warn "terraform MCP: neither terraform-mcp-server nor go found"
+  missing_hint "brew install hashicorp/tap/terraform-mcp-server   (or: brew install go)"
+fi
+
+if have mcp-grafana; then
+  ok "mcp-grafana   ${DIM}(grafana)${RESET}"
+elif have go; then
+  ok "go found — grafana MCP will use 'go run'"
+else
+  warn "grafana MCP: neither mcp-grafana nor go found"
+  missing_hint "brew install mcp-grafana   (or: brew install go)"
+fi
+
+say "   ${DIM}dynatrace and grafana also need DT_* / GRAFANA_URL + GRAFANA_API_KEY in your env;${RESET}"
+say "   ${DIM}skip them if you don't use those servers.${RESET}"
+
+# ── Step 4: fsi-dsp reference repo (optional) ───────────────────────
+
+say ""
+info "4. fsi-dsp reference repo ${DIM}(optional)${RESET}"
+
+fsi_dsp_path="$ROOT/raw/repos/fsi-dsp"
 
 if [ -d "$fsi_dsp_path/.git" ] || [ -f "$fsi_dsp_path/.git" ]; then
   ok "fsi-dsp submodule present"
 else
-  echo "   The fsi-dsp repo contains Ansible vars, Terraform configs, ADRs,"
-  echo "   and reference implementations used by wiki articles and /wiki:evaluate."
-  echo "   Requires access to github.com/goodlabs-studio/fsi-dsp."
-  echo ""
-  read -rp "   Initialize fsi-dsp submodule? [Y/n]: " fsi_choice
+  say "   The fsi-dsp repo contains Ansible vars, Terraform configs, ADRs,"
+  say "   and reference implementations used by wiki articles and /wiki:evaluate."
+  say "   Requires access to github.com/goodlabs-studio/fsi-dsp."
+  say ""
+  ask "   Initialize fsi-dsp submodule? [Y/n]: " fsi_choice
 
   if [[ ! "$fsi_choice" =~ ^[nN] ]]; then
-    if git submodule update --init raw/repos/fsi-dsp 2>/dev/null; then
+    if git -C "$ROOT" submodule update --init raw/repos/fsi-dsp 2>/dev/null; then
       ok "fsi-dsp submodule initialized"
     else
       warn "Could not clone fsi-dsp. Check your SSH key access to goodlabs-studio."
-      echo "   You can retry later: git submodule update --init raw/repos/fsi-dsp"
+      say "   You can retry later: git submodule update --init raw/repos/fsi-dsp"
     fi
   else
-    echo "   ${DIM}Skipped. Wiki skills still work but /wiki:evaluate code-delta checks${RESET}"
-    echo "   ${DIM}and some source references will be unavailable.${RESET}"
+    say "   ${DIM}Skipped. Wiki skills still work but /wiki:evaluate code-delta checks${RESET}"
+    say "   ${DIM}and some source references will be unavailable.${RESET}"
   fi
 fi
 
-# ── Step 4: Confluent Cloud (optional) ──────────────────────────────
+# ── Step 5: Confluent Cloud (optional) ──────────────────────────────
 
-echo ""
-info "4. Confluent Cloud credentials ${DIM}(optional)${RESET}"
+say ""
+info "5. Confluent Cloud credentials ${DIM}(optional)${RESET}"
 
-cc_env_file="${HOME}/.config/confluent/mcp.env"
+cc_env_file="${CONFLUENT_MCP_ENV_FILE:-$HOME/.config/confluent/mcp.env}"
 
 if [ -f "$cc_env_file" ]; then
   ok "Found $cc_env_file"
-  export CONFLUENT_MCP_ENV_FILE="$cc_env_file"
 else
-  echo "   The mcp-confluent server lets Claude query live Confluent Cloud clusters."
-  echo "   You need a Confluent Cloud API key/secret."
-  echo ""
-  read -rp "   Set up CC credentials? [y/N]: " cc_choice
+  say "   The mcp-confluent server lets Claude query live Confluent Cloud clusters."
+  say "   You need a Confluent Cloud API key/secret."
+  say ""
+  ask "   Set up CC credentials? [y/N]: " cc_choice
 
   if [[ "$cc_choice" =~ ^[yY] ]]; then
-    read -rp "   Confluent Cloud API key: " cc_key
+    ask "   Confluent Cloud API key: " cc_key
     read -rsp "   Confluent Cloud API secret: " cc_secret
-    echo ""
+    say ""
 
     if [ -n "$cc_key" ] && [ -n "$cc_secret" ]; then
       mkdir -p "$(dirname "$cc_env_file")"
-      cat > "$cc_env_file" << EOF
+      ( umask 077
+        cat > "$cc_env_file" << EOF
 CONFLUENT_CLOUD_API_KEY=${cc_key}
 CONFLUENT_CLOUD_API_SECRET=${cc_secret}
 EOF
+      )
       chmod 600 "$cc_env_file"
-      export CONFLUENT_MCP_ENV_FILE="$cc_env_file"
       ok "Credentials written to $cc_env_file"
+      say "   ${DIM}bin/mcp-launch reads this file; set CONFLUENT_MCP_ENV_FILE to use another path.${RESET}"
     fi
   else
-    echo "   ${DIM}Skipped. Wiki and skills still work without CC credentials.${RESET}"
+    say "   ${DIM}Skipped. Wiki and skills still work without CC credentials.${RESET}"
   fi
 fi
 
-# ── Step 4: MCP auto-approve ────────────────────────────────────────
+# ── Step 6: Desktop app dependencies (optional) ─────────────────────
 
-echo ""
-info "5. MCP server auto-approve"
+say ""
+info "6. Desktop app dependencies ${DIM}(optional)${RESET}"
 
-claude_settings="$HOME/.claude/settings.json"
-needs_mcp_setting=true
+app_dir="$ROOT/app"
 
-if [ -f "$claude_settings" ]; then
-  if grep -q '"enableAllProjectMcpServers"' "$claude_settings" 2>/dev/null; then
-    ok "MCP auto-approve already configured"
-    needs_mcp_setting=false
+if [ ! -d "$app_dir" ]; then
+  say "   ${DIM}No app/ directory in this checkout — skipping.${RESET}"
+elif [ -d "$app_dir/node_modules/electron/dist" ]; then
+  ok "App dependencies already installed (Electron binary present)"
+elif ! have pnpm; then
+  warn "pnpm not found — needed only for the desktop app"
+  missing_hint "brew install pnpm   (then re-run bin/setup, or: cd app && pnpm install)"
+else
+  say "   The Electron app in app/ is a UI over the same skills."
+  say "   It needs pnpm install (downloads the Electron binary, ~100 MB)."
+  say ""
+  ask "   Install app dependencies now? [y/N]: " app_choice
+
+  if [[ "$app_choice" =~ ^[yY] ]]; then
+    if (cd "$app_dir" && pnpm install --frozen-lockfile); then
+      ok "App dependencies installed — run: cd app && pnpm dev"
+    else
+      warn "pnpm install failed. Retry: cd app && pnpm install"
+      say "   ${DIM}On pnpm 11, make sure app/pnpm-workspace.yaml exists (allowBuilds for electron/esbuild).${RESET}"
+    fi
+  else
+    say "   ${DIM}Skipped. Later: cd app && pnpm install && pnpm dev${RESET}"
   fi
 fi
 
-if [ "$needs_mcp_setting" = true ]; then
-  echo "   cflt-ai uses 3 MCP servers (context7, confluent-docs, mcp-confluent)."
-  echo "   Auto-approve skips the per-session approval prompt."
-  echo ""
-  read -rp "   Enable MCP auto-approve? [Y/n]: " mcp_choice
+# ── Step 7: MCP approval (project-scoped) ───────────────────────────
+# Written to .claude/settings.local.json (gitignored, this repo only) rather
+# than ~/.claude/settings.json: the global flag would auto-approve MCP servers
+# from *every* repo you open, including untrusted ones.
+
+say ""
+info "7. MCP server approval ${DIM}(this repo only)${RESET}"
+
+local_settings="$ROOT/.claude/settings.local.json"
+global_settings="$HOME/.claude/settings.json"
+
+if [ -f "$local_settings" ] && grep -q '"enableAllProjectMcpServers"' "$local_settings" 2>/dev/null; then
+  ok "Project MCP approval already configured in .claude/settings.local.json"
+else
+  say "   cflt-ai declares 8 MCP servers in .mcp.json: context7, confluent-docs,"
+  say "   mcp-confluent, terraform, dynatrace, grafana, plus the on-demand"
+  say "   shadowtraffic-docs and headroom-docs."
+  say "   Approving them for this repo skips the per-session prompt. The two"
+  say "   on-demand servers stay disabled until you enable them with /mcp."
+  say ""
+  ask "   Approve this repo's MCP servers? [Y/n]: " mcp_choice
 
   if [[ ! "$mcp_choice" =~ ^[nN] ]]; then
-    mkdir -p "$(dirname "$claude_settings")"
-    if [ -f "$claude_settings" ]; then
-      # Merge into existing settings using a temp file
-      tmp=$(mktemp)
-      python3 -c "
-import json, sys
-with open('$claude_settings') as f:
-    data = json.load(f)
-data['enableAllProjectMcpServers'] = True
-with open('$tmp', 'w') as f:
+    mkdir -p "$(dirname "$local_settings")"
+    # Paths go in via argv, never interpolated into the Python source.
+    if python3 - "$local_settings" << 'PY'
+import json, os, sys
+path = sys.argv[1]
+data = {}
+if os.path.exists(path):
+    with open(path) as f:
+        data = json.load(f)
+data["enableAllProjectMcpServers"] = True
+disabled = data.setdefault("disabledMcpjsonServers", [])
+for name in ("shadowtraffic-docs", "headroom-docs"):
+    if name not in disabled:
+        disabled.append(name)
+tmp = path + ".tmp"
+with open(tmp, "w") as f:
     json.dump(data, f, indent=2)
-    f.write('\n')
-" 2>/dev/null && mv "$tmp" "$claude_settings" || {
-        # Fallback: write fresh
-        echo '{ "enableAllProjectMcpServers": true }' > "$claude_settings"
-      }
+    f.write("\n")
+os.replace(tmp, path)
+PY
+    then
+      ok "Approved in .claude/settings.local.json (shadowtraffic-docs, headroom-docs left on-demand)"
     else
-      echo '{ "enableAllProjectMcpServers": true }' > "$claude_settings"
+      warn "Could not update $local_settings (invalid JSON?). Approve servers via /mcp instead."
     fi
-    ok "MCP auto-approve enabled in $claude_settings"
   else
-    echo "   ${DIM}Skipped. You'll be prompted to approve MCP servers each session.${RESET}"
+    say "   ${DIM}Skipped. You'll be prompted to approve MCP servers each session.${RESET}"
   fi
+fi
+
+if [ -f "$global_settings" ] && grep -q '"enableAllProjectMcpServers"[[:space:]]*:[[:space:]]*true' "$global_settings" 2>/dev/null; then
+  warn "~/.claude/settings.json auto-approves MCP servers for ALL projects (older bin/setup did this)"
+  say "   ${DIM}Consider removing that key; the per-repo setting above is enough.${RESET}"
 fi
 
 # ── Done ────────────────────────────────────────────────────────────
 
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+say ""
+say "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 if [ "$auth_ok" = true ]; then
   ok "${BOLD}You're ready. Run 'claude' to start.${RESET}"
-  echo ""
-  echo "   Try these skills:"
-  echo "     /ask        — paste a config or question, get a validated answer"
-  echo "     /review     — evaluate a document against wiki + MCP sources"
-  echo "     /wiki:lint  — health check the wiki"
-  echo ""
+  say ""
+  say "   Try these skills:"
+  say "     /ask        — paste a config or question, get a validated answer"
+  say "     /review     — evaluate a document against wiki + MCP sources"
+  say "     /wiki:lint  — health check the wiki"
+  say ""
 else
   warn "Set up authentication first, then run: claude"
 fi

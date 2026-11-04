@@ -129,8 +129,8 @@ High-quality, internally consistent synthesis that tracks the Confluent Canon an
 
 | # | Claim | Wiki | MCP | Verdict |
 |---|-------|------|-----|---------|
-| qs-55 | CC connectivity by type: Public (Basic/Standard/Dedicated), PrivateLink/PSC one-way CIDR-overlap-OK (Enterprise/Dedicated), VPC/VNet peering two-way non-overlapping (Dedicated only), AWS Transit Gateway (Dedicated only); Enterprise = PrivateLink/PSC only, no peering | — (queued: `concepts/private-networking.md`) | ⚠️ not re-run | Confirmed (recency-flagged) |
-| qs-56 | PrivateLink uses per-AZ endpoints with zonal DNS; clients must resolve the zonal endpoints | — (queued: `concepts/private-networking.md`) | ⚠️ not re-run | Confirmed (recency-flagged) |
+| qs-55 | CC connectivity by type: Public (Basic/Standard/Dedicated), PrivateLink/PSC one-way CIDR-overlap-OK (Enterprise/Dedicated), VPC/VNet peering two-way non-overlapping (Dedicated only), AWS Transit Gateway (Dedicated only); Enterprise = PrivateLink/PSC only, no peering | — (queued: `concepts/confluent-cloud-private-networking.md`) | ⚠️ not re-run | Confirmed (recency-flagged) |
+| qs-56 | PrivateLink uses per-AZ endpoints with zonal DNS; clients must resolve the zonal endpoints | — (queued: `concepts/confluent-cloud-private-networking.md`) | ⚠️ not re-run | Confirmed (recency-flagged) |
 | qs-57 | `advertised.listeners` (CP) is the #1 connectivity footgun — must be the address clients actually use; cert SANs must match every advertised name; firewall ports 9092/9093/8081/8083/8090/9021 | — | not re-run | Confirmed |
 | qs-58 | Cross-region replication (Cluster Linking) is always async — RPO=0 across regions doesn't exist; within-region MRC on CP is the RPO=0 option | `patterns/dr-cluster-linking.md`, `patterns/dr-multi-region-cluster.md` | not re-run | Confirmed |
 | qs-59 | Fetch-from-follower keeps consumer fetch in-AZ — typically 30–50% off inter-AZ egress; cross-AZ ≈ 1–2 ms/hop; Freight trades latency for ~10× cheaper throughput | `patterns/low-latency-kafka-azure.md`, `patterns/aks-kafka-tuning.md` | not re-run | Confirmed (the 30–50% / 1–2 ms / ~10× figures are planning estimates, environment-dependent) |
@@ -179,7 +179,7 @@ Claims that could not be verified against wiki or by re-running MCP this session
 - **qs-38** — Custom Connector on CC: plugin size caps, sensitive-config handling, PrivateLink-cluster availability. → auto-stubbed.
 - **qs-47** — Tableflow: Iceberg GA date, Delta Lake support status, supported catalogs (Glue / Snowflake Open Catalog-Polaris / Unity / REST), BYOB. No dedicated wiki article. → auto-stubbed.
 - **qs-16** — KIP-848 GA-in-4.0 + client `group.protocol=consumer` support matrix. Partial wiki coverage in `concepts/consumer-group-rebalancing.md`; verify exact client-library versions.
-- **qs-55 / qs-56** — CC PrivateLink/PSC per-type availability and zonal-DNS specifics. Already queued as `wiki/concepts/private-networking.md`.
+- **qs-55 / qs-56** — CC PrivateLink/PSC per-type availability and zonal-DNS specifics. Already queued as `wiki/concepts/confluent-cloud-private-networking.md`.
 - **qs-42** — CC-specific source idle-timeout property name (the doc gives the CP/OSS `table.exec.source.idle-timeout`; CC's SQL surface differs). Already partially covered by queued `wiki/concepts/flink-confluent-cloud-setup.md`.
 - **qs-45 / qs-61** — Per-CKU sizing numbers and CFU burn model — explicitly drift-prone; re-confirm via Confluent sizing guidance before quoting.
 
