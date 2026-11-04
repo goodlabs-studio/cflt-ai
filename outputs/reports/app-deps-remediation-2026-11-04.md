@@ -42,6 +42,6 @@ Branch: `sriram-branch`. Operator: Claude Code (session-driven), requested by Sr
 
 ## Checkpoint (update after every step)
 
-- **State:** DONE except push (user) and optional part-B remainder. Local commits on `sriram-branch`: 9850790, 99f2246, + review-reports commit.
-- **Open items for the user:** (1) `git push origin sriram-branch` from own terminal; (2) fsi-dsp fixes belong in the fsi-dsp repo — top priority: remove client app codes, fix audit router JSON (part B C1), stop staging secrets in /tmp (part B C2), harden CSFLE client config (part A C2); (3) part B unread: 5 reference, 7 observability, 3 modules READMEs + M10 hostname check (human); (4) remaining 2 pytest failures are local flox env only.
+- **State:** DONE except push (user). Part B review COMPLETED 2026-11-04 (resume session: 3 Haiku sub-reviewers + Opus coordinator; final C3/H33/M48/L46; H16→C3 confirmed by local kustomize render, H12 confirmed from apache/kafka source, M16→H34 confirmed on Maven Central, M10 cleared as placeholders). Local commits on `sriram-branch`: 9850790, 99f2246, + review-reports commit.
+- **Open items for the user:** (1) `git push origin sriram-branch` from own terminal; (2) fsi-dsp fixes belong in the fsi-dsp repo — top priority: remove client app codes, fix audit router JSON (part B C1), stop staging secrets in /tmp (part B C2), harden CSFLE client config (part A C2); (3) part B complete — see report Top priorities; (4) remaining 2 pytest failures are local flox env only.
 - **Rollback:** `git revert` the three commits.
