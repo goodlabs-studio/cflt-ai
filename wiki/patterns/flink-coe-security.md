@@ -3,7 +3,7 @@ title: Flink COE — Security (RBAC, Service Accounts, Principals)
 tags: [flink, confluent-cloud, coe, security, rbac, service-accounts, mtls, fsi, stub]
 sources:
   - https://docs.confluent.io/cloud/current/flink/operate-and-deploy/flink-rbac.html
-  - raw/repos/fsi-dsp/accelerators/confluent-on-linuxone/layers/05-flink/rolebindings
+  - fsi-dsp://accelerator/confluent-on-linuxone  # layer 05-flink rolebindings
   - outputs/reports/flink-confluent-cloud-setup-privatelink-architecture.md
 related: [patterns/flink-coe-managed-cc-overview, patterns/flink-coe-aws-privatelink-refarch, patterns/fsi-governance-automation, patterns/auditor-readonly-rbac-payload-isolation]
 confidence: low

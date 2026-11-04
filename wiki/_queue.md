@@ -42,15 +42,10 @@ The LLM reads this at session start and clears items when complete.
 ## Lint Findings
 
 <!-- format: - [ ] finding from last lint run -->
-<!-- Last lint run: 2026-11-04 (python tools/wiki-lint.py --full): 192 findings, 0 broken links. Orphans auto-fixed in _index.md; stale articles flagged for /wiki:validate (not date-bumped — content is version-bearing). -->
+<!-- Last lint run: 2026-11-04 (second pass, fsi-dsp submodule initialized): 160 findings, 0 broken links, 0 orphans, 0 missing-source. The 42 missing-source findings from the first 2026-11-04 pass were false positives caused by the uninitialized raw/repos/fsi-dsp submodule (check-citations resolves 43/43). Stale articles flagged for /wiki:validate, not date-bumped. -->
 - [ ] stub: wiki/patterns/flink-coe-aws-privatelink-refarch.md
 - [ ] stub: wiki/patterns/flink-coe-optimization.md
 - [ ] stub: wiki/patterns/flink-coe-security.md
-- [x] orphan: wiki/activity/2026-06.md — **FIXED 2026-11-04**: added to wiki/_index.md
-- [x] orphan: wiki/activity/2026-08.md — **FIXED 2026-11-04**: added to wiki/_index.md
-- [x] orphan: wiki/activity/2026-09.md — **FIXED 2026-11-04**: added to wiki/_index.md
-- [x] orphan: wiki/activity/2026-10.md — **FIXED 2026-11-04**: added to wiki/_index.md
-- [x] orphan: wiki/incidents/confluent-cloud-on-gcp-starter-2026-05-11.md — **FIXED 2026-11-04**: added to wiki/_index.md
 - [ ] stale: wiki/concepts/avro-schema-source-directory.md — >90 days; run /wiki:validate before bumping last_updated
 - [ ] stale: wiki/concepts/azure-connection-management.md — >90 days; run /wiki:validate before bumping last_updated
 - [ ] stale: wiki/concepts/cdc-source-connector-setup.md — >90 days; run /wiki:validate before bumping last_updated
@@ -193,48 +188,21 @@ The LLM reads this at session start and clears items when complete.
 - [ ] decayed: wiki/patterns/x86-to-linuxone-cluster-linking-migration.md
 - [ ] decayed: wiki/synthesis/adr-index.md
 - [ ] vendor-drift: DRIFT: wiki/patterns/fsi-canon-overlay-for-confluent-skills.md: source=1.0.0..., pin=91d1871ef8c3...
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/confluent-platform-broker-jmx.md: URI 'fsi-dsp://observability/grafana' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/fips-at-install-ocp-requirement.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/fsi-compliance.md: URI 'fsi-dsp://script/validate-fips' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/fsi-compliance.md: URI 'fsi-dsp://adr/006' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/fsi-data-streaming-platform.md: URI 'fsi-dsp://scenario/cc-aws' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/fsi-data-streaming-platform.md: URI 'fsi-dsp://module/topic' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/linuxone-kafka-integration.md: URI 'fsi-dsp://adr/009' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/observability-metrics-mapping.md: URI 'fsi-dsp://observability/metrics-mapping' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/s390x-custom-image-build-pipeline.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/schema-evolution-strategies.md: URI 'fsi-dsp://adr/001' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/schema-evolution-strategies.md: URI 'fsi-dsp://adr/002' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/sla-tiers.md: URI 'fsi-dsp://role/cp_topic' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/auditor-readonly-rbac-payload-isolation.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/cfk-observability-baseline.md: URI 'fsi-dsp://observability/grafana' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/cluster-linking-observability.md: URI 'fsi-dsp://observability/grafana' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-cluster-linking.md: URI 'fsi-dsp://adr/005' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-cluster-linking.md: URI 'fsi-dsp://script/mirror-failover' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-mirrormaker2.md: URI 'fsi-dsp://adr/005' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-mirrormaker2.md: URI 'fsi-dsp://script/mirror-failback' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-mirrormaker2.md: URI 'fsi-dsp://role/cp_dr_mm2' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-multi-region-cluster.md: URI 'fsi-dsp://adr/008' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-multi-region-cluster.md: URI 'fsi-dsp://script/fsi-dr' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/flink-on-cfk-fsi-example-jobs.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/fsi-governance-automation.md: URI 'fsi-dsp://role/cp_topic' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/fsi-governance-automation.md: URI 'fsi-dsp://role/cp_schema' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/fsi-governance-automation.md: URI 'fsi-dsp://role/cp_rbac' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/linuxone-on-cfk-reference-architecture.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/linuxone-on-cfk-reference-architecture.md: URI 'fsi-dsp://adr/013' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/topic-naming.md: URI 'fsi-dsp://adr/007' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/topic-naming.md: URI 'fsi-dsp://role/cp_topic' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/topic-naming.md: URI 'fsi-dsp://module/topic' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/x86-to-linuxone-cluster-linking-migration.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/x86-to-linuxone-cluster-linking-migration.md: URI 'fsi-dsp://adr/005' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/001' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/002' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/003' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/004' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/005' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/006' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/007' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/008' resolves to no MANIFEST capability — id removed or never registered
-- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/009' resolves to no MANIFEST capability — id removed or never registered
+- [ ] stale-source: STALE-SOURCE-1 wiki/concepts/confluent-platform-broker-jmx.md: cites fsi-dsp://observability/grafana (observability/grafana); validated 2026-05-20, file last changed 2026-05-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/concepts/fips-at-install-ocp-requirement.md: cites fsi-dsp://accelerator/confluent-on-linuxone (accelerators/confluent-on-linuxone); validated 2026-10-25, file last changed 2026-10-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/concepts/fsi-compliance.md: cites fsi-dsp://script/validate-fips (scripts/validate-fips.sh); validated 2026-10-25, file last changed 2026-10-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/concepts/linuxone-kafka-integration.md: cites fsi-dsp://adr/009 (docs/adr/009-linuxone-kafka-offload.md); validated 2026-10-25, file last changed 2026-10-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/concepts/observability-metrics-mapping.md: cites fsi-dsp://observability/metrics-mapping (observability/metrics-mapping.md); validated 2026-05-20, file last changed 2026-05-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/concepts/s390x-custom-image-build-pipeline.md: cites fsi-dsp://accelerator/confluent-on-linuxone (accelerators/confluent-on-linuxone); validated 2026-05-23, file last changed 2026-10-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/patterns/auditor-readonly-rbac-payload-isolation.md: cites fsi-dsp://accelerator/confluent-on-linuxone (accelerators/confluent-on-linuxone); validated 2026-05-23, file last changed 2026-10-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/patterns/cfk-observability-baseline.md: cites fsi-dsp://observability/grafana (observability/grafana); validated 2026-05-20, file last changed 2026-05-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/patterns/cluster-linking-observability.md: cites fsi-dsp://observability/grafana (observability/grafana); validated 2026-05-20, file last changed 2026-05-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/patterns/flink-coe-security.md: cites fsi-dsp://accelerator/confluent-on-linuxone (accelerators/confluent-on-linuxone); validated 2026-07-30, file last changed 2026-10-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/patterns/flink-on-cfk-fsi-example-jobs.md: cites fsi-dsp://accelerator/confluent-on-linuxone (accelerators/confluent-on-linuxone); validated 2026-05-23, file last changed 2026-10-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/patterns/linuxone-on-cfk-reference-architecture.md: cites fsi-dsp://accelerator/confluent-on-linuxone (accelerators/confluent-on-linuxone); validated 2026-10-25, file last changed 2026-10-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/patterns/linuxone-on-cfk-reference-architecture.md: cites fsi-dsp://adr/013 (docs/adr/013-linuxone-deployment-guidance.md); validated 2026-10-25, file last changed 2026-10-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/patterns/x86-to-linuxone-cluster-linking-migration.md: cites fsi-dsp://accelerator/confluent-on-linuxone (accelerators/confluent-on-linuxone); validated 2026-05-23, file last changed 2026-10-25 — queue for reconsolidation
+- [ ] stale-source: STALE-SOURCE-1 wiki/synthesis/adr-index.md: cites fsi-dsp://adr/009 (docs/adr/009-linuxone-kafka-offload.md); validated 2026-04-28, file last changed 2026-10-25 — queue for reconsolidation
 
 ## Candidate Articles (from lint / Q&A sessions)
 
