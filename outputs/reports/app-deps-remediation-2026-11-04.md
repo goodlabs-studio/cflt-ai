@@ -27,9 +27,21 @@ Branch: `sriram-branch`. Operator: Claude Code (session-driven), requested by Sr
 - Python after deps change: 1258 passed / 3 failed (identical set to baseline — **0 regressions**); evals 200 ✅, adapters 9 ✅, golden 678 ✅, wiki-lint exit 0, citations ✅.
 - Fixed one of the 3 pre-existing failures: `wiki/patterns/flink-coe-security.md` cited a raw `raw/repos/fsi-dsp/...` path → replaced with `fsi-dsp://accelerator/confluent-on-linuxone` (MANIFEST id verified). Now **1259 passed / 2 failed**; remaining 2 are `test_flox_manifest_*` (no `.flox/` env on this machine — flox optional per CONTRIBUTING; CI doesn't run this file).
 - **Correction to earlier /wiki:lint pass today:** its 42 "MISSING-SOURCE" findings were false positives from the uninitialized `fsi-dsp` submodule. With the submodule present: 0 missing-source, and 15 real **STALE-SOURCE** findings (cited fsi-dsp files changed after `last_validated`). `wiki/_queue.md` Lint Findings regenerated (160 findings: stale 68, decayed 46, unverified 24, stale-source 15, stubs 3, low-confidence 3, vendor-drift 1).
+- Committed `9850790` (app deps) and `99f2246` (wiki citation + queue + this log) on `sriram-branch`. Push guard kept in place per user decision; **user pushes from their own terminal** (`git push origin sriram-branch`).
+- fsi-dsp review **part B** (accelerators/, scenarios/, reference/, observability/, modules/) was stopped by the user mid-run; it had not written its report yet, so no part-B output exists. Not restarted. Part A (docs/, README, EXECSUMMARY, CLAUDE.md) still running.
+- fsi-dsp review part B was then **resumed by the user** from its transcript; running again (same agent, report still pending).
+- fsi-dsp review part B **stopped by the user again** after the resume; no part-B report written. Treating part B as cancelled unless the user asks to re-run it.
+- fsi-dsp review part B handed back a **PARTIAL** report → `outputs/reports/fsi-dsp-doc-review-2026-11-04-part-b.md` (33/48 files read in full; mechanical scans over all 48). Counts: Critical 2 / High 16 / Medium 17 / Low 14. Spot-checked both Criticals myself:
+  - C1 confirmed: `accelerators/confluent-on-linuxone/layers/04-audit/patches/kafka-audit.yaml` line 21 `confluent.security.event.router.config` fails `json.loads` (stray `"` before each route object) → FSI audit routing would not load.
+  - C2 confirmed: `accelerators/confluent-on-linuxone/RUNBOOK.md` ~L95-99 copies secret templates to world-readable `/tmp`, edits real values there, and `oc apply`s from it.
+  - Unread: 5 reference READMEs, 7 observability, 3 modules; H12/M16 unverified; M10 internal-looking hostnames NOT resolved (per never-connect rule) — needs human check.
+- fsi-dsp review **part A complete** → `outputs/reports/fsi-dsp-doc-review-2026-11-04-part-a.md` (35/35 files; 55 findings: Critical 2 / High 15 / Medium 24 / Low 14; all relative links resolve; no credentials/IPs). Spot-checked both Criticals:
+  - Client-identifying app codes still present in fsi-dsp `docs/adr/002:24`, `docs/adr/004:8,15` (and per report `docs/schema-guide.md:6,37`) — confirmed. This is the residue the 2026-09-29 client-data audit scrubbed from cflt-ai but not fsi-dsp.
+  - `docs/csfle-guide.md` client config never sets `auto.register.schemas=false` / `use.latest.version=true` — confirmed (rule-less schema could be registered → plaintext PII).
+- **Redacted** the client codes (and a client-specific domain example) from the part-A report before committing, so cflt-ai history doesn't regain them. Rescan of both reports + this log: 0 hits.
 
 ## Checkpoint (update after every step)
 
-- **State:** all fixes done and verified; committing on `sriram-branch` (2 commits: app deps; wiki citation + queue). fsi-dsp review agents still running.
-- **Next:** push — BLOCKED by user's Claude-only push guard (pre-push hook + deny rules). Ask user: lift guard for this push, or push from own terminal. Then fold fsi-dsp review results into this log.
-- **Rollback:** `git revert` the two commits (or `git reset --hard <prior HEAD dd5fb5c>` before push).
+- **State:** DONE except push (user) and optional part-B remainder. Local commits on `sriram-branch`: 9850790, 99f2246, + review-reports commit.
+- **Open items for the user:** (1) `git push origin sriram-branch` from own terminal; (2) fsi-dsp fixes belong in the fsi-dsp repo — top priority: remove client app codes, fix audit router JSON (part B C1), stop staging secrets in /tmp (part B C2), harden CSFLE client config (part A C2); (3) part B unread: 5 reference, 7 observability, 3 modules READMEs + M10 hostname check (human); (4) remaining 2 pytest failures are local flox env only.
+- **Rollback:** `git revert` the three commits.
