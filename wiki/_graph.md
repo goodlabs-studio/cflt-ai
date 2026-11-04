@@ -742,3 +742,11 @@ patterns/kcp-msk-migration-bastion-host → patterns/yaml-topic-rbac-admin-tool 
 patterns/dr-cluster-linking → patterns/kcp-msk-migration-bastion-host : KCP as the MSK-source path onto the same mirror-topic DR primitive
 concepts/confluent-cloud-private-networking → patterns/kcp-msk-migration-bastion-host : PNI as the connectivity step in an MSK migration
 concepts/confluent-gateway → patterns/kcp-msk-migration-bastion-host : gateway-based zero-config-change client switchover consumed by KCP migrations
+
+## streamhouse concept (2026-11-04)
+
+concepts/streamhouse → concepts/tableflow-iceberg-delta : analytical serve path in the Query pillar
+concepts/streamhouse → patterns/cdc-to-tableflow-flink-decode : shape-in-Flink-then-materialize discipline LT also requires
+concepts/streamhouse → concepts/flink-confluent-cloud-setup : transform stage; joins/aggregates must live upstream of Lightning Tables
+concepts/streamhouse → concepts/schema-registry-best-practices : registered schema is a Lightning Tables prerequisite
+concepts/streamhouse → patterns/fsi-l1-reference-architecture : existing Streamhouse-shaped FSI topology

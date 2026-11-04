@@ -51,6 +51,7 @@ The LLM maintains this file. Do not edit manually.
 [Oracle XStream Source Limitations](concepts/oracle-xstream-source-limitations.md) — Trip-wire: OracleXStreamSource doesn't support after.state.only; workaround via Flink transform — #trip-wire #cdc #oracle #confluent-agent-skills
 [Schema-Aware Console Producer Required](concepts/schema-aware-console-producer-required.md) — Trip-wire: kafka-console-producer doesn't speak Schema Registry; use kafka-avro-console-producer for SR-governed topics — #trip-wire #schema-registry #cli #confluent-agent-skills
 [Tableflow Changelog Mode Immutability](concepts/tableflow-changelog-mode-immutability.md) — Trip-wire: Tableflow CHANGELOG mode is immutable after first materialization; cannot switch to APPEND without recreate — #trip-wire #tableflow #confluent-cloud #confluent-agent-skills
+[Streamhouse — Architecture, Purpose, and Confluent's Implementation](concepts/streamhouse.md) — Vendor-neutral capture→transport→transform→govern→serve pattern (working group 2026-09); Confluent's version = existing Kafka/Flink/Governance + new Query pillar (Tableflow, Lightning Tables, Real-Time Context Engine/MCP); LT is CC-on-AWS only, read-only single-table SQL — #streamhouse #lightning-tables #real-time-context-engine #tableflow #confluent-cloud #ai-agents #fsi
 [Tableflow — Kafka Topics as Iceberg and Delta Lake Tables](concepts/tableflow-iceberg-delta.md) — Materialize Kafka topics as Iceberg/Delta in object storage with auto schema mapping, snapshot management, compaction, and catalog integration (Glue, Unity, Polaris, Snowflake Open Catalog, built-in IRC); AWS+Azure only, not GCP/CP — #tableflow #iceberg #delta-lake #confluent-cloud #lakehouse #fsi
 [WarpStream Config Overrides](concepts/warpstream-config-overrides.md) — Trip-wire: WarpStream silently ignores fetch.min.bytes; replication.factor is cosmetic (always 3-way internally) — #trip-wire #warpstream #competitive-context #configuration #confluent-agent-skills
 [WarpStream Schema Registry Format Constraint](concepts/warpstream-schema-registry-format-constraint.md) — Trip-wire: WarpStream built-in SR only supports Avro and Protobuf; no JSON Schema — #trip-wire #warpstream #competitive-context #schema-registry #confluent-agent-skills
@@ -135,6 +136,7 @@ The LLM maintains this file. Do not edit manually.
 ## Incidents
 
 <!-- LLM populates this section -->
+[Incident: confluent-cloud-on-gcp-starter (2026-05-11)](incidents/confluent-cloud-on-gcp-starter-2026-05-11.md) — /dsp:apply record for scenario/cc-gcp (engineer profile); all gates pass, execution deferred to MCP runtime — #incident #dsp #confluent-cloud #gcp
 
 ## Releases
 
@@ -151,3 +153,7 @@ Append-only audit trail of skill invocations. One file per calendar month; see [
 
 [2026-04](activity/2026-04.md) — Skill invocations during April 2026 — #activity
 [2026-05](activity/2026-05.md) — Skill invocations during May 2026 — #activity
+[2026-06](activity/2026-06.md) — Skill invocations during June 2026 — #activity
+[2026-08](activity/2026-08.md) — Skill invocations during August 2026 — #activity
+[2026-09](activity/2026-09.md) — Skill invocations during September 2026 — #activity
+[2026-10](activity/2026-10.md) — Skill invocations during October 2026 — #activity

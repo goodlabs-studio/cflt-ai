@@ -19,6 +19,9 @@ The LLM reads this at session start and clears items when complete.
 ## Articles to Expand
 
 <!-- format: - [ ] wiki/concepts/<slug>.md — what is missing -->
+- [ ] wiki/patterns/flink-coe-aws-privatelink-refarch.md — stub / confidence: low; expand and MCP-validate (queued by /wiki:lint 2026-11-04)
+- [ ] wiki/patterns/flink-coe-optimization.md — stub / confidence: low; expand and MCP-validate (queued by /wiki:lint 2026-11-04)
+- [ ] wiki/patterns/flink-coe-security.md — stub / confidence: low; expand and MCP-validate (queued by /wiki:lint 2026-11-04)
 - [x] [Queues for Kafka (Share Groups)](wiki/concepts/queues-for-kafka-share-groups.md) — **RESOLVED 2026-06-09** via `outputs/reports/wiki-validation-2026-06-09-queues-for-kafka-share-groups.md`. Promoted confidence:medium → high; group.share.* config names/defaults, ack modes, kafka-share-groups CLI, share.version=1 enablement, and GA (AK 4.2.0 / CC) all MCP-confirmed and markers cleared. One ⚠️ unverified remains by design: exact share-group **metric identities** (Monitoring bullet) — resolve against the observability mapping before alerting.
 
 ## Unverified Claims to Resolve
@@ -39,8 +42,199 @@ The LLM reads this at session start and clears items when complete.
 ## Lint Findings
 
 <!-- format: - [ ] finding from last lint run -->
-<!-- Last lint run: 2026-05-07 after Phase A+B peer-review pass on the four LinuxONE patterns + new linuxone-platform-foundations concept doc. Lint clean except for the pre-existing fsi-exactly-once unverified markers (already tracked above). -->
-- [x] unverified: wiki/patterns/fsi-exactly-once.md — **RESOLVED 2026-06-15**: the last inline `⚠️ unverified` marker (CC Flink commit interval) was validated against `confluent-docs` and retired. Article is now marker-free (IBM MQ marker resolved 2026-05-18).
+<!-- Last lint run: 2026-11-04 (python tools/wiki-lint.py --full): 192 findings, 0 broken links. Orphans auto-fixed in _index.md; stale articles flagged for /wiki:validate (not date-bumped — content is version-bearing). -->
+- [ ] stub: wiki/patterns/flink-coe-aws-privatelink-refarch.md
+- [ ] stub: wiki/patterns/flink-coe-optimization.md
+- [ ] stub: wiki/patterns/flink-coe-security.md
+- [x] orphan: wiki/activity/2026-06.md — **FIXED 2026-11-04**: added to wiki/_index.md
+- [x] orphan: wiki/activity/2026-08.md — **FIXED 2026-11-04**: added to wiki/_index.md
+- [x] orphan: wiki/activity/2026-09.md — **FIXED 2026-11-04**: added to wiki/_index.md
+- [x] orphan: wiki/activity/2026-10.md — **FIXED 2026-11-04**: added to wiki/_index.md
+- [x] orphan: wiki/incidents/confluent-cloud-on-gcp-starter-2026-05-11.md — **FIXED 2026-11-04**: added to wiki/_index.md
+- [ ] stale: wiki/concepts/avro-schema-source-directory.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/azure-connection-management.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/cdc-source-connector-setup.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/confluent-cloud-private-networking.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/confluent-platform-broker-jmx.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/consumer-group-rebalancing.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/consumer-lag-monitoring.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/exactly-once-semantics.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/exactly-once-v2-warpstream-throughput-cost.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/flink-checkpointing.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/fsi-compliance.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/kafka-connect-deployment-models.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/kafka-streams-4x-uncaught-exception-handler-import.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/kafka-streams-architecture.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/kafka-streams-config-baseline.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/kafka-streams-debugging.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/kafka-streams-production-hardening.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/kafka-streams-schema-patterns.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/ksqldb-observability.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/network-connectivity-by-tier.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/observability-metrics-mapping.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/oic-kafka-integration.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/oracle-xstream-source-limitations.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/producer-batching-config.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/queues-for-kafka-share-groups.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/s390x-custom-image-build-pipeline.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/schema-aware-console-producer-required.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/schema-evolution-strategies.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/schema-registry-observability.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/tableflow-changelog-mode-immutability.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/tableflow-iceberg-delta.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/warpstream-config-overrides.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/concepts/warpstream-schema-registry-format-constraint.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/aks-kafka-tuning.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/archival-storage-long-retention-topics.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/audit-log-siem-integration.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/auditor-readonly-rbac-payload-isolation.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/cdc-tableflow-flink-decode-required.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/cdc-to-tableflow-flink-decode.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/cfk-observability-baseline.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/cluster-linking-observability.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/connect-deployment-models.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/consumer-config-fsi.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/cp-mtls-self-signed-setup.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/cp-tls-debugging-by-component.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/dr-mirrormaker2.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/dr-multi-region-cluster.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/flink-coe-aws-privatelink-refarch.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/flink-coe-managed-cc-overview.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/flink-coe-optimization.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/flink-coe-security.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/flink-event-routing.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/flink-on-cfk-fsi-example-jobs.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/flink-runtime-models.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/fsi-exactly-once.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/fsi-governance-automation.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/kafka-streams-topology-patterns.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/latency-optimized-kafka-client.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/low-latency-kafka-azure.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/oci-audit-events-to-splunk.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/producer-config-fsi.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/schema-registry-adoption-playbook.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/schema-registry-shared-types.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/terraform-cicd-confluent-private-networking.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/topic-naming.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/patterns/x86-to-linuxone-cluster-linking-migration.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/synthesis/adr-index.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] stale: wiki/synthesis/confluent-gotchas-top-20.md — >90 days; run /wiki:validate before bumping last_updated
+- [ ] low-confidence: wiki/patterns/flink-coe-aws-privatelink-refarch.md
+- [ ] low-confidence: wiki/patterns/flink-coe-optimization.md
+- [ ] low-confidence: wiki/patterns/flink-coe-security.md
+- [ ] unverified: wiki/activity/2026-09.md
+- [ ] unverified: wiki/concepts/azure-connection-management.md
+- [ ] unverified: wiki/concepts/confluent-cloud-cluster-sku-selection.md
+- [ ] unverified: wiki/concepts/confluent-cloud-private-networking.md
+- [ ] unverified: wiki/concepts/confluent-platform-broker-jmx.md
+- [ ] unverified: wiki/concepts/exactly-once-v2-warpstream-throughput-cost.md
+- [ ] unverified: wiki/concepts/kafka-connect-deployment-models.md
+- [ ] unverified: wiki/concepts/ksqldb-observability.md
+- [ ] unverified: wiki/concepts/linuxone-jdk-tls-gotchas.md
+- [ ] unverified: wiki/concepts/observability-metrics-mapping.md
+- [ ] unverified: wiki/concepts/oic-kafka-integration.md
+- [ ] unverified: wiki/concepts/queues-for-kafka-share-groups.md
+- [ ] unverified: wiki/concepts/schema-registry-observability.md
+- [ ] unverified: wiki/concepts/tableflow-iceberg-delta.md
+- [ ] unverified: wiki/concepts/warpstream-config-overrides.md
+- [ ] unverified: wiki/concepts/warpstream-schema-registry-format-constraint.md
+- [ ] unverified: wiki/patterns/cluster-linking-observability.md
+- [ ] unverified: wiki/patterns/cp-tls-debugging-by-component.md
+- [ ] unverified: wiki/patterns/dr-application-routing.md
+- [ ] unverified: wiki/patterns/flink-event-routing.md
+- [ ] unverified: wiki/patterns/kcp-msk-migration-bastion-host.md
+- [ ] unverified: wiki/patterns/latency-optimized-kafka-client.md
+- [ ] unverified: wiki/patterns/x86-to-linuxone-cluster-linking-migration.md
+- [ ] unverified: wiki/synthesis/confluent-gotchas-top-20.md
+- [ ] decayed: wiki/concepts/avro-schema-source-directory.md
+- [ ] decayed: wiki/concepts/azure-connection-management.md
+- [ ] decayed: wiki/concepts/cdc-source-connector-setup.md
+- [ ] decayed: wiki/concepts/confluent-cloud-private-networking.md
+- [ ] decayed: wiki/concepts/exactly-once-v2-warpstream-throughput-cost.md
+- [ ] decayed: wiki/concepts/fsi-data-streaming-platform.md
+- [ ] decayed: wiki/concepts/kafka-streams-4x-uncaught-exception-handler-import.md
+- [ ] decayed: wiki/concepts/kafka-streams-architecture.md
+- [ ] decayed: wiki/concepts/kafka-streams-config-baseline.md
+- [ ] decayed: wiki/concepts/kafka-streams-debugging.md
+- [ ] decayed: wiki/concepts/kafka-streams-production-hardening.md
+- [ ] decayed: wiki/concepts/kafka-streams-schema-patterns.md
+- [ ] decayed: wiki/concepts/network-connectivity-by-tier.md
+- [ ] decayed: wiki/concepts/oracle-xstream-source-limitations.md
+- [ ] decayed: wiki/concepts/queues-for-kafka-share-groups.md
+- [ ] decayed: wiki/concepts/s390x-custom-image-build-pipeline.md
+- [ ] decayed: wiki/concepts/schema-aware-console-producer-required.md
+- [ ] decayed: wiki/concepts/schema-evolution-strategies.md
+- [ ] decayed: wiki/concepts/schema-registry-observability.md
+- [ ] decayed: wiki/concepts/tableflow-changelog-mode-immutability.md
+- [ ] decayed: wiki/concepts/tableflow-iceberg-delta.md
+- [ ] decayed: wiki/concepts/warpstream-config-overrides.md
+- [ ] decayed: wiki/concepts/warpstream-schema-registry-format-constraint.md
+- [ ] decayed: wiki/patterns/archival-storage-long-retention-topics.md
+- [ ] decayed: wiki/patterns/auditor-readonly-rbac-payload-isolation.md
+- [ ] decayed: wiki/patterns/cdc-tableflow-flink-decode-required.md
+- [ ] decayed: wiki/patterns/cdc-to-tableflow-flink-decode.md
+- [ ] decayed: wiki/patterns/cfk-observability-baseline.md
+- [ ] decayed: wiki/patterns/cp-mtls-self-signed-setup.md
+- [ ] decayed: wiki/patterns/cp-tls-debugging-by-component.md
+- [ ] decayed: wiki/patterns/dead-letter-queue-design.md
+- [ ] decayed: wiki/patterns/dr-mirrormaker2.md
+- [ ] decayed: wiki/patterns/dr-multi-region-cluster.md
+- [ ] decayed: wiki/patterns/flink-coe-managed-cc-overview.md
+- [ ] decayed: wiki/patterns/flink-on-cfk-fsi-example-jobs.md
+- [ ] decayed: wiki/patterns/fsi-canon-overlay-for-confluent-skills.md
+- [ ] decayed: wiki/patterns/fsi-exactly-once.md
+- [ ] decayed: wiki/patterns/fsi-governance-automation.md
+- [ ] decayed: wiki/patterns/kafka-streams-topology-patterns.md
+- [ ] decayed: wiki/patterns/latency-optimized-kafka-client.md
+- [ ] decayed: wiki/patterns/schema-registry-adoption-playbook.md
+- [ ] decayed: wiki/patterns/schema-registry-shared-types.md
+- [ ] decayed: wiki/patterns/terraform-cicd-confluent-private-networking.md
+- [ ] decayed: wiki/patterns/topic-naming.md
+- [ ] decayed: wiki/patterns/x86-to-linuxone-cluster-linking-migration.md
+- [ ] decayed: wiki/synthesis/adr-index.md
+- [ ] vendor-drift: DRIFT: wiki/patterns/fsi-canon-overlay-for-confluent-skills.md: source=1.0.0..., pin=91d1871ef8c3...
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/confluent-platform-broker-jmx.md: URI 'fsi-dsp://observability/grafana' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/fips-at-install-ocp-requirement.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/fsi-compliance.md: URI 'fsi-dsp://script/validate-fips' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/fsi-compliance.md: URI 'fsi-dsp://adr/006' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/fsi-data-streaming-platform.md: URI 'fsi-dsp://scenario/cc-aws' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/fsi-data-streaming-platform.md: URI 'fsi-dsp://module/topic' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/linuxone-kafka-integration.md: URI 'fsi-dsp://adr/009' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/observability-metrics-mapping.md: URI 'fsi-dsp://observability/metrics-mapping' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/s390x-custom-image-build-pipeline.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/schema-evolution-strategies.md: URI 'fsi-dsp://adr/001' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/schema-evolution-strategies.md: URI 'fsi-dsp://adr/002' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/concepts/sla-tiers.md: URI 'fsi-dsp://role/cp_topic' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/auditor-readonly-rbac-payload-isolation.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/cfk-observability-baseline.md: URI 'fsi-dsp://observability/grafana' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/cluster-linking-observability.md: URI 'fsi-dsp://observability/grafana' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-cluster-linking.md: URI 'fsi-dsp://adr/005' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-cluster-linking.md: URI 'fsi-dsp://script/mirror-failover' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-mirrormaker2.md: URI 'fsi-dsp://adr/005' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-mirrormaker2.md: URI 'fsi-dsp://script/mirror-failback' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-mirrormaker2.md: URI 'fsi-dsp://role/cp_dr_mm2' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-multi-region-cluster.md: URI 'fsi-dsp://adr/008' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/dr-multi-region-cluster.md: URI 'fsi-dsp://script/fsi-dr' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/flink-on-cfk-fsi-example-jobs.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/fsi-governance-automation.md: URI 'fsi-dsp://role/cp_topic' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/fsi-governance-automation.md: URI 'fsi-dsp://role/cp_schema' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/fsi-governance-automation.md: URI 'fsi-dsp://role/cp_rbac' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/linuxone-on-cfk-reference-architecture.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/linuxone-on-cfk-reference-architecture.md: URI 'fsi-dsp://adr/013' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/topic-naming.md: URI 'fsi-dsp://adr/007' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/topic-naming.md: URI 'fsi-dsp://role/cp_topic' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/topic-naming.md: URI 'fsi-dsp://module/topic' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/x86-to-linuxone-cluster-linking-migration.md: URI 'fsi-dsp://accelerator/confluent-on-linuxone' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/patterns/x86-to-linuxone-cluster-linking-migration.md: URI 'fsi-dsp://adr/005' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/001' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/002' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/003' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/004' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/005' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/006' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/007' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/008' resolves to no MANIFEST capability — id removed or never registered
+- [ ] missing-source: STALE-SOURCE-2 wiki/synthesis/adr-index.md: URI 'fsi-dsp://adr/009' resolves to no MANIFEST capability — id removed or never registered
 
 ## Candidate Articles (from lint / Q&A sessions)
 
