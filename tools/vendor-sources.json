@@ -21,9 +21,10 @@
     "repo": "confluentinc/agent-skills",
     "marketplace": "confluent-agent-skills",
     "plugin_name": "streaming-skills-plugin",
-    "version": "1.0.0",
-    "commit": "91d1871ef8c320be92bca955c8e42492a2778cb4",
-    "installed_at": "2026-05-17",
+    "version": "1.4.0",
+    "commit": "204b36f10e9be41819557988e8f5291711fda986",
+    "installed_at": "2026-11-04",
+    "vendor_path": "raw/vendor/confluent-agent-skills/204b36f1/",
     "kind": "claude-plugin",
     "license": "Apache-2.0",
     "drift_check": "tools/check_streaming_skills_drift.py"

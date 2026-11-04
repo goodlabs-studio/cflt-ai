@@ -49,7 +49,7 @@ from pathlib import Path
 from typing import Iterable
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-PIN_SHA = "91d1871e"  # streaming-skills-plugin pin per tools/vendor-sources.json
+PIN_SHA = "204b36f1"  # streaming-skills-plugin pin per tools/vendor-sources.json
 VENDOR_SKILLS = PROJECT_ROOT / "raw" / "vendor" / "confluent-agent-skills" / PIN_SHA / "skills"
 SKILL_SLUGS = (
     "kafka-streams-programming",
