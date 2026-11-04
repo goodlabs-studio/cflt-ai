@@ -3,9 +3,10 @@ title: FSI Canon Overlay for Confluent Agent Skills
 slug: fsi-canon-overlay-for-confluent-skills
 category: pattern
 confidence: high
-last_validated: 2026-05-17
-source: streaming-skills-plugin@1.0.0
-source_commit: 91d1871ef8c320be92bca955c8e42492a2778cb4
+last_validated: 2026-11-04
+source: streaming-skills-plugin@204b36f10e9be41819557988e8f5291711fda986
+source_commit: 204b36f10e9be41819557988e8f5291711fda986
+plugin_version: 1.4.0
 tags: [fsi, overlay, upstream-skills, canon, kafka-streams, python-client, schema-registry, tableflow]
 ---
 
@@ -104,14 +105,16 @@ The CDC-Tableflow skill is the **most architecturally opinionated** upstream ski
 
 ## How to use this overlay
 
-When an upstream skill activates inside cflt-ai, Claude reads this article and applies the override rows for that skill's section. For any override key not listed in a section, the upstream default applies — silence means alignment. If the upstream skill produces output that conflicts with an FSI override row (e.g., scaffolds Python code with `enable.auto.commit=true` despite the override table), the overlay wins: Claude must edit the generated output to match the override row before presenting it, and log the conflict as a review note for the developer. The overlay does not modify the upstream skills themselves — they remain pinned at SHA `91d1871e` and are upgraded explicitly per the H.3b pin process.
+When an upstream skill activates inside cflt-ai, Claude reads this article and applies the override rows for that skill's section. For any override key not listed in a section, the upstream default applies — silence means alignment. If the upstream skill produces output that conflicts with an FSI override row (e.g., scaffolds Python code with `enable.auto.commit=true` despite the override table), the overlay wins: Claude must edit the generated output to match the override row before presenting it, and log the conflict as a review note for the developer. The overlay does not modify the upstream skills themselves — they remain pinned at SHA `204b36f1` (plugin 1.4.0) and are upgraded explicitly per the H.3b pin process.
 
 ---
 
 **Provenance**
-- `streaming-skills-plugin/kafka-streams-programming/SKILL.md` @ 91d1871e
-- `streaming-skills-plugin/developing-kafka-python-client/SKILL.md` @ 91d1871e
-- `streaming-skills-plugin/kafka-schema-registry/SKILL.md` @ 91d1871e
-- `streaming-skills-plugin/confluent-cloud-cdc-tableflow/SKILL.md` @ 91d1871e
+- `streaming-skills-plugin/kafka-streams-programming/SKILL.md` @ 204b36f1
+- `streaming-skills-plugin/developing-kafka-python-client/SKILL.md` @ 204b36f1
+- `streaming-skills-plugin/kafka-schema-registry/SKILL.md` @ 204b36f1
+- `streaming-skills-plugin/confluent-cloud-cdc-tableflow/SKILL.md` @ 204b36f1
 
-Vendor pin: `tools/vendor-sources.json` → `confluent-agent-skills` @ commit `91d1871ef8c320be92bca955c8e42492a2778cb4`. Plugin pin formalized in H.3b (`tools/vendor-plugins.json` + `.github/workflows/streaming-skills-drift.yml`).
+Plugin pin: `tools/vendor-sources.json` → `streaming-skills-plugin` @ commit `204b36f10e9be41819557988e8f5291711fda986` (1.4.0), drift-gated by `.github/workflows/streaming-skills-drift.yml`. Originally authored against `91d1871e` (1.0.0); revalidated 2026-11-04 — the 91d1871e→204b36f1 delta for these four SKILL.md files is a `metadata.version` frontmatter field plus `.html`→`.md` doc-link rewrites, and the references delta adds one reworded Oracle XStream prerequisite (confluent-cloud-cdc-tableflow), which no override row touches. No override row changed.
+
+Not covered: the seven skills added upstream by 1.4.0 (`confluent-cloud-flink-sql`, `developing-kafka-java-client`, `msk-migration`, `confluent-tuning-advisor`, `flink-udf`, `confluent-skill-creator`, `confluent-skill-reviewer`) have no section here yet; apply the CLAUDE.md Confluent Canon directly when they activate.
