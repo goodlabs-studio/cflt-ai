@@ -54,3 +54,6 @@ canon/engagement/*
 
 # Local headroom proxy state (PIDs/ports) — machine-specific
 .claude/.headroom_wrap_*
+
+# Headroom wrapper runtime lock (created per session, never commit)
+.claude/.headroom_wrap_settings.lock
