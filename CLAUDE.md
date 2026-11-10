@@ -188,7 +188,25 @@ If the server isn't available, tell the user to enable it via `/mcp` rather than
 ## Design
 
 When producing or styling docs, artifacts, HTML, or slides, follow `DESIGN.md` (colors, type, layout).
-The GoodLabs logo is at `assets/brand/logo.svg` — use the file as-is, never redraw or recolor it.
+The GoodLabs logo is at `assets/brand/logo.svg` (PNGs for Office: `assets/brand/mark.png`, `assets/brand/logo-black.png`) — use the files as-is, never redraw or recolor them.
+
+## Documentation Output (Always-On)
+
+Whenever the user asks for documentation, a doc, a write-up, a proposal, a runbook, a deck or slides:
+
+1. **Read `WRITING.md` before writing anything.** Read `DESIGN.md` §11 only when building a `.docx` or `.pptx`. Together they are the template, measured from a delivered client solution design (.docx) and deck (.pptx).
+2. **Format by request** (`WRITING.md` §0):
+   - No format named → **one plain `.md` first pass**, per `WRITING.md` §4 (same section skeleton and voice as the Word document). This is the default because it costs far fewer tokens than building a .docx.
+   - **Word asked for** ("make it a Word doc", "docx") → run `python3 tools/md2docx/md2docx.py <doc>.md` on the reviewed `.md` (pandoc, no tokens; see `tools/md2docx/README.md`). Don't hand-build a .docx. Changes go into the `.md` first and get converted again, so the two always match. Render PNG figures only if the `.md` needs them.
+   - **No PDF.** The user exports PDFs from Word. Don't render or export one unless asked.
+   - Deck/slides → `.pptx` per `DESIGN.md` §11.2 (black, Arial, cyan `#1FC4F4` + amber `#F7B731`, eyebrow/title/subtitle/footer grid, speaker notes on every slide).
+   - Both → a matched pair (§11.4).
+   - Figures in a first pass: a Mermaid block or numbered flow in the `.md`. Render PNG figures only when building the `.docx`, or when asked.
+   - These rules override the default preference for Claude Docs / Artifacts for documents in this repo, unless the user names one of those.
+3. **Senior-architect voice in every format.** The .docx, the .pptx (titles, subtitles and speaker notes) and the .md are all written as the senior streaming architect who owns the design (`WRITING.md` §1). The architect commits to a recommendation, leads with production consequences and rollback, and separates what's verified from what's inferred.
+4. **De-Claudify every draft** against `WRITING.md` §2 (banned words, no em dashes, no emoji, no triplets, no restating conclusions) and run its self-check before delivering.
+5. Client deliverables go in the engagement folder (`~/GoodLabs/<Client>/`) or `outputs/`. Never put client names in committed files.
+6. **Issuing brand:** GoodLabs Studio by default; IBM Confluent only when the user asks for it. Represent only that one brand: no client logos or branding, no other partners, and never name a client as a template or source (`DESIGN.md` §11).
 
 ---
 
