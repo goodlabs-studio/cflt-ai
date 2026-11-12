@@ -51,6 +51,7 @@ PRIVATE_LISTS = {".client-terms", ".org-audit-reviewed"}
 ALLOWLIST = os.path.join(HERE, "org-audit-allowlist.txt")
 CACHE = os.path.expanduser("~/.cache/org-audit/verdicts.json")
 SELF_FILES = {os.path.realpath(__file__), os.path.join(HERE, "check-client-terms.py"), ALLOWLIST,
+              os.path.join(REPO_ROOT, ".client-terms.example"),
               os.path.realpath(CLIENT_TERMS), os.path.realpath(REVIEWED)}
 SKIP_PREFIXES = ("raw/repos/",)  # vendored submodules carry their own history and hooks
 TEXT_EXT = {".md", ".txt", ".yaml", ".yml", ".json", ".py", ".tf", ".hcl", ".properties", ".html",

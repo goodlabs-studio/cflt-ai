@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# cflt-ai client-name guards: one command, safe to re-run.
+#
+#   bin/setup-guards                 install git hooks, alias and your client list
+#   bin/setup-guards --claude-hook   also add the Claude Code edit hook to ~/.claude/settings.json
+#   bin/setup-guards --check         report status only, change nothing
+#
+# What it sets up (all local to this clone, nothing is committed):
+#   - core.hooksPath=.githooks       pre-commit + pre-push (canon guard, org audit)
+#   - git alias `git org-audit`      quick audit of the repo
+#   - .client-terms                  your client list, from .client-terms.example (gitignored, 0600)
+#   - Claude Code PostToolUse hook   optional; checks every file Claude edits in this repo
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+BOLD='\033[1m'; DIM='\033[2m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; RED='\033[0;31m'; RESET='\033[0m'
+say()  { echo -e "$*"; }
+ok()   { say "${GREEN}✓${RESET} $1"; }
+warn() { say "${YELLOW}⚠${RESET} $1"; }
+fail() { say "${RED}✗${RESET} $1"; }
+
+mode=install; claude_hook=ask
+for arg in "$@"; do
+  case "$arg" in
+    --check) mode=check ;;
+    --claude-hook) claude_hook=yes ;;
+    --no-claude-hook) claude_hook=no ;;
+    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+    *) fail "unknown option: $arg"; exit 2 ;;
+  esac
+done
+
+say ""; say "${BOLD}cflt-ai client-name guards${RESET} ${DIM}($ROOT)${RESET}"; say ""
+
+command -v python3 >/dev/null || { fail "python3 not found; the guards need Python 3.9+"; exit 1; }
+
+# ── 1. Git hooks ────────────────────────────────────────────────────
+current_path="$(git config --get core.hooksPath || true)"
+if [ "$current_path" = ".githooks" ]; then
+  ok "git hooks active from .githooks (pre-commit, pre-push)"
+elif [ "$mode" = check ]; then
+  warn "git hooks not active (core.hooksPath='${current_path:-unset}'); run bin/setup-guards"
+else
+  [ -n "$current_path" ] && warn "replacing core.hooksPath='$current_path' with .githooks"
+  git config core.hooksPath .githooks
+  ok "git hooks active from .githooks (pre-commit, pre-push)"
+fi
+[ "$mode" = install ] && chmod +x .githooks/pre-commit .githooks/pre-push .githooks/canon-guard
+
+# Hooks in .git/hooks stop running once core.hooksPath is set. Say so, so nothing is silently lost.
+stale=$(find .git/hooks -maxdepth 1 -type f -perm -u+x ! -name '*.sample' ! -name '*.disabled' 2>/dev/null | sed 's#^\./##' || true)
+if [ -n "$stale" ]; then
+  if [ "$(git config --get core.hooksPath || true)" = ".githooks" ]; then
+    warn "these hooks in .git/hooks no longer run (core.hooksPath wins):"
+  else
+    warn "these hooks in .git/hooks would stop running once the guards are installed:"
+  fi
+  echo "$stale" | sed 's/^/     /'
+  say "   ${DIM}Move anything you still need into .githooks, then delete them.${RESET}"
+fi
+
+# ── 2. Alias ────────────────────────────────────────────────────────
+want_alias='!python3 "$(git rev-parse --show-toplevel)/tools/org_audit.py"'
+if [ "$(git config --get alias.org-audit || true)" = "$want_alias" ]; then
+  ok "git org-audit alias present"
+elif [ "$mode" = check ]; then
+  warn "git org-audit alias missing"
+else
+  git config alias.org-audit "$want_alias"
+  ok "git org-audit alias added"
+fi
+
+# ── 3. Client list ──────────────────────────────────────────────────
+if [ -f .client-terms ]; then
+  n=$(grep -cvE '^[[:space:]]*(#|$)' .client-terms || true)
+  [ "$mode" = install ] && chmod 600 .client-terms
+  if [ "$n" -gt 0 ]; then ok ".client-terms has $n entr$([ "$n" = 1 ] && echo y || echo ies)"
+  else warn ".client-terms is empty: add every client you work for (see .client-terms.example)"; fi
+elif [ "$mode" = check ]; then
+  warn ".client-terms missing; run bin/setup-guards"
+else
+  ( umask 077; cp .client-terms.example .client-terms )
+  warn "created .client-terms from the template: add every client you work for, one per line"
+fi
+git check-ignore -q .client-terms && ok ".client-terms is gitignored" || fail ".client-terms is NOT ignored; check .gitignore"
+
+# ── 4. Claude Code hook (optional, user-level settings) ─────────────
+settings="$HOME/.claude/settings.json"
+hook_cmd="python3 $ROOT/tools/org_audit.py --hook"
+has_hook=false
+[ -f "$settings" ] && grep -qF "$hook_cmd" "$settings" && has_hook=true
+
+if $has_hook; then
+  ok "Claude Code edit hook installed"
+elif [ "$mode" = check ]; then
+  warn "Claude Code edit hook not installed (optional): bin/setup-guards --claude-hook"
+else
+  if [ "$claude_hook" = ask ]; then
+    if [ -t 0 ]; then
+      read -rp "   Add the Claude Code edit hook to ~/.claude/settings.json? [y/N]: " ans || ans=""
+      [[ "$ans" =~ ^[yY] ]] && claude_hook=yes || claude_hook=no
+    else
+      claude_hook=no
+    fi
+  fi
+  if [ "$claude_hook" = yes ]; then
+    mkdir -p "$(dirname "$settings")"
+    [ -f "$settings" ] && cp "$settings" "$settings.bak-$(date +%Y%m%d%H%M%S)"
+    # Paths go in via argv, never interpolated into the Python source.
+    python3 - "$settings" "$ROOT" "$hook_cmd" <<'PY'
+import json, os, sys
+path, root, cmd = sys.argv[1:4]
+data = json.load(open(path)) if os.path.exists(path) else {}
+post = data.setdefault("hooks", {}).setdefault("PostToolUse", [])
+legacy = (f"{root}/tools/check-client-terms.py --hook", f"{root}/tools/org_audit.py --hook")
+for entry in post:   # drop older guard hooks for this clone so there is exactly one
+    entry["hooks"] = [h for h in entry.get("hooks", []) if not any(l in h.get("command", "") for l in legacy)]
+post[:] = [e for e in post if e.get("hooks")]
+post.append({"matcher": "Edit|Write", "hooks": [{"type": "command", "command": cmd, "timeout": 15,
+             "statusMessage": "Checking cflt-ai for client names"}]})
+tmp = path + ".tmp"
+with open(tmp, "w") as fh:
+    json.dump(data, fh, separators=(",", ":"))
+os.replace(tmp, path)
+PY
+    ok "Claude Code edit hook installed (previous settings backed up next to $settings)"
+    say "   ${DIM}Open /hooks in Claude Code once, or restart it, to load the change.${RESET}"
+  else
+    say "   ${DIM}Skipped the Claude Code hook. Add it later with: bin/setup-guards --claude-hook${RESET}"
+  fi
+fi
+
+# ── 5. Smoke test ───────────────────────────────────────────────────
+say ""
+if python3 tools/org_audit.py >/dev/null 2>&1; then
+  ok "org audit: repo is clean"
+else
+  warn "org audit found possible client names; run: git org-audit"
+fi
+say ""

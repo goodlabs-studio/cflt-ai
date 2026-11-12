@@ -1,0 +1,20 @@
+# Template for your personal client list. bin/setup-guards copies it to .client-terms
+# (gitignored, chmod 600). Put the real names in .client-terms, never in this file.
+#
+# Every organization you consult for goes in .client-terms, one entry per line.
+# tools/org_audit.py blocks them in commits, pushes and Claude edits.
+#
+# Plain entries match regardless of case, extra spaces, hyphens, underscores, dots,
+# line wraps or no space at all. "Example Clearing" also catches "EXAMPLE  CLEARING",
+# "example-clearing", "ExampleClearing" and "exampleclearing.com". CamelCase splits
+# into words.
+# Regex entries: prefix with re: or wrap in slashes. Regex is case-insensitive.
+#
+# Add short forms and internal domains too. A client named only by a bare word with
+# no company suffix ("Meridian runs three clusters") is caught ONLY if it is listed here.
+#
+# Examples (delete these and add your own in .client-terms):
+# Example Clearing
+# EXCL
+# re:\bexcl-?corp\.internal\b
+# /prd-kafka-\d+\.example\.net/

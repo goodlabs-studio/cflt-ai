@@ -217,7 +217,9 @@ else
       ok "fsi-dsp submodule initialized"
     else
       warn "Could not clone fsi-dsp. Check your SSH key access to goodlabs-studio."
-      say "   You can retry later: git submodule update --init raw/repos/fsi-dsp"
+      say "   Retry over SSH:   git submodule update --init raw/repos/fsi-dsp"
+      say "   Or over HTTPS (after 'gh auth login'):"
+      say "     git -c url.\"https://github.com/\".insteadOf=\"git@github.com:\" submodule update --init raw/repos/fsi-dsp"
     fi
   else
     say "   ${DIM}Skipped. Wiki skills still work but /wiki:evaluate code-delta checks${RESET}"
@@ -350,6 +352,21 @@ fi
 if [ -f "$global_settings" ] && grep -q '"enableAllProjectMcpServers"[[:space:]]*:[[:space:]]*true' "$global_settings" 2>/dev/null; then
   warn "~/.claude/settings.json auto-approves MCP servers for ALL projects (older bin/setup did this)"
   say "   ${DIM}Consider removing that key; the per-repo setting above is enough.${RESET}"
+fi
+
+# ── Step 8: Client-name guards ──────────────────────────────────────
+# Git hooks + client list that keep client organizations out of commits and pushes.
+# Delegated to bin/setup-guards so it can be re-run on its own.
+
+say ""
+info "8. Client-name guards"
+say "   Blocks client organization names (and client canon) from commits and pushes."
+say "   Installs .githooks, the 'git org-audit' alias and your private .client-terms list."
+ask "   Install the guards now? [Y/n]: " guard_choice
+if [[ ! "$guard_choice" =~ ^[nN] ]]; then
+  "$ROOT/bin/setup-guards" || warn "bin/setup-guards reported a problem; re-run it on its own."
+else
+  say "   ${DIM}Skipped. Run bin/setup-guards any time.${RESET}"
 fi
 
 # ── Done ────────────────────────────────────────────────────────────

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Pre-commit gate for cflt-ai. Install with: bin/setup-guards
+# Blocks staged client names (from .client-terms) and the private client lists themselves.
+# Other org-like names are reported as REVIEW but don't block the commit; the push gate does.
+# Runs locally; nothing leaves the machine.
+exec python3 "$(git rev-parse --show-toplevel)/tools/org_audit.py" --staged

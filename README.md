@@ -20,7 +20,7 @@ bin/setup
 claude
 ```
 
-That's it. Ask a question, paste a config, or run a skill.
+That's it. Ask a question, paste a config, or run a skill. New to the repo? Read [GETTING_STARTED.md](GETTING_STARTED.md) first: it covers setup, the client-name guards and the daily workflow.
 
 > **Flox is optional.** It's a convenience wrapper that pins the toolchain (Python 3.11, Node, `uv`) so the wiki/canon tooling is reproducible. If you already have Python 3.11+ and Node 20+ on your `PATH`, skip step 2 — `bin/setup` and the skills run the same. Flox is never required for the [desktop app](#desktop-app-no-flox-required).
 

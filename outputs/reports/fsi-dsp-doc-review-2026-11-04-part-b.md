@@ -1,6 +1,6 @@
 # fsi-dsp doc review, part B (COMPLETE: 2026-11-04)
 
-Repo: `/Users/sriramkannan/GoodLabs/cflt-ai/raw/repos/fsi-dsp` (pinned 4687db8). Read-only review. No edits, commits, or pushes in fsi-dsp. No hosts, IPs, or endpoints from the docs were resolved or contacted. External lookups were limited to docs.confluent.io, the Terraform registry, repo1.maven.org, raw.githubusercontent.com (apache/kafka source), and vendor docs sites.
+Repo: `raw/repos/fsi-dsp` (pinned 4687db8). Read-only review. No edits, commits, or pushes in fsi-dsp. No hosts, IPs, or endpoints from the docs were resolved or contacted. External lookups were limited to docs.confluent.io, the Terraform registry, repo1.maven.org, raw.githubusercontent.com (apache/kafka source), and vendor docs sites.
 
 ## Status
 

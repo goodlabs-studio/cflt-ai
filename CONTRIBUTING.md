@@ -118,13 +118,16 @@ never the always-on prompt prefix.
 ### Guardrails (install once)
 
 ```bash
-git config core.hooksPath .githooks   # enables .githooks/pre-push silo guard
-chmod +x .githooks/pre-push
+bin/setup-guards                 # hooks, `git org-audit` alias, your private .client-terms
+bin/setup-guards --claude-hook   # optional: also check every file Claude edits here
+bin/setup-guards --check         # status only
 ```
 
 `.gitignore` keeps `canon/customer/*` and `canon/engagement/*` untracked (except the
-acme-bank demo + scaffolds); the pre-push hook and the `canon-silo-guard.yml` CI job
-reject any client/engagement canon that slips into a commit.
+acme-bank demo + scaffolds). `.githooks/pre-push` runs `.githooks/canon-guard` and the
+`canon-silo-guard.yml` CI job backs it up, so client/engagement canon that slips into a
+commit is rejected. The same push gate runs `tools/org_audit.py`, which rejects client
+organization names; see GETTING_STARTED.md.
 
 ### Promoting a pattern up (the "cleanser")
 
