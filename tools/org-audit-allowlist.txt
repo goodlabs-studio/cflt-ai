@@ -1,7 +1,7 @@
 # Organization and product names that org_audit.py never flags.
 # Committed and shared: technology vendors, products, standards bodies and the issuing brands.
 # Client names must NEVER go here. Personal "reviewed, not a client" decisions go in
-# ~/GoodLabs/.org-audit-reviewed (outside the repo) via `org_audit.py --accept NAME`.
+# .org-audit-reviewed at the repo root (gitignored) via `org_audit.py --accept NAME`.
 # One name per line, case-insensitive. A candidate is allowed if it equals an entry or starts with one.
 
 # Issuing brands

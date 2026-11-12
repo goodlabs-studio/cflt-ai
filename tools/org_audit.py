@@ -6,11 +6,12 @@ Technology vendors, products and tools are fine to name. Client organizations
 (the companies a consultant works for) are not.
 
 Detection is LOCAL by default and never leaves the machine:
-  1. Known clients: ~/GoodLabs/.client-terms (outside the repo). Hit = CLIENT.
+  1. Known clients: <repo>/.client-terms (gitignored, never committed). Hit = CLIENT.
+     Plain names match regardless of case, spacing, hyphens or line wraps; `re:` or /.../ for regex.
   2. Org-like names found by local patterns (company suffixes such as "Bank" or
      "Holdings", "<Name> platform team", "<Name>'s prod cluster", "XYZ BU").
      Names on tools/org-audit-allowlist.txt (tech vendors) or on your personal
-     ~/GoodLabs/.org-audit-reviewed list pass. Anything else = REVIEW.
+     <repo>/.org-audit-reviewed list pass. Anything else = REVIEW.
 Model reasoning is opt-in: --explain sends each finding's name plus one line of
 context to Claude Haiku (headless, no tools, no MCP, no saved session), caches the
 verdict in ~/.cache/org-audit/, and prints why it thinks the name is or isn't a client.
@@ -24,7 +25,7 @@ Quick use:
                                               rewrite, edit it, skip, or mark not-a-client
   python3 tools/org_audit.py --accept "Name"  mark a name as reviewed, not a client
   python3 tools/org_audit.py --add-client "Name"
-                                              add a client name to ~/GoodLabs/.client-terms
+                                              add a client name to <repo>/.client-terms
 
 Hook modes (used by git and Claude Code, always local):
   --staged   pre-commit: block CLIENT hits, warn on REVIEW
@@ -42,11 +43,15 @@ from io import BytesIO
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 REPO_ROOT = os.path.realpath(os.path.join(HERE, ".."))
-CLIENT_TERMS = os.environ.get("CLIENT_TERMS_FILE", os.path.expanduser("~/GoodLabs/.client-terms"))
-REVIEWED = os.environ.get("ORG_AUDIT_REVIEWED", os.path.expanduser("~/GoodLabs/.org-audit-reviewed"))
+# Personal lists live at the repo root and are gitignored (.gitignore and the global excludes file).
+# The commit and push gates also refuse them outright if someone force-adds them.
+CLIENT_TERMS = os.environ.get("CLIENT_TERMS_FILE", os.path.join(REPO_ROOT, ".client-terms"))
+REVIEWED = os.environ.get("ORG_AUDIT_REVIEWED", os.path.join(REPO_ROOT, ".org-audit-reviewed"))
+PRIVATE_LISTS = {".client-terms", ".org-audit-reviewed"}
 ALLOWLIST = os.path.join(HERE, "org-audit-allowlist.txt")
 CACHE = os.path.expanduser("~/.cache/org-audit/verdicts.json")
-SELF_FILES = {os.path.realpath(__file__), os.path.join(HERE, "check-client-terms.py"), ALLOWLIST}
+SELF_FILES = {os.path.realpath(__file__), os.path.join(HERE, "check-client-terms.py"), ALLOWLIST,
+              os.path.realpath(CLIENT_TERMS), os.path.realpath(REVIEWED)}
 SKIP_PREFIXES = ("raw/repos/",)  # vendored submodules carry their own history and hooks
 TEXT_EXT = {".md", ".txt", ".yaml", ".yml", ".json", ".py", ".tf", ".hcl", ".properties", ".html",
             ".sh", ".sql", ".toml", ".cfg", ".ini", ".csv", ".j2", ".xml", ".conf", ""}
@@ -107,13 +112,33 @@ def read_list(path):
     return out
 
 
+SEP = r"[\s\-_./·]*"   # between words: any spaces (incl. line breaks), hyphens, underscores, dots, or none
+
+
+def fuzzy_pattern(term):
+    """'Northern Trust' -> matches 'northern trust', 'NORTHERN  TRUST', 'Northern-Trust',
+    'northern_trust', 'NorthernTrust', 'northerntrust.com', and a name wrapped across lines.
+    CamelCase and letter/digit changes count as word breaks, so 'SiriusXM' also matches 'Sirius XM'."""
+    words = re.findall(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+", term)
+    if not words:
+        return None
+    body = SEP.join(re.escape(w) for w in words)
+    return re.compile(r"(?<![A-Za-z0-9])" + body + r"(?![A-Za-z0-9])", re.IGNORECASE)
+
+
 def client_patterns():
+    """Entries: plain names (fuzzy, case- and spacing-insensitive), or regex as `re:<pattern>` or
+    `/<pattern>/`. Regex is case-insensitive and may span lines."""
     pats = []
     for term in read_list(CLIENT_TERMS):
-        if term.startswith("re:"):
-            pats.append((term, re.compile(term[3:], re.IGNORECASE)))
-        else:
-            pats.append((term, re.compile(r"(?<![A-Za-z0-9])" + re.escape(term) + r"(?![A-Za-z0-9])", re.IGNORECASE)))
+        raw = term[3:] if term.startswith("re:") else term[1:-1] if len(term) > 2 and term[0] == term[-1] == "/" else None
+        try:
+            rx = re.compile(raw, re.IGNORECASE | re.MULTILINE) if raw is not None else fuzzy_pattern(term)
+        except re.error as exc:
+            print(f"org_audit: skipping bad regex in {CLIENT_TERMS}: {term!r} ({exc})", file=sys.stderr)
+            continue
+        if rx:
+            pats.append((term, rx))
     return pats
 
 
@@ -166,15 +191,18 @@ def skip(relpath):
 def detect(label, text, cpats, allow):
     """Return findings: dicts with file, line, kind (CLIENT|REVIEW), name, why, text."""
     findings, seen = [], set()
+    lines = text.splitlines()
+    for term, rx in cpats:                 # whole text, so names wrapped across lines are caught
+        for m in rx.finditer(text):
+            n = text.count("\n", 0, m.start()) + 1
+            name = re.sub(r"\s+", " ", m.group(0)).strip()
+            key = (n, norm(name))
+            if key not in seen and name:
+                seen.add(key)
+                findings.append(dict(file=label, line=n, kind="CLIENT", name=name,
+                                     why=f"client list: {term}", text=lines[n - 1] if n <= len(lines) else ""))
     in_fence = False
-    for n, line in enumerate(text.splitlines(), 1):
-        for term, rx in cpats:
-            for m in rx.finditer(line):
-                key = (n, norm(m.group(0)))
-                if key not in seen:
-                    seen.add(key)
-                    findings.append(dict(file=label, line=n, kind="CLIENT", name=m.group(0),
-                                         why="on your client list", text=line))
+    for n, line in enumerate(lines, 1):
         if line.lstrip().startswith("```"):
             in_fence = not in_fence
         if in_fence:          # code blocks: commands and configs, too noisy for name heuristics
@@ -395,6 +423,11 @@ def fix(findings, explained):
 def mode_staged(cpats, allow):
     names = subprocess.run(["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"],
                            cwd=REPO_ROOT, capture_output=True, check=True).stdout.decode().split("\0")
+    leaked = [n for n in names if n and os.path.basename(n) in PRIVATE_LISTS]
+    if leaked:
+        print("Commit blocked: private client lists are staged: " + ", ".join(leaked) +
+              "\nUnstage with: git rm --cached " + " ".join(leaked), file=sys.stderr)
+        return 1
     findings = git_blob_findings([(f":{n}", n) for n in names if n], cpats, allow)
     clients = [f for f in findings if f["kind"] == "CLIENT"]
     if findings:
@@ -423,6 +456,10 @@ def mode_push(cpats, allow):
     for spec, label in pairs:  # skip files deleted again by a later pushed commit
         if subprocess.run(["git", "cat-file", "-e", spec], cwd=REPO_ROOT, capture_output=True).returncode == 0:
             existing.add((spec, label))
+    leaked = sorted({label for _, label in existing if os.path.basename(label) in PRIVATE_LISTS})
+    if leaked:
+        print("Push blocked: private client lists are in the pushed commits: " + ", ".join(leaked), file=sys.stderr)
+        return 1
     findings = git_blob_findings(sorted(existing), cpats, allow)
     if findings:
         report(findings, out=sys.stderr)

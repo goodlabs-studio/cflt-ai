@@ -48,12 +48,14 @@ canon/engagement/*
 !canon/customer/README.md
 !canon/customer/.gitkeep
 !canon/customer/acme-bank
-!canon/customer/acme-bank/**
 !canon/engagement/README.md
 !canon/engagement/.gitkeep
 
-# Local headroom proxy state (PIDs/ports) — machine-specific
+# Local headroom proxy state (PIDs/ports, runtime lock) — machine-specific
 .claude/.headroom_wrap_*
 
-# Headroom wrapper runtime lock (created per session, never commit)
-.claude/.headroom_wrap_settings.lock
+
+# Personal client-name lists for tools/org_audit.py. They sit at the repo root so there is one place
+# to update them, and must never be committed (the commit and push gates also refuse them).
+.client-terms
+.org-audit-reviewed
