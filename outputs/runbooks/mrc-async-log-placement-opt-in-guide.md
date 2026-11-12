@@ -128,6 +128,11 @@ should be applied cluster-wide — it's a deliberate, per-topic, per-app excepti
 - Don't conflate `observerPromotionPolicy: under-min-isr` (handles partial failures
   automatically) with `unclean.leader.election.enable=true` (handles total ISR loss) — both are
   needed for this pattern to be genuinely hands-off during a full DC outage.
+- Set `min.insync.replicas=2` on every async opt-in topic. With 3 sync replicas pinned to one
+  DC, this lets `acks=all` producers keep writing through the loss of one sync broker, while
+  still requiring two in-DC copies of every acknowledged write. At `3`, a single broker outage
+  in the sync DC blocks producers. This is the setting sometimes miswritten as `under.min.isr`,
+  which isn't a Kafka config.
 
 ## Related
 

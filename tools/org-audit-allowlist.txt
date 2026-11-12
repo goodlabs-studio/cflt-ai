@@ -1,0 +1,159 @@
+# Organization and product names that org_audit.py never flags.
+# Committed and shared: technology vendors, products, standards bodies and the issuing brands.
+# Client names must NEVER go here. Personal "reviewed, not a client" decisions go in
+# ~/GoodLabs/.org-audit-reviewed (outside the repo) via `org_audit.py --accept NAME`.
+# One name per line, case-insensitive. A candidate is allowed if it equals an entry or starts with one.
+
+# Issuing brands
+GoodLabs
+GoodLabs Studio
+Confluent
+Confluent Professional Services
+Confluent Cloud
+Confluent Platform
+IBM
+
+# Cloud and infrastructure
+AWS
+Amazon
+Amazon Web Services
+Microsoft
+Microsoft Azure
+Azure
+Google
+Google Cloud
+GCP
+Oracle
+OCI
+Alibaba
+Red Hat
+RHEL
+VMware
+Broadcom
+Cisco
+Citrix
+Nutanix
+Equinix
+Cloudflare
+Akamai
+Dell
+HPE
+NetApp
+Pure Storage
+
+# Streaming, data and analytics
+Apache
+Apache Software Foundation
+Kafka
+Flink
+Redpanda
+WarpStream
+Pulsar
+StreamNative
+Aiven
+Instaclustr
+Cloudera
+Databricks
+Snowflake
+Starburst
+Dremio
+Tabular
+Iceberg
+Delta Lake
+MongoDB
+Elastic
+Elasticsearch
+OpenSearch
+Redis
+Couchbase
+Cockroach Labs
+CockroachDB
+PostgreSQL
+Postgres
+MySQL
+MariaDB
+SQL Server
+Teradata
+SAP
+Salesforce
+ServiceNow
+Workday
+Solace
+TIBCO
+IBM MQ
+RabbitMQ
+Debezium
+Striim
+Qlik
+Informatica
+Fivetran
+dbt Labs
+ShadowTraffic
+
+# Observability and security tooling
+Datadog
+Dynatrace
+Grafana
+Grafana Labs
+Prometheus
+Splunk
+New Relic
+PagerDuty
+Sumo Logic
+Honeycomb
+Chronosphere
+CrowdStrike
+Palo Alto Networks
+Okta
+Ping Identity
+CyberArk
+HashiCorp
+Vault
+Venafi
+Entrust
+DigiCert
+Let's Encrypt
+Zscaler
+Zero Trust
+
+# Placeholder and public reference names used in examples and case studies
+Acme
+Example
+Contoso
+Fabrikam
+LinkedIn
+Netflix
+Uber
+
+# Dev tooling
+GitHub
+GitLab
+Atlassian
+JetBrains
+Docker
+Kubernetes
+CNCF
+Linux Foundation
+Terraform
+Ansible
+Jenkins
+Argo
+Helm
+Anthropic
+Claude
+OpenAI
+
+# Standards and regulators (named as frameworks, not parties)
+NIST
+ISO
+PCI
+SEC
+FINRA
+OCC
+FFIEC
+Federal Reserve
+EBA
+ESMA
+FCA
+GDPR
+SOC

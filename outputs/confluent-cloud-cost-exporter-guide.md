@@ -192,7 +192,7 @@ Ranked by impact for a financial-services client.
 ## 8. Recommendation
 
 - **As a quick win** (environment/cluster cost visibility, a day or two of effort): run 4a or 4c on localhost, change the Grafana password, drop the dead dashboard, and fix pitfall 1 with an alert on absent series.
-- **For the DTCC BU requirement:** do not build on this. Use it at most as a reference for the Billing API call shape. Either adopt Mikan or build a small Flink/SQL allocation job over the Billing API plus Metrics API. If forking this repo, the minimum fixes are: return errors from `GetCosts`, add pagination, fix `KeepZero`, move numeric fields out of labels, make the window advance and backfill, and add a record ID plus idempotence to the Kafka path.
+- **For a per-business-unit cost allocation requirement:** do not build on this. Use it at most as a reference for the Billing API call shape. Either adopt Mikan or build a small Flink/SQL allocation job over the Billing API plus Metrics API. If forking this repo, the minimum fixes are: return errors from `GetCosts`, add pagination, fix `KeepZero`, move numeric fields out of labels, make the window advance and backfill, and add a record ID plus idempotence to the Kafka path.
 - Next step if wanted: a fork with those fixes, tested only against a mock Billing API on localhost (no client accounts).
 
 ## 9. Grafana Cloud integration
